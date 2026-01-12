@@ -1,6 +1,6 @@
 // =================== БЛОК 1: Импорты и примерные данные ===================
 import React, { useState, useEffect } from "react";
-import { FaSearch, FaUser, FaClipboardList } from "react-icons/fa";
+import { FaSearch, FaUser, FaClipboardList, FaSun, FaMoon } from "react-icons/fa";
 
 /*
   Пример расширенных рецептов (добавлены поля для фильтров):
@@ -81,6 +81,7 @@ export default function CookifyDemo() {
   // ---------- Стейты ----------
   const [activeScreen, setActiveScreen] = useState("home"); // home, search, account
   const [language, setLanguage] = useState("ru");
+  const [darkMode, setDarkMode] = useState(false); // Новый стейт для темы
   const [showRegisterForm, setShowRegisterForm] = useState(false);
   const [registered, setRegistered] = useState(false);
   const [userData, setUserData] = useState(null); // объект профиля
@@ -115,6 +116,18 @@ export default function CookifyDemo() {
   // Вспомогательные
   const GOALS = language === "ru" ? GOAL_OPTIONS_RU : GOAL_OPTIONS_EN;
   const LIFESTYLE = language === "ru" ? LIFESTYLE_RU : LIFESTYLE_EN;
+
+  // ---------- Тема (цветовая схема) ----------
+  const theme = {
+    bg: darkMode ? "bg-gray-900" : "bg-[#f8f3eb]",
+    cardBg: darkMode ? "bg-gray-800" : "bg-white",
+    text: darkMode ? "text-gray-100" : "text-gray-900",
+    textSecondary: darkMode ? "text-gray-400" : "text-gray-600",
+    border: darkMode ? "border-gray-700" : "border-gray-200",
+    input: darkMode ? "bg-gray-700 border-gray-600 text-white" : "bg-white border-gray-300",
+    headerText: darkMode ? "text-blue-400" : "text-blue-800",
+    accentText: darkMode ? "text-teal-400" : "text-[#2a8c82]"
+  };
 
   // ---------- Обработчики профиля ----------
   const handleAvatarUpload = (e) => {
@@ -223,47 +236,56 @@ export default function CookifyDemo() {
 
   // =================== БЛОК 3: JSX (UI) ===================
   return (
-    <div className="min-h-screen bg-[#f8f3eb] p-6 font-sans">
+    <div className={`min-h-screen ${theme.bg} ${theme.text} p-6 font-sans transition-colors duration-300`}>
       {/* ------------------ БЛОК 3.1: Хедер ------------------ */}
       <header className="max-w-6xl mx-auto flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-blue-800">Cookify</h1>
-          <p className="text-sm text-gray-600">{t("Интерактивная имитация приложения", "Interactive demo")}</p>
+          <h1 className={`text-3xl font-bold ${theme.headerText}`}>Cookify</h1>
+          <p className={`text-sm ${theme.textSecondary}`}>{t("Интерактивная имитация приложения", "Interactive demo")}</p>
         </div>
 
         <div className="flex gap-3 items-center">
           <nav className="flex gap-3">
             <button
               onClick={() => setActiveScreen("home")}
-              className={`px-3 py-2 rounded text-sm ${activeScreen === "home" ? "bg-green-500 text-white" : "bg-white shadow-sm text-blue-700"}`}
+              className={`px-3 py-2 rounded text-sm ${activeScreen === "home" ? "bg-green-500 text-white" : `${theme.cardBg} shadow-sm text-blue-700`}`}
             >{t("Главная", "Home")}</button>
 
             <button
               onClick={() => setActiveScreen("search")}
-              className={`px-3 py-2 rounded text-sm ${activeScreen === "search" ? "bg-green-500 text-white" : "bg-white shadow-sm text-blue-700"}`}
+              className={`px-3 py-2 rounded text-sm ${activeScreen === "search" ? "bg-green-500 text-white" : `${theme.cardBg} shadow-sm text-blue-700`}`}
             >{t("Поиск", "Search")}</button>
 
             <button
               onClick={() => setActiveScreen("account")}
-              className={`px-3 py-2 rounded text-sm ${activeScreen === "account" ? "bg-green-500 text-white" : "bg-white shadow-sm text-blue-700"}`}
+              className={`px-3 py-2 rounded text-sm ${activeScreen === "account" ? "bg-green-500 text-white" : `${theme.cardBg} shadow-sm text-blue-700`}`}
             >{t("Мой аккаунт", "My Account")}</button>
           </nav>
 
-          <select className="border p-1 rounded" value={language} onChange={e => setLanguage(e.target.value)}>
+          <select className={`${theme.input} p-1 rounded`} value={language} onChange={e => setLanguage(e.target.value)}>
             <option value="ru">Русский</option>
             <option value="en">English</option>
           </select>
+          
+          {/* Переключатель темы */}
+          <button
+            onClick={() => setDarkMode(prev => !prev)}
+            className={`${theme.cardBg} p-2 rounded shadow-sm hover:shadow-md transition`}
+            title={darkMode ? t("Светлая тема", "Light mode") : t("Темная тема", "Dark mode")}
+          >
+            {darkMode ? <FaSun className="text-yellow-400 w-5 h-5" /> : <FaMoon className="text-gray-600 w-5 h-5" />}
+          </button>
         </div>
       </header>
 
       {/* ------------------ БЛОК 3.2: Главная с подсказками ------------------ */}
       {activeScreen === "home" && (
         <div className="max-w-5xl mx-auto space-y-6">
-          <div className="bg-white p-6 rounded shadow">
-            <h2 className="text-xl font-semibold mb-3 text-blue-800">
+          <div className={`${theme.cardBg} p-6 rounded shadow`}>
+            <h2 className={`text-xl font-semibold mb-3 ${theme.headerText}`}>
               {t("Добро пожаловать, ", "Welcome, ")}{userData?.name || t("Пользователь", "User")}!
             </h2>
-            <p className="text-gray-700 mb-4">{t("Используйте вкладки сверху для перехода по функциям приложения.", "Use the tabs above to navigate app features.")}</p>
+            <p className={`${theme.textSecondary} mb-4`}>{t("Используйте вкладки сверху для перехода по функциям приложения.", "Use the tabs above to navigate app features.")}</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -271,11 +293,11 @@ export default function CookifyDemo() {
               { title: t("Поиск рецептов", "Recipe Search"), content: t("Введите ингредиенты или используйте фильтры.", "Enter ingredients or use filters."), screen: "search" },
               { title: t("Мой аккаунт", "My Account"), content: t("Настройте профиль и добавьте план питания.", "Set up profile and add meal plan."), screen: "account" },
             ].map((tip, idx) => (
-              <div key={idx} onClick={() => setActiveScreen(tip.screen)} className="bg-white p-4 rounded shadow border-l-4 border-green-500 cursor-pointer flex items-start gap-3 hover:shadow-lg transition">
+              <div key={idx} onClick={() => setActiveScreen(tip.screen)} className={`${theme.cardBg} p-4 rounded shadow border-l-4 border-green-500 cursor-pointer flex items-start gap-3 hover:shadow-lg transition`}>
                 <FaSearch className="text-blue-600 w-6 h-6" />
                 <div>
                   <h4 className="font-semibold text-blue-700">{tip.title}</h4>
-                  <p className="text-gray-700 text-sm mt-1">{tip.content}</p>
+                  <p className={`${theme.textSecondary} text-sm mt-1`}>{tip.content}</p>
                 </div>
               </div>
             ))}
@@ -288,15 +310,15 @@ export default function CookifyDemo() {
 {activeScreen === "search" && (
   <div className="max-w-6xl mx-auto space-y-4">
     {/* Верхняя поисковая панель */}
-    <div className="sticky top-4 bg-[#fdf8f3] z-20 p-4 rounded-2xl shadow flex flex-col md:flex-row gap-3 items-center">
+    <div className={`sticky top-4 ${theme.cardBg} z-20 p-4 rounded-2xl shadow flex flex-col md:flex-row gap-3 items-center`}>
       <div className="relative flex-1 w-full">
-        <FaSearch className="absolute left-3 top-3 text-gray-500" />
+        <FaSearch className={`absolute left-3 top-3 ${theme.textSecondary}`} />
         <input
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder={searchMode === "name" ? t("Введите название блюда или тег...", "Enter dish name or tag...") : t("Введите ингредиенты (через запятую)...", "Enter ingredients (comma separated)...")}
-          className="w-full pl-10 pr-4 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-green-300"
+          className={`w-full pl-10 pr-4 py-2 ${theme.input} rounded-xl focus:outline-none focus:ring-2 focus:ring-green-300`}
         />
       </div>
 
@@ -324,19 +346,18 @@ export default function CookifyDemo() {
         value={excludeIngredients}
         onChange={(e) => setExcludeIngredients(e.target.value)}
         placeholder={t("Исключить ингредиенты (через запятую)", "Exclude ingredients (comma-separated)")}
-        className="w-full p-2 border rounded mb-2"
+        className={`w-full p-2 ${theme.input} rounded mb-2`}
       />
     </div>
 
     {/* Фильтры (скрываемые) */}
     {showFilters && (
-      <div className="bg-white p-4 rounded-2xl shadow space-y-3">
+      <div className={`${theme.cardBg} p-4 rounded-2xl shadow space-y-3`}>
         <h3 className="text-lg font-semibold">{t("Фильтры", "Filters")}</h3>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-          {/* Здесь все селекты фильтров остаются без изменений */}
           {/* Тип блюда */}
-          <select value={selectedFilters.type} onChange={(e) => setSelectedFilters(prev => ({ ...prev, type: e.target.value }))} className="border p-2 rounded">
+          <select value={selectedFilters.type} onChange={(e) => setSelectedFilters(prev => ({ ...prev, type: e.target.value }))} className={`${theme.input} p-2 rounded`}>
             <option value="">{t("Тип блюда", "Dish type")}</option>
             <option value="завтрак">{t("Завтрак", "Breakfast")}</option>
             <option value="обед">{t("Обед", "Lunch")}</option>
@@ -346,7 +367,7 @@ export default function CookifyDemo() {
           </select>
 
           {/* Диетические предпочтения */}
-          <select value={selectedFilters.diet} onChange={(e) => setSelectedFilters(prev => ({ ...prev, diet: e.target.value }))} className="border p-2 rounded">
+          <select value={selectedFilters.diet} onChange={(e) => setSelectedFilters(prev => ({ ...prev, diet: e.target.value }))} className={`${theme.input} p-2 rounded`}>
             <option value="">{t("Диетические предпочтения", "Diet preferences")}</option>
             <option value="веган">{t("Веган", "Vegan")}</option>
             <option value="вегетарианское">{t("Вегетарианское", "Vegetarian")}</option>
@@ -355,7 +376,7 @@ export default function CookifyDemo() {
           </select>
 
           {/* Время приготовления */}
-          <select value={selectedFilters.timeRange} onChange={(e) => setSelectedFilters(prev => ({ ...prev, timeRange: e.target.value }))} className="border p-2 rounded">
+          <select value={selectedFilters.timeRange} onChange={(e) => setSelectedFilters(prev => ({ ...prev, timeRange: e.target.value }))} className={`${theme.input} p-2 rounded`}>
             <option value="">{t("Время приготовления", "Cooking time")}</option>
             <option value="short">{t("до 15 мин", "up to 15 min")}</option>
             <option value="medium">{t("15–40 мин", "15–40 min")}</option>
@@ -363,7 +384,7 @@ export default function CookifyDemo() {
           </select>
 
           {/* Кухни мира */}
-          <select value={selectedFilters.cuisine} onChange={(e) => setSelectedFilters(prev => ({ ...prev, cuisine: e.target.value }))} className="border p-2 rounded">
+          <select value={selectedFilters.cuisine} onChange={(e) => setSelectedFilters(prev => ({ ...prev, cuisine: e.target.value }))} className={`${theme.input} p-2 rounded`}>
             <option value="">{t("Кухни мира", "World cuisine")}</option>
             <option value="итальянская">{t("Итальянская", "Italian")}</option>
             <option value="азиатская">{t("Азиатская", "Asian")}</option>
@@ -372,14 +393,14 @@ export default function CookifyDemo() {
           </select>
 
           {/* Особые параметры */}
-          <select value={selectedFilters.special} onChange={(e) => setSelectedFilters(prev => ({ ...prev, special: e.target.value }))} className="border p-2 rounded">
+          <select value={selectedFilters.special} onChange={(e) => setSelectedFilters(prev => ({ ...prev, special: e.target.value }))} className={`${theme.input} p-2 rounded`}>
             <option value="">{t("Особые параметры", "Special parameters")}</option>
             <option value="безглютеновое">{t("Безглютеновое", "Gluten-free")}</option>
             <option value="низкокалорийное">{t("Низкокалорийное", "Low calorie")}</option>
           </select>
 
           {/* Уровень сложности */}
-          <select value={selectedFilters.difficulty} onChange={(e) => setSelectedFilters(prev => ({ ...prev, difficulty: e.target.value }))} className="border p-2 rounded">
+          <select value={selectedFilters.difficulty} onChange={(e) => setSelectedFilters(prev => ({ ...prev, difficulty: e.target.value }))} className={`${theme.input} p-2 rounded`}>
             <option value="">{t("Уровень сложности", "Difficulty")}</option>
             <option value="легкий">{t("Лёгкий", "Easy")}</option>
             <option value="средний">{t("Средний", "Medium")}</option>
@@ -387,7 +408,7 @@ export default function CookifyDemo() {
           </select>
 
           {/* Популярные теги */}
-          <select value={selectedFilters.tag} onChange={(e) => setSelectedFilters(prev => ({ ...prev, tag: e.target.value }))} className="border p-2 rounded">
+          <select value={selectedFilters.tag} onChange={(e) => setSelectedFilters(prev => ({ ...prev, tag: e.target.value }))} className={`${theme.input} p-2 rounded`}>
             <option value="">{t("Популярные теги", "Popular tags")}</option>
             <option value="веган">веган</option>
             <option value="быстро">быстро</option>
@@ -408,17 +429,17 @@ export default function CookifyDemo() {
     )}
 
     {/* Результаты поиска */}
-    <div className="bg-white p-4 rounded-2xl shadow">
+    <div className={`${theme.cardBg} p-4 rounded-2xl shadow`}>
       <h2 className="text-xl font-semibold mb-3">{t("Результаты", "Results")}</h2>
       {filteredResults.length === 0 ? (
-        <p className="text-gray-600">{t("Ничего не найдено", "No recipes found")}</p>
+        <p className={theme.textSecondary}>{t("Ничего не найдено", "No recipes found")}</p>
       ) : (
         <div className="grid gap-3">
           {filteredResults.map(r => (
-            <div key={r.id} className="p-4 border rounded-lg">
+            <div key={r.id} className={`p-4 ${theme.border} border rounded-lg`}>
               <div>
                 <h3 className="text-lg font-bold">{r.title}</h3>
-                <div className="text-sm text-gray-600 mt-1">{r.time} {t("мин", "min")} • {r.calories} {t("ккал", "kcal")}</div>
+                <div className={`text-sm ${theme.textSecondary} mt-1`}>{r.time} {t("мин", "min")} • {r.calories} {t("ккал", "kcal")}</div>
               </div>
 
               {/* Ингредиенты с подсветкой аллергенов/исключений */}
@@ -428,7 +449,7 @@ export default function CookifyDemo() {
                   const low = ing.toLowerCase();
                   const isAllergy = allergyList.some(a => a && low.includes(a));
                   const isExcluded = excludeIngredients.toLowerCase().split(",").map(s => s.trim()).filter(Boolean).some(e => e && low.includes(e));
-                  const cls = isAllergy || isExcluded ? "text-red-600 font-semibold" : "text-gray-800";
+                  const cls = isAllergy || isExcluded ? "text-red-600 font-semibold" : theme.text;
                   return <span key={i} className={`${cls} mr-2`}>{ing}{i < r.ingredients.length - 1 ? "," : ""}</span>;
                 })}
               </div>
@@ -448,7 +469,7 @@ export default function CookifyDemo() {
       {/* ------------------ БЛОК 3.4: Аккаунт / Профиль ------------------ */}
       {activeScreen === "account" && (
         <div className="max-w-3xl mx-auto space-y-6">
-          <h2 className="text-3xl font-bold text-center text-[#2a8c82]">{t("Мой аккаунт", "My Account")}</h2>
+          <h2 className={`text-3xl font-bold text-center ${theme.accentText}`}>{t("Мой аккаунт", "My Account")}</h2>
 
           {/* Если не зарегистрирован — показать кнопку/форму регистрации */}
           {!registered && !showRegisterForm && (
@@ -459,12 +480,12 @@ export default function CookifyDemo() {
           )}
 
           {showRegisterForm && (
-            <form onSubmit={handleRegister} className="bg-white p-6 rounded-xl shadow space-y-3">
+            <form onSubmit={handleRegister} className={`${theme.cardBg} p-6 rounded-xl shadow space-y-3`}>
               <h3 className="text-xl font-semibold">{t("Регистрация / Редактирование", "Register / Edit")}</h3>
 
               <div className="flex gap-2">
-                <input defaultValue={userData?.name || ""} name="name" placeholder={t("Имя", "Name")} className="flex-1 border p-2 rounded" required />
-                <select defaultValue={userData?.gender || ""} name="gender" className="border p-2 rounded" required>
+                <input defaultValue={userData?.name || ""} name="name" placeholder={t("Имя", "Name")} className={`flex-1 ${theme.input} p-2 rounded`} required />
+                <select defaultValue={userData?.gender || ""} name="gender" className={`${theme.input} p-2 rounded`} required>
                   <option value="">{t("Пол", "Gender")}</option>
                   <option value="Мужской">{t("Мужской", "Male")}</option>
                   <option value="Женский">{t("Женский", "Female")}</option>
@@ -472,10 +493,10 @@ export default function CookifyDemo() {
               </div>
 
               <div className="flex gap-2">
-                <input defaultValue={userData?.age || ""} name="age" type="number" min="0" placeholder={t("Возраст", "Age")} className="flex-1 border p-2 rounded" required />
+                <input defaultValue={userData?.age || ""} name="age" type="number" min="0" placeholder={t("Возраст", "Age")} className={`flex-1 ${theme.input} p-2 rounded`} required />
                 <div className="flex gap-2">
-                  <input defaultValue={userData?.weight || ""} name="weight" type="number" min="0" placeholder={t("Вес", "Weight")} className="w-32 border p-2 rounded" />
-                  <select defaultValue={userData?.weightUnit || "кг"} name="weightUnit" className="border p-2 rounded">
+                  <input defaultValue={userData?.weight || ""} name="weight" type="number" min="0" placeholder={t("Вес", "Weight")} className={`w-32 ${theme.input} p-2 rounded`} />
+                  <select defaultValue={userData?.weightUnit || "кг"} name="weightUnit" className={`${theme.input} p-2 rounded`}>
                     <option value="кг">кг</option>
                     <option value="фунты">ф</option>
                   </select>
@@ -483,58 +504,58 @@ export default function CookifyDemo() {
               </div>
 
               <div className="flex gap-2">
-                <input defaultValue={userData?.height || ""} name="height" type="number" min="0" placeholder={t("Рост", "Height")} className="flex-1 border p-2 rounded" />
-                <select defaultValue={userData?.heightUnit || "см"} name="heightUnit" className="border p-2 rounded">
+                <input defaultValue={userData?.height || ""} name="height" type="number" min="0" placeholder={t("Рост", "Height")} className={`flex-1 ${theme.input} p-2 rounded`} />
+                <select defaultValue={userData?.heightUnit || "см"} name="heightUnit" className={`${theme.input} p-2 rounded`}>
                   <option value="см">см</option>
                   <option value="дюймы">in</option>
                 </select>
               </div>
 
-              <select defaultValue={userData?.goals || ""} name="goals" className="w-full border p-2 rounded">
+              <select defaultValue={userData?.goals || ""} name="goals" className={`w-full ${theme.input} p-2 rounded`}>
                 <option value="">{t("Цели", "Goals")}</option>
                 {GOALS.map((g,i) => <option key={i} value={g}>{g}</option>)}
               </select>
 
-              <select defaultValue={userData?.lifestyle || ""} name="lifestyle" className="w-full border p-2 rounded">
+              <select defaultValue={userData?.lifestyle || ""} name="lifestyle" className={`w-full ${theme.input} p-2 rounded`}>
                 <option value="">{t("Образ жизни", "Lifestyle")}</option>
                 {LIFESTYLE.map((l,i) => <option key={i} value={l}>{l}</option>)}
               </select>
 
-              <input defaultValue={userData?.allergies || ""} name="allergies" placeholder={t("Аллергии (через запятую)", "Allergies (comma-separated)") } className="w-full border p-2 rounded" />
-              <input defaultValue={userData?.medical || ""} name="medical" placeholder={t("Медпоказания (опционально)", "Medical info (optional)") } className="w-full border p-2 rounded" />
-              <input defaultValue={userData?.preferences || ""} name="preferences" placeholder={t("Предпочтения (опционально)", "Preferences (optional)") } className="w-full border p-2 rounded" />
-              <input defaultValue={userData?.habits || ""} name="habits" placeholder={t("Привычки (опционально)", "Habits (optional)") } className="w-full border p-2 rounded" />
+              <input defaultValue={userData?.allergies || ""} name="allergies" placeholder={t("Аллергии (через запятую)", "Allergies (comma-separated)") } className={`w-full ${theme.input} p-2 rounded`} />
+              <input defaultValue={userData?.medical || ""} name="medical" placeholder={t("Медпоказания (опционально)", "Medical info (optional)") } className={`w-full ${theme.input} p-2 rounded`} />
+              <input defaultValue={userData?.preferences || ""} name="preferences" placeholder={t("Предпочтения (опционально)", "Preferences (optional)") } className={`w-full ${theme.input} p-2 rounded`} />
+              <input defaultValue={userData?.habits || ""} name="habits" placeholder={t("Привычки (опционально)", "Habits (optional)") } className={`w-full ${theme.input} p-2 rounded`} />
 
               <div>
                 <label className="block text-sm mb-1">{t("Аватарка", "Avatar")}</label>
-                <input onChange={handleAvatarUpload} type="file" accept="image/*" className="w-full border p-2 rounded" />
+                <input onChange={handleAvatarUpload} type="file" accept="image/*" className={`w-full ${theme.input} p-2 rounded`} />
               </div>
 
               <div className="flex gap-2">
                 <button type="submit" className="bg-[#2a8c82] text-white px-4 py-2 rounded">{t("Сохранить", "Save")}</button>
-                {registered && <button type="button" onClick={() => { setShowRegisterForm(false); setIsEditingProfile(false); }} className="px-4 py-2 border rounded">{t("Отмена", "Cancel")}</button>}
+                {registered && <button type="button" onClick={() => { setShowRegisterForm(false); setIsEditingProfile(false); }} className={`px-4 py-2 ${theme.border} border rounded`}>{t("Отмена", "Cancel")}</button>}
               </div>
             </form>
           )}
 
           {/* Просмотр профиля */}
           {registered && userData && !showRegisterForm && (
-            <div className="bg-white p-6 rounded-xl shadow space-y-4">
+            <div className={`${theme.cardBg} p-6 rounded-xl shadow space-y-4`}>
               <div className="flex items-start gap-4">
-                {userData.avatarURL ? <img src={userData.avatarURL} alt="avatar" className="w-24 h-24 rounded-full object-cover border" /> : <div className="w-24 h-24 rounded-full bg-gray-100 flex items-center justify-center">?</div>}
+                {userData.avatarURL ? <img src={userData.avatarURL} alt="avatar" className={`w-24 h-24 rounded-full object-cover ${theme.border} border`} /> : <div className={`w-24 h-24 rounded-full bg-gray-100 flex items-center justify-center ${darkMode ? 'bg-gray-700' : ''}`}>?</div>}
                 <div className="flex-1">
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="text-xl font-bold">{userData.name}</h3>
-                      <p className="text-sm text-gray-600">{userData.gender && <>{t("Пол", "Gender")}: {userData.gender} · </>}</p>
+                      <p className={`text-sm ${theme.textSecondary}`}>{userData.gender && <>{t("Пол", "Gender")}: {userData.gender} · </>}</p>
                     </div>
                     <div className="flex gap-2">
-                      <button onClick={() => { setShowRegisterForm(true); setIsEditingProfile(true); }} className="px-3 py-1 border rounded">{t("Изменить профиль", "Edit profile")}</button>
+                      <button onClick={() => { setShowRegisterForm(true); setIsEditingProfile(true); }} className={`px-3 py-1 ${theme.border} border rounded`}>{t("Изменить профиль", "Edit profile")}</button>
                       <button onClick={handleLogout} className="px-3 py-1 bg-red-100 text-red-700 rounded">{t("Выйти", "Logout")}</button>
                     </div>
                   </div>
 
-                  <div className="mt-3 text-gray-700 space-y-1">
+                  <div className={`mt-3 ${theme.textSecondary} space-y-1`}>
                     {userData.age && <div><strong>{t("Возраст", "Age")}: </strong>{userData.age}</div>}
                     {userData.weight && <div><strong>{t("Вес", "Weight")}: </strong>{userData.weight} {userData.weightUnit || "кг"}</div>}
                     {userData.height && <div><strong>{t("Рост", "Height")}: </strong>{userData.height} {userData.heightUnit || "см"}</div>}
@@ -548,14 +569,14 @@ export default function CookifyDemo() {
                 </div>
               </div>
 
-              {/* Здесь можно добавить отдельный просмотр плана питания --- подробный */}
+              {/* План питания */}
               <div>
                 <h4 className="font-semibold">{t("Мой план питания", "My Meal Plan")}</h4>
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-2 mt-2">
                   {MEAL_CATEGORIES.map(cat => (
-                    <div key={cat} className="p-2 border rounded">
+                    <div key={cat} className={`p-2 ${theme.border} border rounded`}>
                       <div className="font-medium mb-1">{language === "ru" ? MEAL_LABELS_RU[cat] : cat}</div>
-                      {mealPlan[cat].length === 0 ? <div className="text-sm text-gray-500">{t("Пусто", "Empty")}</div> :
+                      {mealPlan[cat].length === 0 ? <div className={`text-sm ${theme.textSecondary}`}>{t("Пусто", "Empty")}</div> :
                         mealPlan[cat].map(m => <div key={m.id} className="text-sm">{m.title}</div>)}
                     </div>
                   ))}
