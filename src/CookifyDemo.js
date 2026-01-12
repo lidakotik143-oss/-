@@ -1,6 +1,6 @@
 // =================== БЛОК 1: Импорты и примерные данные ===================
 import React, { useState, useEffect } from "react";
-import { FaSearch, FaUser, FaClipboardList, FaSun, FaMoon, FaPalette } from "react-icons/fa";
+import { FaSearch, FaUser, FaClipboardList, FaSun, FaMoon, FaPalette, FaFont } from "react-icons/fa";
 
 /*
   Пример расширенных рецептов (добавлены поля для фильтров):
@@ -76,6 +76,16 @@ const LIFESTYLE_EN = ["Sedentary", "Moderately active", "Active"];
 const MEAL_CATEGORIES = ["breakfast", "lunch", "snack", "dinner"];
 const MEAL_LABELS_RU = { breakfast: "Завтрак", lunch: "Обед", snack: "Перекус", dinner: "Ужин" };
 
+// Доступные шрифты
+const FONTS = {
+  inter: { name: "Inter", nameRu: "Inter", class: "font-sans" },
+  roboto: { name: "Roboto", nameRu: "Roboto", class: "font-['Roboto']" },
+  openSans: { name: "Open Sans", nameRu: "Open Sans", class: "font-['Open_Sans']" },
+  lora: { name: "Lora", nameRu: "Lora", class: "font-['Lora']" },
+  playfair: { name: "Playfair Display", nameRu: "Playfair Display", class: "font-['Playfair_Display']" },
+  montserrat: { name: "Montserrat", nameRu: "Montserrat", class: "font-['Montserrat']" }
+};
+
 // Цветовые темы на основе природных палитр
 const THEMES = {
   olive: {
@@ -101,7 +111,7 @@ const THEMES = {
     text: "text-[#6C584C]",
     textSecondary: "text-[#A98467]",
     border: "border-[#D4A373]",
-    input: "bg-white border-[#CCD5AE] text-[#6C584C] placeholder-[#A98467]",
+    input: "bg-[#FAEDCD] border-[#CCD5AE] text-[#6C584C] placeholder-[#A98467]",
     headerText: "text-[#A98467]",
     accentText: "text-[#D4A373]",
     accent: "bg-[#CCD5AE]",
@@ -146,7 +156,9 @@ export default function CookifyDemo() {
   const [activeScreen, setActiveScreen] = useState("home"); // home, search, account
   const [language, setLanguage] = useState("ru");
   const [currentTheme, setCurrentTheme] = useState("olive"); // Текущая тема
+  const [currentFont, setCurrentFont] = useState("inter"); // Текущий шрифт
   const [showThemePicker, setShowThemePicker] = useState(false); // Показ выбора тем
+  const [showFontPicker, setShowFontPicker] = useState(false); // Показ выбора шрифтов
   const [showRegisterForm, setShowRegisterForm] = useState(false);
   const [registered, setRegistered] = useState(false);
   const [userData, setUserData] = useState(null); // объект профиля
@@ -184,6 +196,7 @@ export default function CookifyDemo() {
 
   // ---------- Текущая тема ----------
   const theme = THEMES[currentTheme];
+  const font = FONTS[currentFont];
 
   // ---------- Обработчики профиля ----------
   const handleAvatarUpload = (e) => {
@@ -292,7 +305,7 @@ export default function CookifyDemo() {
 
   // =================== БЛОК 3: JSX (UI) ===================
   return (
-    <div className={`min-h-screen ${theme.bg} ${theme.text} p-6 font-sans transition-all duration-500`}>
+    <div className={`min-h-screen ${theme.bg} ${theme.text} ${font.class} p-6 transition-all duration-500`}>
       {/* ------------------ БЛОК 3.1: Хедер ------------------ */}
       <header className="max-w-6xl mx-auto flex items-center justify-between mb-6">
         <div>
@@ -323,10 +336,43 @@ export default function CookifyDemo() {
             <option value="en">English</option>
           </select>
           
+          {/* Переключатель шрифтов */}
+          <div className="relative">
+            <button
+              onClick={() => { setShowFontPicker(prev => !prev); setShowThemePicker(false); }}
+              className={`${theme.cardBg} p-2 rounded shadow-sm hover:shadow-md transition`}
+              title={t("Выбрать шрифт", "Choose font")}
+            >
+              <FaFont className={`${theme.accentText} w-5 h-5`} />
+            </button>
+
+            {/* Меню выбора шрифтов */}
+            {showFontPicker && (
+              <div className={`absolute right-0 mt-2 ${theme.cardBg} rounded-xl shadow-2xl p-4 w-56 z-50 border ${theme.border}`}>
+                <h3 className="font-semibold mb-3 text-center">{t("Выберите шрифт", "Choose font")}</h3>
+                <div className="space-y-2">
+                  {Object.entries(FONTS).map(([key, fontItem]) => (
+                    <button
+                      key={key}
+                      onClick={() => {
+                        setCurrentFont(key);
+                        setShowFontPicker(false);
+                      }}
+                      className={`w-full p-3 rounded-lg transition hover:scale-102 text-left ${fontItem.class} ${currentFont === key ? 'ring-2 ring-[#606C38] shadow-md' : 'hover:shadow'} ${theme.cardBg}`}
+                    >
+                      <p className="text-sm font-medium">{language === "ru" ? fontItem.nameRu : fontItem.name}</p>
+                      <p className="text-xs mt-1 opacity-70">Aa Бб Вв 123</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
           {/* Переключатель тем */}
           <div className="relative">
             <button
-              onClick={() => setShowThemePicker(prev => !prev)}
+              onClick={() => { setShowThemePicker(prev => !prev); setShowFontPicker(false); }}
               className={`${theme.cardBg} p-2 rounded shadow-sm hover:shadow-md transition`}
               title={t("Выбрать тему", "Choose theme")}
             >
@@ -359,10 +405,10 @@ export default function CookifyDemo() {
       </header>
 
       {/* Закрытие меню при клике вне его */}
-      {showThemePicker && (
+      {(showThemePicker || showFontPicker) && (
         <div 
           className="fixed inset-0 z-40" 
-          onClick={() => setShowThemePicker(false)}
+          onClick={() => { setShowThemePicker(false); setShowFontPicker(false); }}
         />
       )}
 
