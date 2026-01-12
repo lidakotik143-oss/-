@@ -126,17 +126,17 @@ const THEMES = {
   forest: {
     name: "Лесная",
     nameEn: "Forest",
-    bg: "bg-[#709255]",
-    cardBg: "bg-[#95B46A]",
-    text: "text-white",
-    textSecondary: "text-[#F0EAD2]",
-    border: "border-[#3E5622]",
-    input: "bg-[#3E5622] border-[#172815] text-white placeholder-[#95B46A]",
-    headerText: "text-white",
-    accentText: "text-[#F0EAD2]",
-    accent: "bg-[#3E5622]",
-    accentHover: "hover:bg-[#172815]",
-    preview: "bg-gradient-to-br from-[#95B46A] via-[#709255] to-[#3E5622]"
+    bg: "bg-[#172815]",
+    cardBg: "bg-[#3E5622]",
+    text: "text-[#EDEEC9]",
+    textSecondary: "text-[#95B46A]",
+    border: "border-[#709255]",
+    input: "bg-[#3E5622] border-[#709255] text-[#EDEEC9] placeholder-[#95B46A]",
+    headerText: "text-[#95B46A]",
+    accentText: "text-[#83781B]",
+    accent: "bg-[#709255]",
+    accentHover: "hover:bg-[#95B46A]",
+    preview: "bg-gradient-to-br from-[#172815] via-[#3E5622] to-[#709255]"
   }
 };
 
@@ -630,7 +630,7 @@ export default function CookifyDemo() {
           {registered && userData && !showRegisterForm && (
             <div className={`${theme.cardBg} p-6 rounded-xl shadow space-y-4`}>
               <div className="flex items-start gap-4">
-                {userData.avatarURL ? <img src={userData.avatarURL} alt="avatar" className={`w-24 h-24 rounded-full object-cover ${theme.border} border-2`} /> : <div className={`w-24 h-24 rounded-full ${currentTheme === 'forest' ? 'bg-[#3E5622]' : 'bg-[#DDA15E]'} flex items-center justify-center text-white text-2xl font-bold`}>?</div>}
+                {userData.avatarURL ? <img src={userData.avatarURL} alt="avatar" className={`w-24 h-24 rounded-full object-cover ${theme.border} border-2`} /> : <div className={`w-24 h-24 rounded-full ${currentTheme === 'forest' ? 'bg-[#709255]' : 'bg-[#DDA15E]'} flex items-center justify-center text-white text-2xl font-bold`}>?</div>}
                 <div className="flex-1">
                   <div className="flex items-center justify-between">
                     <div>
