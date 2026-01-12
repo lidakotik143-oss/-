@@ -215,7 +215,6 @@ export default function CookifyDemo() {
     diet: "",
     timeRange: "", // short / medium / long
     cuisine: "",
-    special: "",
     difficulty: "",
     tag: ""
   });
@@ -359,13 +358,10 @@ export default function CookifyDemo() {
       matchesFilters = matchesFilters && normalize(r.type) === normalize(selectedFilters.type);
     }
     if (selectedFilters.diet) {
-      matchesFilters = matchesFilters && normalize(r.diet) === normalize(selectedFilters.diet);
+      matchesFilters = matchesFilters && normalize(r.diet).includes(normalize(selectedFilters.diet));
     }
     if (selectedFilters.cuisine) {
       matchesFilters = matchesFilters && normalize(r.cuisine) === normalize(selectedFilters.cuisine);
-    }
-    if (selectedFilters.special) {
-      matchesFilters = matchesFilters && normalize(r.special).includes(normalize(selectedFilters.special));
     }
     if (selectedFilters.difficulty) {
       matchesFilters = matchesFilters && normalize(r.difficulty) === normalize(selectedFilters.difficulty);
@@ -536,6 +532,8 @@ export default function CookifyDemo() {
             <option value="вегетарианское">{t("Вегетарианское", "Vegetarian")}</option>
             <option value="низкокалорийное">{t("Низкокалорийное", "Low calorie")}</option>
             <option value="безглютеновое">{t("Безглютеновое", "Gluten free")}</option>
+            <option value="кето">{t("Кето", "Keto")}</option>
+            <option value="палео">{t("Палео", "Paleo")}</option>
           </select>
 
           {/* Время приготовления */}
@@ -546,20 +544,26 @@ export default function CookifyDemo() {
             <option value="long">{t("свыше 40 мин", "40+ min")}</option>
           </select>
 
-          {/* Кухни мира */}
+          {/* Кухни мира (РАСШИРЕННЫЙ СПИСОК) */}
           <select value={selectedFilters.cuisine} onChange={(e) => setSelectedFilters(prev => ({ ...prev, cuisine: e.target.value }))} className={`${theme.input} p-2 rounded`}>
             <option value="">{t("Кухни мира", "World cuisine")}</option>
             <option value="итальянская">{t("Итальянская", "Italian")}</option>
-            <option value="азиатская">{t("Азиатская", "Asian")}</option>
+            <option value="французская">{t("Французская", "French")}</option>
+            <option value="японская">{t("Японская", "Japanese")}</option>
+            <option value="китайская">{t("Китайская", "Chinese")}</option>
+            <option value="тайская">{t("Тайская", "Thai")}</option>
+            <option value="индийская">{t("Индийская", "Indian")}</option>
+            <option value="мексиканская">{t("Мексиканская", "Mexican")}</option>
+            <option value="грузинская">{t("Грузинская", "Georgian")}</option>
             <option value="русская">{t("Русская", "Russian")}</option>
+            <option value="украинская">{t("Украинская", "Ukrainian")}</option>
             <option value="средиземноморская">{t("Средиземноморская", "Mediterranean")}</option>
-          </select>
-
-          {/* Особые параметры */}
-          <select value={selectedFilters.special} onChange={(e) => setSelectedFilters(prev => ({ ...prev, special: e.target.value }))} className={`${theme.input} p-2 rounded`}>
-            <option value="">{t("Особые параметры", "Special parameters")}</option>
-            <option value="безглютеновое">{t("Безглютеновое", "Gluten-free")}</option>
-            <option value="низкокалорийное">{t("Низкокалорийное", "Low calorie")}</option>
+            <option value="американская">{t("Американская", "American")}</option>
+            <option value="корейская">{t("Корейская", "Korean")}</option>
+            <option value="вьетнамская">{t("Вьетнамская", "Vietnamese")}</option>
+            <option value="греческая">{t("Греческая", "Greek")}</option>
+            <option value="турецкая">{t("Турецкая", "Turkish")}</option>
+            <option value="испанская">{t("Испанская", "Spanish")}</option>
           </select>
 
           {/* Уровень сложности */}
@@ -583,7 +587,7 @@ export default function CookifyDemo() {
         {/* Сброс фильтров */}
         <div className="flex gap-2 justify-end mt-2">
           <button onClick={() => {
-            setSelectedFilters({ type: "", diet: "", timeRange: "", cuisine: "", special: "", difficulty: "", tag: "" });
+            setSelectedFilters({ type: "", diet: "", timeRange: "", cuisine: "", difficulty: "", tag: "" });
             setSearchQuery("");
             setExcludeIngredients("");
           }} className={`px-4 py-2 rounded transition ${theme.accent} ${theme.accentHover} text-white`}>{t("Сбросить фильтры", "Reset filters")}</button>
