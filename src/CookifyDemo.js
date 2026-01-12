@@ -193,6 +193,48 @@ export default function CookifyDemo() {
   });
   const [planPeriod, setPlanPeriod] = useState("day"); // day|week|month
 
+  // ---------- Загрузка из localStorage ----------
+  useEffect(() => {
+    const savedUserData = localStorage.getItem("cookify_user");
+    const savedLanguage = localStorage.getItem("cookify_language");
+    const savedTheme = localStorage.getItem("cookify_theme");
+    const savedFont = localStorage.getItem("cookify_font");
+    const savedFontSize = localStorage.getItem("cookify_fontSize");
+    
+    if (savedUserData) {
+      const parsed = JSON.parse(savedUserData);
+      setUserData(parsed);
+      setRegistered(true);
+    }
+    if (savedLanguage) setLanguage(savedLanguage);
+    if (savedTheme) setCurrentTheme(savedTheme);
+    if (savedFont) setCurrentFont(savedFont);
+    if (savedFontSize) setCurrentFontSize(savedFontSize);
+  }, []);
+
+  // ---------- Сохранение в localStorage ----------
+  useEffect(() => {
+    if (userData) {
+      localStorage.setItem("cookify_user", JSON.stringify(userData));
+    }
+  }, [userData]);
+
+  useEffect(() => {
+    localStorage.setItem("cookify_language", language);
+  }, [language]);
+
+  useEffect(() => {
+    localStorage.setItem("cookify_theme", currentTheme);
+  }, [currentTheme]);
+
+  useEffect(() => {
+    localStorage.setItem("cookify_font", currentFont);
+  }, [currentFont]);
+
+  useEffect(() => {
+    localStorage.setItem("cookify_fontSize", currentFontSize);
+  }, [currentFontSize]);
+
   // Вспомогательные
   const GOALS = language === "ru" ? GOAL_OPTIONS_RU : GOAL_OPTIONS_EN;
   const LIFESTYLE = language === "ru" ? LIFESTYLE_RU : LIFESTYLE_EN;
@@ -240,6 +282,7 @@ export default function CookifyDemo() {
     setShowRegisterForm(false);
     setIsEditingProfile(false);
     setMealPlan({ breakfast: [], lunch: [], snack: [], dinner: [] });
+    localStorage.removeItem("cookify_user");
   };
 
   // ---------- План питания ----------
@@ -341,11 +384,6 @@ export default function CookifyDemo() {
               className={`px-3 py-2 rounded text-sm transition ${activeScreen === "account" ? `${theme.accent} ${theme.accentHover} text-white` : `${theme.cardBg} shadow-sm`}`}
             >{t("Мой аккаунт", "My Account")}</button>
           </nav>
-
-          <select className={`${theme.input} p-1 rounded`} value={language} onChange={e => setLanguage(e.target.value)}>
-            <option value="ru">Русский</option>
-            <option value="en">English</option>
-          </select>
         </div>
       </header>
 
@@ -353,9 +391,27 @@ export default function CookifyDemo() {
       {activeScreen === "home" && (
         <div className="max-w-5xl mx-auto space-y-6">
           <div className={`${theme.cardBg} p-6 rounded-xl shadow`}>
-            <h2 className={`text-xl font-semibold mb-3 ${theme.headerText}`}>
-              {t("Добро пожаловать, ", "Welcome, ")}{userData?.name || t("Пользователь", "User")}!
-            </h2>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className={`text-xl font-semibold ${theme.headerText}`}>
+                {t("Добро пожаловать, ", "Welcome, ")}{userData?.name || t("Пользователь", "User")}!
+              </h2>
+              
+              {/* Переключатель языка на главной */}
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setLanguage("ru")}
+                  className={`px-3 py-1 rounded transition ${language === "ru" ? `${theme.accent} text-white` : `${theme.cardBg} border ${theme.border}`}`}
+                >
+                  🇷🇺 RU
+                </button>
+                <button
+                  onClick={() => setLanguage("en")}
+                  className={`px-3 py-1 rounded transition ${language === "en" ? `${theme.accent} text-white` : `${theme.cardBg} border ${theme.border}`}`}
+                >
+                  🇬🇧 EN
+                </button>
+              </div>
+            </div>
             <p className={`${theme.textSecondary} mb-4`}>{t("Используйте вкладки сверху для перехода по функциям приложения.", "Use the tabs above to navigate app features.")}</p>
           </div>
 
@@ -713,6 +769,25 @@ export default function CookifyDemo() {
                             <p className={`font-medium ${sizeItem.class}`}>{language === "ru" ? sizeItem.name : sizeItem.nameEn}</p>
                           </button>
                         ))}
+                      </div>
+                    </div>
+
+                    {/* Язык */}
+                    <div>
+                      <label className="block text-sm font-medium mb-2">{t("Язык интерфейса", "Interface Language")}</label>
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          onClick={() => setLanguage("ru")}
+                          className={`p-3 rounded-lg transition hover:scale-102 ${theme.cardBg} border ${language === "ru" ? `${theme.border} ring-2 ring-[#606C38]` : 'border-transparent'}`}
+                        >
+                          <p className="font-medium">🇷🇺 Русский</p>
+                        </button>
+                        <button
+                          onClick={() => setLanguage("en")}
+                          className={`p-3 rounded-lg transition hover:scale-102 ${theme.cardBg} border ${language === "en" ? `${theme.border} ring-2 ring-[#606C38]` : 'border-transparent'}`}
+                        >
+                          <p className="font-medium">🇬🇧 English</p>
+                        </button>
                       </div>
                     </div>
                   </div>
