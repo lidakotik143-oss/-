@@ -1,6 +1,6 @@
 // =================== БЛОК 1: Импорты и примерные данные ===================
 import React, { useState, useEffect } from "react";
-import { FaSearch, FaUser, FaClipboardList, FaSun, FaMoon } from "react-icons/fa";
+import { FaSearch, FaUser, FaClipboardList, FaSun, FaMoon, FaPalette } from "react-icons/fa";
 
 /*
   Пример расширенных рецептов (добавлены поля для фильтров):
@@ -76,12 +76,73 @@ const LIFESTYLE_EN = ["Sedentary", "Moderately active", "Active"];
 const MEAL_CATEGORIES = ["breakfast", "lunch", "snack", "dinner"];
 const MEAL_LABELS_RU = { breakfast: "Завтрак", lunch: "Обед", snack: "Перекус", dinner: "Ужин" };
 
+// Цветовые темы
+const THEMES = {
+  light: {
+    name: "Светлая",
+    nameEn: "Light",
+    bg: "bg-[#f8f3eb]",
+    cardBg: "bg-white",
+    text: "text-gray-900",
+    textSecondary: "text-gray-600",
+    border: "border-gray-200",
+    input: "bg-white border-gray-300",
+    headerText: "text-blue-800",
+    accentText: "text-[#2a8c82]",
+    accent: "bg-green-500",
+    preview: "bg-gradient-to-br from-[#f8f3eb] to-white"
+  },
+  lightGreen: {
+    name: "Светло-зеленая",
+    nameEn: "Light Green",
+    bg: "bg-gradient-to-br from-green-50 to-emerald-50",
+    cardBg: "bg-white",
+    text: "text-gray-900",
+    textSecondary: "text-gray-600",
+    border: "border-green-200",
+    input: "bg-white border-green-300",
+    headerText: "text-green-800",
+    accentText: "text-green-700",
+    accent: "bg-green-600",
+    preview: "bg-gradient-to-br from-green-100 to-emerald-100"
+  },
+  green: {
+    name: "Зеленая",
+    nameEn: "Green",
+    bg: "bg-gradient-to-br from-green-600 to-green-700",
+    cardBg: "bg-green-500",
+    text: "text-white",
+    textSecondary: "text-green-100",
+    border: "border-green-400",
+    input: "bg-green-600 border-green-500 text-white placeholder-green-200",
+    headerText: "text-white",
+    accentText: "text-green-100",
+    accent: "bg-green-700",
+    preview: "bg-gradient-to-br from-green-500 to-green-600"
+  },
+  darkGreen: {
+    name: "Темно-зеленая",
+    nameEn: "Dark Green",
+    bg: "bg-gradient-to-br from-gray-900 to-gray-800",
+    cardBg: "bg-green-700",
+    text: "text-white",
+    textSecondary: "text-gray-300",
+    border: "border-green-600",
+    input: "bg-gray-800 border-gray-700 text-white placeholder-gray-400",
+    headerText: "text-green-400",
+    accentText: "text-green-400",
+    accent: "bg-green-600",
+    preview: "bg-gradient-to-br from-gray-800 to-green-900"
+  }
+};
+
 // =================== БЛОК 2: Компонент приложения ===================
 export default function CookifyDemo() {
   // ---------- Стейты ----------
   const [activeScreen, setActiveScreen] = useState("home"); // home, search, account
   const [language, setLanguage] = useState("ru");
-  const [darkMode, setDarkMode] = useState(false); // Новый стейт для темы
+  const [currentTheme, setCurrentTheme] = useState("light"); // Текущая тема
+  const [showThemePicker, setShowThemePicker] = useState(false); // Показ выбора тем
   const [showRegisterForm, setShowRegisterForm] = useState(false);
   const [registered, setRegistered] = useState(false);
   const [userData, setUserData] = useState(null); // объект профиля
@@ -117,17 +178,8 @@ export default function CookifyDemo() {
   const GOALS = language === "ru" ? GOAL_OPTIONS_RU : GOAL_OPTIONS_EN;
   const LIFESTYLE = language === "ru" ? LIFESTYLE_RU : LIFESTYLE_EN;
 
-  // ---------- Тема (цветовая схема) ----------
-  const theme = {
-    bg: darkMode ? "bg-gray-900" : "bg-[#f8f3eb]",
-    cardBg: darkMode ? "bg-gray-800" : "bg-white",
-    text: darkMode ? "text-gray-100" : "text-gray-900",
-    textSecondary: darkMode ? "text-gray-400" : "text-gray-600",
-    border: darkMode ? "border-gray-700" : "border-gray-200",
-    input: darkMode ? "bg-gray-700 border-gray-600 text-white" : "bg-white border-gray-300",
-    headerText: darkMode ? "text-blue-400" : "text-blue-800",
-    accentText: darkMode ? "text-teal-400" : "text-[#2a8c82]"
-  };
+  // ---------- Текущая тема ----------
+  const theme = THEMES[currentTheme];
 
   // ---------- Обработчики профиля ----------
   const handleAvatarUpload = (e) => {
@@ -236,7 +288,7 @@ export default function CookifyDemo() {
 
   // =================== БЛОК 3: JSX (UI) ===================
   return (
-    <div className={`min-h-screen ${theme.bg} ${theme.text} p-6 font-sans transition-colors duration-300`}>
+    <div className={`min-h-screen ${theme.bg} ${theme.text} p-6 font-sans transition-all duration-500`}>
       {/* ------------------ БЛОК 3.1: Хедер ------------------ */}
       <header className="max-w-6xl mx-auto flex items-center justify-between mb-6">
         <div>
@@ -248,17 +300,17 @@ export default function CookifyDemo() {
           <nav className="flex gap-3">
             <button
               onClick={() => setActiveScreen("home")}
-              className={`px-3 py-2 rounded text-sm ${activeScreen === "home" ? "bg-green-500 text-white" : `${theme.cardBg} shadow-sm text-blue-700`}`}
+              className={`px-3 py-2 rounded text-sm transition ${activeScreen === "home" ? `${theme.accent} text-white` : `${theme.cardBg} shadow-sm`}`}
             >{t("Главная", "Home")}</button>
 
             <button
               onClick={() => setActiveScreen("search")}
-              className={`px-3 py-2 rounded text-sm ${activeScreen === "search" ? "bg-green-500 text-white" : `${theme.cardBg} shadow-sm text-blue-700`}`}
+              className={`px-3 py-2 rounded text-sm transition ${activeScreen === "search" ? `${theme.accent} text-white` : `${theme.cardBg} shadow-sm`}`}
             >{t("Поиск", "Search")}</button>
 
             <button
               onClick={() => setActiveScreen("account")}
-              className={`px-3 py-2 rounded text-sm ${activeScreen === "account" ? "bg-green-500 text-white" : `${theme.cardBg} shadow-sm text-blue-700`}`}
+              className={`px-3 py-2 rounded text-sm transition ${activeScreen === "account" ? `${theme.accent} text-white` : `${theme.cardBg} shadow-sm`}`}
             >{t("Мой аккаунт", "My Account")}</button>
           </nav>
 
@@ -267,16 +319,48 @@ export default function CookifyDemo() {
             <option value="en">English</option>
           </select>
           
-          {/* Переключатель темы */}
-          <button
-            onClick={() => setDarkMode(prev => !prev)}
-            className={`${theme.cardBg} p-2 rounded shadow-sm hover:shadow-md transition`}
-            title={darkMode ? t("Светлая тема", "Light mode") : t("Темная тема", "Dark mode")}
-          >
-            {darkMode ? <FaSun className="text-yellow-400 w-5 h-5" /> : <FaMoon className="text-gray-600 w-5 h-5" />}
-          </button>
+          {/* Переключатель тем */}
+          <div className="relative">
+            <button
+              onClick={() => setShowThemePicker(prev => !prev)}
+              className={`${theme.cardBg} p-2 rounded shadow-sm hover:shadow-md transition`}
+              title={t("Выбрать тему", "Choose theme")}
+            >
+              <FaPalette className={`${theme.accentText} w-5 h-5`} />
+            </button>
+
+            {/* Меню выбора тем */}
+            {showThemePicker && (
+              <div className={`absolute right-0 mt-2 ${theme.cardBg} rounded-xl shadow-2xl p-4 w-64 z-50 border ${theme.border}`}>
+                <h3 className="font-semibold mb-3 text-center">{t("Выберите тему", "Choose theme")}</h3>
+                <div className="grid grid-cols-2 gap-3">
+                  {Object.entries(THEMES).map(([key, themeItem]) => (
+                    <button
+                      key={key}
+                      onClick={() => {
+                        setCurrentTheme(key);
+                        setShowThemePicker(false);
+                      }}
+                      className={`p-3 rounded-xl transition hover:scale-105 ${currentTheme === key ? 'ring-2 ring-green-500 shadow-lg' : 'hover:shadow-md'}`}
+                    >
+                      <div className={`${themeItem.preview} h-16 rounded-lg mb-2`}></div>
+                      <p className="text-xs font-medium text-center">{language === "ru" ? themeItem.name : themeItem.nameEn}</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </header>
+
+      {/* Закрытие меню при клике вне его */}
+      {showThemePicker && (
+        <div 
+          className="fixed inset-0 z-40" 
+          onClick={() => setShowThemePicker(false)}
+        />
+      )}
 
       {/* ------------------ БЛОК 3.2: Главная с подсказками ------------------ */}
       {activeScreen === "home" && (
@@ -293,10 +377,10 @@ export default function CookifyDemo() {
               { title: t("Поиск рецептов", "Recipe Search"), content: t("Введите ингредиенты или используйте фильтры.", "Enter ingredients or use filters."), screen: "search" },
               { title: t("Мой аккаунт", "My Account"), content: t("Настройте профиль и добавьте план питания.", "Set up profile and add meal plan."), screen: "account" },
             ].map((tip, idx) => (
-              <div key={idx} onClick={() => setActiveScreen(tip.screen)} className={`${theme.cardBg} p-4 rounded shadow border-l-4 border-green-500 cursor-pointer flex items-start gap-3 hover:shadow-lg transition`}>
-                <FaSearch className="text-blue-600 w-6 h-6" />
+              <div key={idx} onClick={() => setActiveScreen(tip.screen)} className={`${theme.cardBg} p-4 rounded shadow border-l-4 ${theme.border} cursor-pointer flex items-start gap-3 hover:shadow-lg transition`}>
+                <FaSearch className={`${theme.accentText} w-6 h-6`} />
                 <div>
-                  <h4 className="font-semibold text-blue-700">{tip.title}</h4>
+                  <h4 className={`font-semibold ${theme.headerText}`}>{tip.title}</h4>
                   <p className={`${theme.textSecondary} text-sm mt-1`}>{tip.content}</p>
                 </div>
               </div>
@@ -325,14 +409,14 @@ export default function CookifyDemo() {
       <div className="flex gap-2">
         <button
           onClick={() => setSearchMode(prev => prev === "name" ? "ingredients" : "name")}
-          className={`px-4 py-2 rounded-xl text-white ${searchMode === "name" ? "bg-green-500 hover:bg-green-600" : "bg-blue-500 hover:bg-blue-600"}`}
+          className={`px-4 py-2 rounded-xl text-white transition ${searchMode === "name" ? "bg-green-500 hover:bg-green-600" : "bg-blue-500 hover:bg-blue-600"}`}
         >
           {searchMode === "name" ? t("По ингредиентам", "By ingredients") : t("По названию", "By name")}
         </button>
 
         <button
           onClick={() => setShowFilters(prev => !prev)}
-          className="px-4 py-2 rounded-xl bg-green-100 text-green-800 hover:bg-green-200"
+          className="px-4 py-2 rounded-xl bg-green-100 text-green-800 hover:bg-green-200 transition"
         >
           {showFilters ? t("Скрыть фильтры", "Hide filters") : t("Показать фильтры", "Show filters")}
         </button>
@@ -423,7 +507,7 @@ export default function CookifyDemo() {
             setSelectedFilters({ type: "", diet: "", timeRange: "", cuisine: "", special: "", difficulty: "", tag: "" });
             setSearchQuery("");
             setExcludeIngredients("");
-          }} className="px-4 py-2 bg-green-100 text-green-800 rounded">{t("Сбросить фильтры", "Reset filters")}</button>
+          }} className="px-4 py-2 bg-green-100 text-green-800 rounded hover:bg-green-200 transition">{t("Сбросить фильтры", "Reset filters")}</button>
         </div>
       </div>
     )}
@@ -475,7 +559,7 @@ export default function CookifyDemo() {
           {!registered && !showRegisterForm && (
             <div className="text-center">
               <p className="mb-4">{t("Зарегистрируйтесь, чтобы заполнить анкету и управлять планом питания.", "Register to fill your profile and manage meal plan.")}</p>
-              <button onClick={() => setShowRegisterForm(true)} className="bg-[#2a8c82] text-white px-6 py-2 rounded">{t("Создать аккаунт", "Create account")}</button>
+              <button onClick={() => setShowRegisterForm(true)} className={`${theme.accent} text-white px-6 py-2 rounded`}>{t("Создать аккаунт", "Create account")}</button>
             </div>
           )}
 
@@ -532,7 +616,7 @@ export default function CookifyDemo() {
               </div>
 
               <div className="flex gap-2">
-                <button type="submit" className="bg-[#2a8c82] text-white px-4 py-2 rounded">{t("Сохранить", "Save")}</button>
+                <button type="submit" className={`${theme.accent} text-white px-4 py-2 rounded`}>{t("Сохранить", "Save")}</button>
                 {registered && <button type="button" onClick={() => { setShowRegisterForm(false); setIsEditingProfile(false); }} className={`px-4 py-2 ${theme.border} border rounded`}>{t("Отмена", "Cancel")}</button>}
               </div>
             </form>
@@ -542,7 +626,7 @@ export default function CookifyDemo() {
           {registered && userData && !showRegisterForm && (
             <div className={`${theme.cardBg} p-6 rounded-xl shadow space-y-4`}>
               <div className="flex items-start gap-4">
-                {userData.avatarURL ? <img src={userData.avatarURL} alt="avatar" className={`w-24 h-24 rounded-full object-cover ${theme.border} border`} /> : <div className={`w-24 h-24 rounded-full bg-gray-100 flex items-center justify-center ${darkMode ? 'bg-gray-700' : ''}`}>?</div>}
+                {userData.avatarURL ? <img src={userData.avatarURL} alt="avatar" className={`w-24 h-24 rounded-full object-cover ${theme.border} border`} /> : <div className={`w-24 h-24 rounded-full bg-gray-${currentTheme === 'light' || currentTheme === 'lightGreen' ? '100' : '700'} flex items-center justify-center`}>?</div>}
                 <div className="flex-1">
                   <div className="flex items-center justify-between">
                     <div>
