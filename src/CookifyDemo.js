@@ -1,6 +1,6 @@
 // =================== БЛОК 1: Импорты и примерные данные ===================
 import React, { useState, useEffect } from "react";
-import { FaSearch, FaUser, FaClipboardList, FaSun, FaMoon, FaPalette, FaFont, FaChevronDown, FaChevronUp } from "react-icons/fa";
+import { FaSearch, FaUser, FaClipboardList, FaSun, FaMoon, FaPalette, FaFont, FaChevronDown, FaChevronUp, FaTimes } from "react-icons/fa";
 
 /*
   Пример расширенных рецептов (добавлены поля для фильтров):
@@ -11,6 +11,7 @@ import { FaSearch, FaUser, FaClipboardList, FaSun, FaMoon, FaPalette, FaFont, Fa
   - special: особые параметры (например "безглютеновое")
   - difficulty: уровень сложности
   - tags: популярные теги
+  - instructions: инструкции приготовления (массив шагов)
 */
 const SAMPLE_RECIPES = [
   {
@@ -24,7 +25,15 @@ const SAMPLE_RECIPES = [
     special: "",
     difficulty: "средний",
     tags: ["низкокалорийное", "популярное"],
-    ingredients: ["курица", "помидоры", "базилик", "оливковое масло", "чеснок"]
+    ingredients: ["курица", "помидоры", "базилик", "оливковое масло", "чеснок"],
+    instructions: [
+      "Разогрейте оливковое масло на сковороде",
+      "Обжарьте нарезанную курицу до золотистой корочки (7-10 минут)",
+      "Добавьте нарезанные помидоры и измельченный чеснок",
+      "Тушите на среднем огне 15 минут",
+      "Добавьте свежий базилик за 2 минуты до готовности",
+      "Посолите и поперчите по вкусу"
+    ]
   },
   {
     id: 2,
@@ -37,7 +46,15 @@ const SAMPLE_RECIPES = [
     special: "низкокалорийное",
     difficulty: "легкий",
     tags: ["веган", "быстро"],
-    ingredients: ["овсянка", "вода", "ягоды", "мёд"]
+    ingredients: ["овсянка", "вода", "ягоды", "мёд"],
+    instructions: [
+      "Измельчите овсянку в блендере до состояния муки",
+      "Смешайте 3 ст.л. овсяной муки с 100 мл воды до однородности",
+      "Разогрейте антипригарную сковороду",
+      "Вылейте тесто и жарьте 3-4 минуты с каждой стороны",
+      "Выложите на тарелку, добавьте свежие ягоды",
+      "Полейте мёдом по желанию"
+    ]
   },
   {
     id: 3,
@@ -50,7 +67,15 @@ const SAMPLE_RECIPES = [
     special: "",
     difficulty: "средний",
     tags: ["вегетарианское"],
-    ingredients: ["паста", "грибы", "сливки", "пармезан"]
+    ingredients: ["паста", "грибы", "сливки", "пармезан"],
+    instructions: [
+      "Отварите пасту в подсоленной воде согласно инструкции на упаковке",
+      "Нарежьте грибы тонкими пластинками",
+      "Обжарьте грибы на растительном масле до золотистого цвета",
+      "Добавьте сливки и тушите 5 минут",
+      "Смешайте готовую пасту с грибным соусом",
+      "Посыпьте тертым пармезаном перед подачей"
+    ]
   },
   {
     id: 4,
@@ -63,7 +88,15 @@ const SAMPLE_RECIPES = [
     special: "безглютеновое",
     difficulty: "легкий",
     tags: ["свежо", "летнее"],
-    ingredients: ["авокадо", "помидоры", "листья салата", "оливковое масло"]
+    ingredients: ["авокадо", "помидоры", "листья салата", "оливковое масло"],
+    instructions: [
+      "Нарежьте авокадо кубиками",
+      "Нарежьте помидоры дольками",
+      "Промойте и обсушите листья салата",
+      "Выложите все ингредиенты в миску",
+      "Заправьте оливковым маслом и лимонным соком",
+      "Посолите и поперчите по вкусу"
+    ]
   }
 ];
 
@@ -166,6 +199,9 @@ export default function CookifyDemo() {
   const [registered, setRegistered] = useState(false);
   const [userData, setUserData] = useState(null); // объект профиля
   const [isEditingProfile, setIsEditingProfile] = useState(false);
+
+  // Модальное окно рецепта
+  const [selectedRecipe, setSelectedRecipe] = useState(null);
 
   // Поиск
   const [searchMode, setSearchMode] = useState("name"); // name | ingredients
@@ -563,7 +599,11 @@ export default function CookifyDemo() {
       ) : (
         <div className="grid gap-3">
           {filteredResults.map(r => (
-            <div key={r.id} className={`p-4 ${theme.border} border rounded-lg`}>
+            <div 
+              key={r.id} 
+              onClick={() => setSelectedRecipe(r)}
+              className={`p-4 ${theme.border} border rounded-lg cursor-pointer hover:shadow-lg transition`}
+            >
               <div>
                 <h3 className="text-lg font-bold">{r.title}</h3>
                 <div className={`text-sm ${theme.textSecondary} mt-1`}>{r.time} {t("мин", "min")} • {r.calories} {t("ккал", "kcal")}</div>
@@ -592,6 +632,54 @@ export default function CookifyDemo() {
     </div>
   </div>
 )}
+
+      {/* ------------------ МОДАЛЬНОЕ ОКНО РЕЦЕПТА ------------------ */}
+      {selectedRecipe && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" onClick={() => setSelectedRecipe(null)}>
+          <div className={`${theme.cardBg} rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6`} onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-start justify-between mb-4">
+              <h2 className={`text-2xl font-bold ${theme.headerText}`}>{selectedRecipe.title}</h2>
+              <button onClick={() => setSelectedRecipe(null)} className={`${theme.textSecondary} hover:${theme.text} transition`}>
+                <FaTimes size={24} />
+              </button>
+            </div>
+
+            <div className={`${theme.textSecondary} mb-4`}>
+              {selectedRecipe.time} {t("мин", "min")} • {selectedRecipe.calories} {t("ккал", "kcal")} • {t("Сложность:", "Difficulty:")} {selectedRecipe.difficulty}
+            </div>
+
+            <div className="mb-6">
+              <h3 className={`text-lg font-semibold mb-2 ${theme.headerText}`}>{t("Ингредиенты:", "Ingredients:")}</h3>
+              <ul className="list-disc list-inside space-y-1">
+                {selectedRecipe.ingredients.map((ing, i) => {
+                  const low = ing.toLowerCase();
+                  const isAllergy = allergyList.some(a => a && low.includes(a));
+                  const cls = isAllergy ? "text-red-600 font-semibold" : "";
+                  return <li key={i} className={cls}>{ing}</li>;
+                })}
+              </ul>
+            </div>
+
+            <div>
+              <h3 className={`text-lg font-semibold mb-3 ${theme.headerText}`}>{t("Как готовить:", "How to cook:")}</h3>
+              <ol className="space-y-3">
+                {selectedRecipe.instructions.map((step, i) => (
+                  <li key={i} className="flex gap-3">
+                    <span className={`${theme.accent} text-white rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0 text-sm font-bold`}>{i + 1}</span>
+                    <span>{step}</span>
+                  </li>
+                ))}
+              </ol>
+            </div>
+
+            <div className="mt-6 flex gap-2 flex-wrap">
+              {(selectedRecipe.tags || []).map((tag, i) => (
+                <span key={i} className={`px-3 py-1 ${theme.accent} text-white rounded-full text-sm`}>{tag}</span>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ------------------ БЛОК 3.4: Аккаунт / Профиль ------------------ */}
       {activeScreen === "account" && (
