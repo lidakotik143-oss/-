@@ -1,6 +1,6 @@
 // =================== БЛОК 1: Импорты и примерные данные ===================
 import React, { useState, useEffect } from "react";
-import { FaSearch, FaUser, FaClipboardList, FaSun, FaMoon, FaPalette, FaFont } from "react-icons/fa";
+import { FaSearch, FaUser, FaClipboardList, FaSun, FaMoon, FaPalette, FaFont, FaChevronDown, FaChevronUp } from "react-icons/fa";
 
 /*
   Пример расширенных рецептов (добавлены поля для фильтров):
@@ -82,6 +82,13 @@ const FONTS = {
   roboto: { name: "Roboto", nameRu: "Roboto", class: "font-['Roboto']" }
 };
 
+// Размеры шрифта
+const FONT_SIZES = {
+  small: { name: "Обычный", nameEn: "Normal", class: "text-base" },
+  medium: { name: "Увеличенный", nameEn: "Large", class: "text-lg" },
+  large: { name: "Крупный", nameEn: "Extra Large", class: "text-xl" }
+};
+
 // Цветовые темы на основе природных палитр
 const THEMES = {
   olive: {
@@ -153,6 +160,8 @@ export default function CookifyDemo() {
   const [language, setLanguage] = useState("ru");
   const [currentTheme, setCurrentTheme] = useState("olive"); // Текущая тема
   const [currentFont, setCurrentFont] = useState("inter"); // Текущий шрифт
+  const [currentFontSize, setCurrentFontSize] = useState("small"); // Размер шрифта
+  const [showCustomization, setShowCustomization] = useState(false); // Показ секции кастомизации
   const [showRegisterForm, setShowRegisterForm] = useState(false);
   const [registered, setRegistered] = useState(false);
   const [userData, setUserData] = useState(null); // объект профиля
@@ -191,13 +200,17 @@ export default function CookifyDemo() {
   // ---------- Текущая тема ----------
   const theme = THEMES[currentTheme];
   const font = FONTS[currentFont];
+  const fontSize = FONT_SIZES[currentFontSize];
 
   // ---------- Обработчики профиля ----------
   const handleAvatarUpload = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const avatarURL = URL.createObjectURL(file);
-    setUserData(prev => ({ ...prev, avatarURL }));
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setUserData(prev => ({ ...prev, avatarURL: reader.result }));
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleRegister = (e) => {
@@ -206,6 +219,10 @@ export default function CookifyDemo() {
     const data = Object.fromEntries(form.entries());
     // Нормализуем пустые строки в undefined
     Object.keys(data).forEach(k => { if (data[k] === "") data[k] = ""; });
+    // Сохраняем аватар если был
+    if (userData?.avatarURL) {
+      data.avatarURL = userData.avatarURL;
+    }
     setUserData(data);
     setRegistered(true);
     setShowRegisterForm(false);
@@ -299,7 +316,7 @@ export default function CookifyDemo() {
 
   // =================== БЛОК 3: JSX (UI) ===================
   return (
-    <div className={`min-h-screen ${theme.bg} ${theme.text} ${font.class} p-6 transition-all duration-500`}>
+    <div className={`min-h-screen ${theme.bg} ${theme.text} ${font.class} ${fontSize.class} p-6 transition-all duration-500`}>
       {/* ------------------ БЛОК 3.1: Хедер ------------------ */}
       <header className="max-w-6xl mx-auto flex items-center justify-between mb-6">
         <div>
@@ -637,45 +654,69 @@ export default function CookifyDemo() {
                 </div>
               </div>
 
-              {/* КАСТОМИЗАЦИЯ АККАУНТА */}
+              {/* КАСТОМИЗАЦИЯ АККАУНТА (складная секция) */}
               <div className={`${theme.cardBg} p-4 rounded-xl border ${theme.border}`}>
-                <h4 className="font-semibold mb-3">{t("🎨 Кастомизация аккаунта", "🎨 Account Customization")}</h4>
+                <button 
+                  onClick={() => setShowCustomization(!showCustomization)}
+                  className="w-full flex items-center justify-between font-semibold mb-3"
+                >
+                  <span>{t("Кастомизация аккаунта", "Account Customization")}</span>
+                  {showCustomization ? <FaChevronUp /> : <FaChevronDown />}
+                </button>
                 
-                <div className="space-y-4">
-                  {/* Выбор темы */}
-                  <div>
-                    <label className="block text-sm font-medium mb-2">{t("Цветовая тема", "Color Theme")}</label>
-                    <div className="grid grid-cols-2 gap-2">
-                      {Object.entries(THEMES).map(([key, themeItem]) => (
-                        <button
-                          key={key}
-                          onClick={() => setCurrentTheme(key)}
-                          className={`p-3 rounded-lg transition hover:scale-102 ${currentTheme === key ? 'ring-2 ring-[#606C38] shadow-md' : 'hover:shadow'}`}
-                        >
-                          <div className={`${themeItem.preview} h-12 rounded-md mb-2 shadow-inner`}></div>
-                          <p className="text-xs font-medium text-center">{language === "ru" ? themeItem.name : themeItem.nameEn}</p>
-                        </button>
-                      ))}
+                {showCustomization && (
+                  <div className="space-y-4 mt-4">
+                    {/* Выбор темы */}
+                    <div>
+                      <label className="block text-sm font-medium mb-2">{t("Цветовая тема", "Color Theme")}</label>
+                      <div className="grid grid-cols-2 gap-2">
+                        {Object.entries(THEMES).map(([key, themeItem]) => (
+                          <button
+                            key={key}
+                            onClick={() => setCurrentTheme(key)}
+                            className={`p-3 rounded-lg transition hover:scale-102 ${currentTheme === key ? 'ring-2 ring-[#606C38] shadow-md' : 'hover:shadow'}`}
+                          >
+                            <div className={`${themeItem.preview} h-12 rounded-md mb-2 shadow-inner`}></div>
+                            <p className="text-xs font-medium text-center">{language === "ru" ? themeItem.name : themeItem.nameEn}</p>
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                  </div>
 
-                  {/* Выбор шрифта */}
-                  <div>
-                    <label className="block text-sm font-medium mb-2">{t("Шрифт", "Font")}</label>
-                    <div className="grid grid-cols-2 gap-2">
-                      {Object.entries(FONTS).map(([key, fontItem]) => (
-                        <button
-                          key={key}
-                          onClick={() => setCurrentFont(key)}
-                          className={`p-3 rounded-lg transition hover:scale-102 text-left ${fontItem.class} ${currentTheme === key ? 'ring-2 ring-[#606C38] shadow-md' : 'hover:shadow'} ${theme.cardBg} border ${currentFont === key ? theme.border : 'border-transparent'}`}
-                        >
-                          <p className="text-sm font-medium">{language === "ru" ? fontItem.nameRu : fontItem.name}</p>
-                          <p className="text-xs mt-1 opacity-70">Aa Бб Вв 123</p>
-                        </button>
-                      ))}
+                    {/* Выбор шрифта */}
+                    <div>
+                      <label className="block text-sm font-medium mb-2">{t("Шрифт", "Font")}</label>
+                      <div className="grid grid-cols-2 gap-2">
+                        {Object.entries(FONTS).map(([key, fontItem]) => (
+                          <button
+                            key={key}
+                            onClick={() => setCurrentFont(key)}
+                            className={`p-3 rounded-lg transition hover:scale-102 text-left ${fontItem.class} ${theme.cardBg} border ${currentFont === key ? `${theme.border} ring-2 ring-[#606C38]` : 'border-transparent'}`}
+                          >
+                            <p className="text-sm font-medium">{language === "ru" ? fontItem.nameRu : fontItem.name}</p>
+                            <p className="text-xs mt-1 opacity-70">Aa Бб Вв 123</p>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Размер шрифта */}
+                    <div>
+                      <label className="block text-sm font-medium mb-2">{t("Размер шрифта", "Font Size")}</label>
+                      <div className="grid grid-cols-3 gap-2">
+                        {Object.entries(FONT_SIZES).map(([key, sizeItem]) => (
+                          <button
+                            key={key}
+                            onClick={() => setCurrentFontSize(key)}
+                            className={`p-3 rounded-lg transition hover:scale-102 ${theme.cardBg} border ${currentFontSize === key ? `${theme.border} ring-2 ring-[#606C38]` : 'border-transparent'}`}
+                          >
+                            <p className={`font-medium ${sizeItem.class}`}>{language === "ru" ? sizeItem.name : sizeItem.nameEn}</p>
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
               </div>
             </div>
           )}
