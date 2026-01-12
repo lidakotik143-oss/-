@@ -116,11 +116,11 @@ const THEMES = {
     text: "text-[#6C584C]",
     textSecondary: "text-[#A98467]",
     border: "border-[#A98467]",
-    input: "bg-white border-[#DDE5B6] text-[#6C584C] placeholder-[#A98467]",
+    input: "bg-[#F0EAD2] border-[#DDE5B6] text-[#6C584C] placeholder-[#A98467]",
     headerText: "text-[#6C584C]",
     accentText: "text-[#A98467]",
-    accent: "bg-[#DDE5B6]",
-    accentHover: "hover:bg-[#A98467]",
+    accent: "bg-[#A98467]",
+    accentHover: "hover:bg-[#6C584C]",
     preview: "bg-gradient-to-br from-[#F0EAD2] via-[#DDE5B6] to-[#A98467]"
   },
   forest: {
