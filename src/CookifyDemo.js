@@ -76,14 +76,10 @@ const LIFESTYLE_EN = ["Sedentary", "Moderately active", "Active"];
 const MEAL_CATEGORIES = ["breakfast", "lunch", "snack", "dinner"];
 const MEAL_LABELS_RU = { breakfast: "Завтрак", lunch: "Обед", snack: "Перекус", dinner: "Ужин" };
 
-// Доступные шрифты
+// Доступные шрифты (только работающие)
 const FONTS = {
   inter: { name: "Inter", nameRu: "Inter", class: "font-sans" },
-  roboto: { name: "Roboto", nameRu: "Roboto", class: "font-['Roboto']" },
-  openSans: { name: "Open Sans", nameRu: "Open Sans", class: "font-['Open_Sans']" },
-  lora: { name: "Lora", nameRu: "Lora", class: "font-['Lora']" },
-  playfair: { name: "Playfair Display", nameRu: "Playfair Display", class: "font-['Playfair_Display']" },
-  montserrat: { name: "Montserrat", nameRu: "Montserrat", class: "font-['Montserrat']" }
+  roboto: { name: "Roboto", nameRu: "Roboto", class: "font-['Roboto']" }
 };
 
 // Цветовые темы на основе природных палитр
@@ -157,8 +153,6 @@ export default function CookifyDemo() {
   const [language, setLanguage] = useState("ru");
   const [currentTheme, setCurrentTheme] = useState("olive"); // Текущая тема
   const [currentFont, setCurrentFont] = useState("inter"); // Текущий шрифт
-  const [showThemePicker, setShowThemePicker] = useState(false); // Показ выбора тем
-  const [showFontPicker, setShowFontPicker] = useState(false); // Показ выбора шрифтов
   const [showRegisterForm, setShowRegisterForm] = useState(false);
   const [registered, setRegistered] = useState(false);
   const [userData, setUserData] = useState(null); // объект профиля
@@ -335,82 +329,8 @@ export default function CookifyDemo() {
             <option value="ru">Русский</option>
             <option value="en">English</option>
           </select>
-          
-          {/* Переключатель шрифтов */}
-          <div className="relative">
-            <button
-              onClick={() => { setShowFontPicker(prev => !prev); setShowThemePicker(false); }}
-              className={`${theme.cardBg} p-2 rounded shadow-sm hover:shadow-md transition`}
-              title={t("Выбрать шрифт", "Choose font")}
-            >
-              <FaFont className={`${theme.accentText} w-5 h-5`} />
-            </button>
-
-            {/* Меню выбора шрифтов */}
-            {showFontPicker && (
-              <div className={`absolute right-0 mt-2 ${theme.cardBg} rounded-xl shadow-2xl p-4 w-56 z-50 border ${theme.border}`}>
-                <h3 className="font-semibold mb-3 text-center">{t("Выберите шрифт", "Choose font")}</h3>
-                <div className="space-y-2">
-                  {Object.entries(FONTS).map(([key, fontItem]) => (
-                    <button
-                      key={key}
-                      onClick={() => {
-                        setCurrentFont(key);
-                        setShowFontPicker(false);
-                      }}
-                      className={`w-full p-3 rounded-lg transition hover:scale-102 text-left ${fontItem.class} ${currentFont === key ? 'ring-2 ring-[#606C38] shadow-md' : 'hover:shadow'} ${theme.cardBg}`}
-                    >
-                      <p className="text-sm font-medium">{language === "ru" ? fontItem.nameRu : fontItem.name}</p>
-                      <p className="text-xs mt-1 opacity-70">Aa Бб Вв 123</p>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Переключатель тем */}
-          <div className="relative">
-            <button
-              onClick={() => { setShowThemePicker(prev => !prev); setShowFontPicker(false); }}
-              className={`${theme.cardBg} p-2 rounded shadow-sm hover:shadow-md transition`}
-              title={t("Выбрать тему", "Choose theme")}
-            >
-              <FaPalette className={`${theme.accentText} w-5 h-5`} />
-            </button>
-
-            {/* Меню выбора тем */}
-            {showThemePicker && (
-              <div className={`absolute right-0 mt-2 ${theme.cardBg} rounded-xl shadow-2xl p-4 w-64 z-50 border ${theme.border}`}>
-                <h3 className="font-semibold mb-3 text-center">{t("Выберите тему", "Choose theme")}</h3>
-                <div className="grid grid-cols-2 gap-3">
-                  {Object.entries(THEMES).map(([key, themeItem]) => (
-                    <button
-                      key={key}
-                      onClick={() => {
-                        setCurrentTheme(key);
-                        setShowThemePicker(false);
-                      }}
-                      className={`p-3 rounded-xl transition hover:scale-105 ${currentTheme === key ? 'ring-2 ring-offset-2 ring-[#606C38] shadow-lg' : 'hover:shadow-md'}`}
-                    >
-                      <div className={`${themeItem.preview} h-16 rounded-lg mb-2 shadow-inner`}></div>
-                      <p className="text-xs font-medium text-center">{language === "ru" ? themeItem.name : themeItem.nameEn}</p>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
         </div>
       </header>
-
-      {/* Закрытие меню при клике вне его */}
-      {(showThemePicker || showFontPicker) && (
-        <div 
-          className="fixed inset-0 z-40" 
-          onClick={() => { setShowThemePicker(false); setShowFontPicker(false); }}
-        />
-      )}
 
       {/* ------------------ БЛОК 3.2: Главная с подсказками ------------------ */}
       {activeScreen === "home" && (
@@ -714,6 +634,47 @@ export default function CookifyDemo() {
                         mealPlan[cat].map(m => <div key={m.id} className="text-sm">{m.title}</div>)}
                     </div>
                   ))}
+                </div>
+              </div>
+
+              {/* КАСТОМИЗАЦИЯ АККАУНТА */}
+              <div className={`${theme.cardBg} p-4 rounded-xl border ${theme.border}`}>
+                <h4 className="font-semibold mb-3">{t("🎨 Кастомизация аккаунта", "🎨 Account Customization")}</h4>
+                
+                <div className="space-y-4">
+                  {/* Выбор темы */}
+                  <div>
+                    <label className="block text-sm font-medium mb-2">{t("Цветовая тема", "Color Theme")}</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {Object.entries(THEMES).map(([key, themeItem]) => (
+                        <button
+                          key={key}
+                          onClick={() => setCurrentTheme(key)}
+                          className={`p-3 rounded-lg transition hover:scale-102 ${currentTheme === key ? 'ring-2 ring-[#606C38] shadow-md' : 'hover:shadow'}`}
+                        >
+                          <div className={`${themeItem.preview} h-12 rounded-md mb-2 shadow-inner`}></div>
+                          <p className="text-xs font-medium text-center">{language === "ru" ? themeItem.name : themeItem.nameEn}</p>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Выбор шрифта */}
+                  <div>
+                    <label className="block text-sm font-medium mb-2">{t("Шрифт", "Font")}</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {Object.entries(FONTS).map(([key, fontItem]) => (
+                        <button
+                          key={key}
+                          onClick={() => setCurrentFont(key)}
+                          className={`p-3 rounded-lg transition hover:scale-102 text-left ${fontItem.class} ${currentTheme === key ? 'ring-2 ring-[#606C38] shadow-md' : 'hover:shadow'} ${theme.cardBg} border ${currentFont === key ? theme.border : 'border-transparent'}`}
+                        >
+                          <p className="text-sm font-medium">{language === "ru" ? fontItem.nameRu : fontItem.name}</p>
+                          <p className="text-xs mt-1 opacity-70">Aa Бб Вв 123</p>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
