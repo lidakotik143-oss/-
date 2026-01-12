@@ -213,6 +213,47 @@ const THEMES = {
   }
 };
 
+// Список кухонь (сортированный по алфавиту)
+const CUISINES_RU = [
+  "американская",
+  "вьетнамская",
+  "греческая",
+  "грузинская",
+  "индийская",
+  "испанская",
+  "итальянская",
+  "китайская",
+  "корейская",
+  "мексиканская",
+  "русская",
+  "средиземноморская",
+  "тайская",
+  "турецкая",
+  "украинская",
+  "французская",
+  "японская"
+];
+
+const CUISINES_EN = [
+  "American",
+  "Chinese",
+  "French",
+  "Georgian",
+  "Greek",
+  "Indian",
+  "Italian",
+  "Japanese",
+  "Korean",
+  "Mediterranean",
+  "Mexican",
+  "Russian",
+  "Spanish",
+  "Thai",
+  "Turkish",
+  "Ukrainian",
+  "Vietnamese"
+];
+
 // =================== БЛОК 2: Компонент приложения ===================
 export default function CookifyDemo() {
   // ---------- Стейты ----------
@@ -300,6 +341,7 @@ export default function CookifyDemo() {
   // Вспомогательные
   const GOALS = language === "ru" ? GOAL_OPTIONS_RU : GOAL_OPTIONS_EN;
   const LIFESTYLE = language === "ru" ? LIFESTYLE_RU : LIFESTYLE_EN;
+  const CUISINES = language === "ru" ? CUISINES_RU : CUISINES_EN;
 
   // ---------- Текущая тема ----------
   const theme = THEMES[currentTheme];
@@ -571,26 +613,18 @@ export default function CookifyDemo() {
             <option value="long">{t("свыше 40 мин", "40+ min")}</option>
           </select>
 
-          {/* Кухни мира (РАСШИРЕННЫЙ СПИСОК) */}
-          <select value={selectedFilters.cuisine} onChange={(e) => setSelectedFilters(prev => ({ ...prev, cuisine: e.target.value }))} className={`${theme.input} ${fontSize.body} p-2 rounded`}>
+          {/* Кухни мира (СОРТИРОВАННЫЙ И ПРОКРУЧИВАЕМЫЙ СПИСОК) */}
+          <select 
+            value={selectedFilters.cuisine} 
+            onChange={(e) => setSelectedFilters(prev => ({ ...prev, cuisine: e.target.value }))} 
+            className={`${theme.input} ${fontSize.body} p-2 rounded`}
+            size="1"
+            style={{ maxHeight: '200px', overflowY: 'auto' }}
+          >
             <option value="">{t("Кухни мира", "World cuisine")}</option>
-            <option value="итальянская">{t("Итальянская", "Italian")}</option>
-            <option value="французская">{t("Французская", "French")}</option>
-            <option value="японская">{t("Японская", "Japanese")}</option>
-            <option value="китайская">{t("Китайская", "Chinese")}</option>
-            <option value="тайская">{t("Тайская", "Thai")}</option>
-            <option value="индийская">{t("Индийская", "Indian")}</option>
-            <option value="мексиканская">{t("Мексиканская", "Mexican")}</option>
-            <option value="грузинская">{t("Грузинская", "Georgian")}</option>
-            <option value="русская">{t("Русская", "Russian")}</option>
-            <option value="украинская">{t("Украинская", "Ukrainian")}</option>
-            <option value="средиземноморская">{t("Средиземноморская", "Mediterranean")}</option>
-            <option value="американская">{t("Американская", "American")}</option>
-            <option value="корейская">{t("Корейская", "Korean")}</option>
-            <option value="вьетнамская">{t("Вьетнамская", "Vietnamese")}</option>
-            <option value="греческая">{t("Греческая", "Greek")}</option>
-            <option value="турецкая">{t("Турецкая", "Turkish")}</option>
-            <option value="испанская">{t("Испанская", "Spanish")}</option>
+            {CUISINES.map((cuisine, idx) => (
+              <option key={idx} value={cuisine.toLowerCase()}>{cuisine.charAt(0).toUpperCase() + cuisine.slice(1)}</option>
+            ))}
           </select>
 
           {/* Уровень сложности */}
