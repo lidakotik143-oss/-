@@ -15,6 +15,15 @@ const LIFESTYLE_EN = ["Sedentary", "Moderately active", "Active"];
 const MEAL_CATEGORIES = ["breakfast", "lunch", "snack", "dinner"];
 const MEAL_LABELS_RU = { breakfast: "Завтрак", lunch: "Обед", snack: "Перекус", dinner: "Ужин" };
 
+// Маппинг типов блюд на русском
+const DISH_TYPE_LABELS = {
+  "завтрак": { ru: "Завтрак", en: "Breakfast" },
+  "обед": { ru: "Обед", en: "Lunch" },
+  "ужин": { ru: "Ужин", en: "Dinner" },
+  "перекус": { ru: "Перекус", en: "Snack" },
+  "десерт": { ru: "Десерт", en: "Dessert" }
+};
+
 // Доступные шрифты (только работающие)
 const FONTS = {
   inter: { name: "Inter", nameRu: "Inter", class: "font-sans" },
@@ -70,6 +79,7 @@ const THEMES = {
     accentText: "text-[#BC6C25]",
     accent: "bg-[#606C38]",
     accentHover: "hover:bg-[#283618]",
+    dishTypeBadge: "bg-[#E76F51]", // Терракотовый для типа блюда
     preview: "bg-gradient-to-br from-[#FEFAE0] via-[#DDA15E] to-[#606C38]"
   },
   beige: {
@@ -85,6 +95,7 @@ const THEMES = {
     accentText: "text-[#D4A373]",
     accent: "bg-[#CCD5AE]",
     accentHover: "hover:bg-[#E9EDC9]",
+    dishTypeBadge: "bg-[#E76F51]", // Терракотовый
     preview: "bg-gradient-to-br from-[#FEFAE0] via-[#FAEDCD] to-[#CCD5AE]"
   },
   sage: {
@@ -100,6 +111,7 @@ const THEMES = {
     accentText: "text-[#A98467]",
     accent: "bg-[#A98467]",
     accentHover: "hover:bg-[#6C584C]",
+    dishTypeBadge: "bg-[#E76F51]", // Терракотовый
     preview: "bg-gradient-to-br from-[#F0EAD2] via-[#DDE5B6] to-[#A98467]"
   },
   forest: {
@@ -115,6 +127,7 @@ const THEMES = {
     accentText: "text-[#83781B]",
     accent: "bg-[#709255]",
     accentHover: "hover:bg-[#95B46A]",
+    dishTypeBadge: "bg-[#E76F51]", // Терракотовый
     preview: "bg-gradient-to-br from-[#172815] via-[#3E5622] to-[#709255]"
   }
 };
@@ -364,6 +377,12 @@ export default function CookifyDemo() {
   // ---------- Утилиты UI ----------
   const t = (ru, en) => (language === "ru" ? ru : en);
 
+  // Функция для получения названия типа блюда
+  const getDishTypeLabel = (type) => {
+    const normalized = normalize(type);
+    return DISH_TYPE_LABELS[normalized]?.[language] || type;
+  };
+
   // =================== БЛОК 3: JSX (UI) ===================
   return (
     <div className={`min-h-screen ${theme.bg} ${theme.text} ${font.class} ${fontSize.body} p-6 transition-all duration-500`}>
@@ -575,9 +594,18 @@ export default function CookifyDemo() {
               onClick={() => setSelectedRecipe(r)}
               className={`p-4 ${theme.border} border rounded-lg cursor-pointer hover:shadow-lg transition`}
             >
-              <div>
-                <h3 className={`${fontSize.cardTitle} font-bold`}>{r.title}</h3>
-                <div className={`${fontSize.small} ${theme.textSecondary} mt-1`}>{r.time} {t("мин", "min")} • {r.calories} {t("ккал", "kcal")}</div>
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <h3 className={`${fontSize.cardTitle} font-bold`}>{r.title}</h3>
+                  <div className={`${fontSize.small} ${theme.textSecondary} mt-1`}>{r.time} {t("мин", "min")} • {r.calories} {t("ккал", "kcal")}</div>
+                </div>
+                
+                {/* Бейдж типа блюда */}
+                {r.type && (
+                  <span className={`${theme.dishTypeBadge} text-white px-3 py-1 rounded-full ${fontSize.tiny} font-semibold ml-3 flex-shrink-0`}>
+                    {getDishTypeLabel(r.type)}
+                  </span>
+                )}
               </div>
 
               {/* Ингредиенты с подсветкой аллергенов/исключений */}
@@ -609,8 +637,15 @@ export default function CookifyDemo() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" onClick={() => setSelectedRecipe(null)}>
           <div className={`${theme.cardBg} ${fontSize.body} rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6`} onClick={(e) => e.stopPropagation()}>
             <div className="flex items-start justify-between mb-4">
-              <h2 className={`${fontSize.subheading} font-bold ${theme.headerText}`}>{selectedRecipe.title}</h2>
-              <button onClick={() => setSelectedRecipe(null)} className={`${theme.textSecondary} hover:${theme.text} transition`}>
+              <div className="flex-1">
+                <h2 className={`${fontSize.subheading} font-bold ${theme.headerText}`}>{selectedRecipe.title}</h2>
+                {selectedRecipe.type && (
+                  <span className={`${theme.dishTypeBadge} text-white px-3 py-1 rounded-full ${fontSize.tiny} font-semibold inline-block mt-2`}>
+                    {getDishTypeLabel(selectedRecipe.type)}
+                  </span>
+                )}
+              </div>
+              <button onClick={() => setSelectedRecipe(null)} className={`${theme.textSecondary} hover:${theme.text} transition ml-4`}>
                 <FaTimes size={24} />
               </button>
             </div>
