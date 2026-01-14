@@ -1,6 +1,6 @@
 // =================== БЛОК 1: Импорты и примерные данные ===================
 import React, { useState, useEffect } from "react";
-import { FaSearch, FaUser, FaClipboardList, FaSun, FaMoon, FaPalette, FaFont, FaChevronDown, FaChevronUp, FaTimes } from "react-icons/fa";
+import { FaSearch, FaUser, FaClipboardList, FaSun, FaMoon, FaPalette, FaFont, FaChevronDown, FaChevronUp, FaTimes, FaClock } from "react-icons/fa";
 import { RECIPES_DATABASE } from './recipesData';
 
 // Используем импортированную базу данных вместо примеров
@@ -42,6 +42,14 @@ const DISH_TYPE_LABELS = {
     en: "Dessert",
     color: "bg-[#CD853F]" // Peru - сладкий персиковый
   }
+};
+
+// Функция для определения скорости приготовления и эмодзи
+const getTimeCategory = (minutes) => {
+  const time = parseInt(minutes, 10);
+  if (time <= 15) return { category: "fast", emoji: "⚡", label_ru: "Быстро", label_en: "Fast", color: "#10B981" };
+  if (time <= 40) return { category: "medium", emoji: "⏱️", label_ru: "Средне", label_en: "Medium", color: "#F59E0B" };
+  return { category: "slow", emoji: "🕐", label_ru: "Не спеша", label_en: "Slow", color: "#EF4444" };
 };
 
 // Доступные шрифты (только работающие)
@@ -655,9 +663,13 @@ export default function CookifyDemo() {
   </div>
 )}
 
-      {/* ------------------ МОДАЛЬНОЕ ОКНО РЕЦЕПТА ------------------ */}
+      {/* ------------------ МОДАЛЬНОЕ ОКНО РЕЦЕПТА С ИНТЕРАКТИВНЫМ ВРЕМЕНЕМ ------------------ */}
       {selectedRecipe && (() => {
         const dishTypeInfo = getDishTypeInfo(selectedRecipe.type);
+        const timeInfo = getTimeCategory(selectedRecipe.time);
+        const timeMinutes = parseInt(selectedRecipe.time, 10);
+        const progressPercentage = Math.min((timeMinutes / 120) * 100, 100); // Макс 120 мин = 100%
+        
         return (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" onClick={() => setSelectedRecipe(null)}>
             <div className={`${theme.cardBg} ${fontSize.body} rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6`} onClick={(e) => e.stopPropagation()}>
@@ -675,8 +687,41 @@ export default function CookifyDemo() {
                 </button>
               </div>
 
+              {/* ИНТЕРАКТИВНЫЙ БЛОК ВРЕМЕНИ */}
+              <div className={`${theme.cardBg} border-2 rounded-xl p-4 mb-6 shadow-md`} style={{ borderColor: timeInfo.color }}>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-3">
+                    <span className="text-4xl">{timeInfo.emoji}</span>
+                    <div>
+                      <div className={`${fontSize.body} font-bold`} style={{ color: timeInfo.color }}>
+                        {timeMinutes} {t("минут", "minutes")}
+                      </div>
+                      <div className={`${fontSize.small} ${theme.textSecondary}`}>
+                        {language === "ru" ? timeInfo.label_ru : timeInfo.label_en}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className={`${fontSize.tiny} ${theme.textSecondary} mb-1`}>{t("Калории", "Calories")}</div>
+                    <div className={`${fontSize.body} font-bold ${theme.accentText}`}>{selectedRecipe.calories} {t("ккал", "kcal")}</div>
+                  </div>
+                </div>
+                
+                {/* Прогресс-бар времени */}
+                <div className="w-full bg-gray-200 rounded-full h-2.5 mb-2">
+                  <div 
+                    className="h-2.5 rounded-full transition-all duration-500" 
+                    style={{ width: `${progressPercentage}%`, backgroundColor: timeInfo.color }}
+                  ></div>
+                </div>
+                <div className={`${fontSize.tiny} ${theme.textSecondary} text-center`}>
+                  {t(`${timeMinutes <= 15 ? 'Быстрое приготовление!' : timeMinutes <= 40 ? 'Умеренное время' : 'Требуется терпение'}`, 
+                     `${timeMinutes <= 15 ? 'Quick cooking!' : timeMinutes <= 40 ? 'Moderate time' : 'Takes patience'}`)}
+                </div>
+              </div>
+
               <div className={`${theme.textSecondary} ${fontSize.small} mb-4`}>
-                {selectedRecipe.time} {t("мин", "min")} • {selectedRecipe.calories} {t("ккал", "kcal")} • {t("Сложность:", "Difficulty:")} {selectedRecipe.difficulty}
+                {t("Сложность:", "Difficulty:")} {selectedRecipe.difficulty}
               </div>
 
               <div className="mb-6">
