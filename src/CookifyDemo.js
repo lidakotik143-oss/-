@@ -15,13 +15,33 @@ const LIFESTYLE_EN = ["Sedentary", "Moderately active", "Active"];
 const MEAL_CATEGORIES = ["breakfast", "lunch", "snack", "dinner"];
 const MEAL_LABELS_RU = { breakfast: "Завтрак", lunch: "Обед", snack: "Перекус", dinner: "Ужин" };
 
-// Маппинг типов блюд на русском
+// Маппинг типов блюд на русском с уникальными цветами
 const DISH_TYPE_LABELS = {
-  "завтрак": { ru: "Завтрак", en: "Breakfast" },
-  "обед": { ru: "Обед", en: "Lunch" },
-  "ужин": { ru: "Ужин", en: "Dinner" },
-  "перекус": { ru: "Перекус", en: "Snack" },
-  "десерт": { ru: "Десерт", en: "Dessert" }
+  "завтрак": { 
+    ru: "Завтрак", 
+    en: "Breakfast",
+    color: "bg-[#F4A460]" // Sandy Brown - утренний теплый оттенок
+  },
+  "обед": { 
+    ru: "Обед", 
+    en: "Lunch",
+    color: "bg-[#8B7355]" // Burlywood Dark - сытный коричневый
+  },
+  "ужин": { 
+    ru: "Ужин", 
+    en: "Dinner",
+    color: "bg-[#6B8E23]" // Olive Drab - вечерний зеленый
+  },
+  "перекус": { 
+    ru: "Перекус", 
+    en: "Snack",
+    color: "bg-[#DAA520]" // Goldenrod - золотистый
+  },
+  "десерт": { 
+    ru: "Десерт", 
+    en: "Dessert",
+    color: "bg-[#CD853F]" // Peru - сладкий персиковый
+  }
 };
 
 // Доступные шрифты (только работающие)
@@ -79,7 +99,6 @@ const THEMES = {
     accentText: "text-[#BC6C25]",
     accent: "bg-[#606C38]",
     accentHover: "hover:bg-[#283618]",
-    dishTypeBadge: "bg-[#E76F51]", // Терракотовый для типа блюда
     preview: "bg-gradient-to-br from-[#FEFAE0] via-[#DDA15E] to-[#606C38]"
   },
   beige: {
@@ -95,7 +114,6 @@ const THEMES = {
     accentText: "text-[#D4A373]",
     accent: "bg-[#CCD5AE]",
     accentHover: "hover:bg-[#E9EDC9]",
-    dishTypeBadge: "bg-[#E76F51]", // Терракотовый
     preview: "bg-gradient-to-br from-[#FEFAE0] via-[#FAEDCD] to-[#CCD5AE]"
   },
   sage: {
@@ -111,7 +129,6 @@ const THEMES = {
     accentText: "text-[#A98467]",
     accent: "bg-[#A98467]",
     accentHover: "hover:bg-[#6C584C]",
-    dishTypeBadge: "bg-[#E76F51]", // Терракотовый
     preview: "bg-gradient-to-br from-[#F0EAD2] via-[#DDE5B6] to-[#A98467]"
   },
   forest: {
@@ -127,7 +144,6 @@ const THEMES = {
     accentText: "text-[#83781B]",
     accent: "bg-[#709255]",
     accentHover: "hover:bg-[#95B46A]",
-    dishTypeBadge: "bg-[#E76F51]", // Терракотовый
     preview: "bg-gradient-to-br from-[#172815] via-[#3E5622] to-[#709255]"
   }
 };
@@ -377,10 +393,14 @@ export default function CookifyDemo() {
   // ---------- Утилиты UI ----------
   const t = (ru, en) => (language === "ru" ? ru : en);
 
-  // Функция для получения названия типа блюда
-  const getDishTypeLabel = (type) => {
+  // Функция для получения названия и цвета типа блюда
+  const getDishTypeInfo = (type) => {
     const normalized = normalize(type);
-    return DISH_TYPE_LABELS[normalized]?.[language] || type;
+    const dishInfo = DISH_TYPE_LABELS[normalized];
+    return {
+      label: dishInfo?.[language] || type,
+      color: dishInfo?.color || "bg-gray-500"
+    };
   };
 
   // =================== БЛОК 3: JSX (UI) ===================
@@ -588,44 +608,47 @@ export default function CookifyDemo() {
         <p className={`${theme.textSecondary} ${fontSize.body}`}>{t("Ничего не найдено", "No recipes found")}</p>
       ) : (
         <div className="grid gap-3">
-          {filteredResults.map(r => (
-            <div 
-              key={r.id} 
-              onClick={() => setSelectedRecipe(r)}
-              className={`p-4 ${theme.border} border rounded-lg cursor-pointer hover:shadow-lg transition`}
-            >
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <h3 className={`${fontSize.cardTitle} font-bold`}>{r.title}</h3>
-                  <div className={`${fontSize.small} ${theme.textSecondary} mt-1`}>{r.time} {t("мин", "min")} • {r.calories} {t("ккал", "kcal")}</div>
+          {filteredResults.map(r => {
+            const dishTypeInfo = getDishTypeInfo(r.type);
+            return (
+              <div 
+                key={r.id} 
+                onClick={() => setSelectedRecipe(r)}
+                className={`p-4 ${theme.border} border rounded-lg cursor-pointer hover:shadow-lg transition`}
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <h3 className={`${fontSize.cardTitle} font-bold`}>{r.title}</h3>
+                    <div className={`${fontSize.small} ${theme.textSecondary} mt-1`}>{r.time} {t("мин", "min")} • {r.calories} {t("ккал", "kcal")}</div>
+                  </div>
+                  
+                  {/* Бейдж типа блюда с уникальным цветом */}
+                  {r.type && (
+                    <span className={`${dishTypeInfo.color} text-white px-3 py-1 rounded-full ${fontSize.tiny} font-semibold ml-3 flex-shrink-0`}>
+                      {dishTypeInfo.label}
+                    </span>
+                  )}
                 </div>
-                
-                {/* Бейдж типа блюда */}
-                {r.type && (
-                  <span className={`${theme.dishTypeBadge} text-white px-3 py-1 rounded-full ${fontSize.tiny} font-semibold ml-3 flex-shrink-0`}>
-                    {getDishTypeLabel(r.type)}
-                  </span>
-                )}
-              </div>
 
-              {/* Ингредиенты с подсветкой аллергенов/исключений */}
-              <div className={`mt-3 ${fontSize.small}`}>
-                <strong>{t("Ингредиенты:", "Ingredients:")}</strong>{" "}
-                {r.ingredients.map((ing, i) => {
-                  const low = ing.toLowerCase();
-                  const isAllergy = allergyList.some(a => a && low.includes(a));
-                  const isExcluded = excludeIngredients.toLowerCase().split(",").map(s => s.trim()).filter(Boolean).some(e => e && low.includes(e));
-                  const cls = isAllergy || isExcluded ? "text-red-600 font-semibold" : "";
-                  return <span key={i} className={`${cls} mr-2`}>{ing}{i < r.ingredients.length - 1 ? "," : ""}</span>;
-                })}
-              </div>
+                {/* Ингредиенты с подсветкой аллергенов/исключений */}
+                <div className={`mt-3 ${fontSize.small}`}>
+                  <strong>{t("Ингредиенты:", "Ingredients:")}</strong>{" "}
+                  {r.ingredients.map((ing, i) => {
+                    const low = ing.toLowerCase();
+                    const isAllergy = allergyList.some(a => a && low.includes(a));
+                    const isExcluded = excludeIngredients.toLowerCase().split(",").map(s => s.trim()).filter(Boolean).some(e => e && low.includes(e));
+                    const cls = isAllergy || isExcluded ? "text-red-600 font-semibold" : "";
+                    return <span key={i} className={`${cls} mr-2`}>{ing}{i < r.ingredients.length - 1 ? "," : ""}</span>;
+                  })}
+                </div>
 
-              {/* Теги */}
-              <div className="mt-3 flex flex-wrap gap-2">
-                {(r.tags || []).map((tag, i) => <span key={i} className={`px-2 py-1 ${theme.accent} text-white rounded-full ${fontSize.tiny}`}>{tag}</span>)}
+                {/* Теги */}
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {(r.tags || []).map((tag, i) => <span key={i} className={`px-2 py-1 ${theme.accent} text-white rounded-full ${fontSize.tiny}`}>{tag}</span>)}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
@@ -633,59 +656,62 @@ export default function CookifyDemo() {
 )}
 
       {/* ------------------ МОДАЛЬНОЕ ОКНО РЕЦЕПТА ------------------ */}
-      {selectedRecipe && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" onClick={() => setSelectedRecipe(null)}>
-          <div className={`${theme.cardBg} ${fontSize.body} rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6`} onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex-1">
-                <h2 className={`${fontSize.subheading} font-bold ${theme.headerText}`}>{selectedRecipe.title}</h2>
-                {selectedRecipe.type && (
-                  <span className={`${theme.dishTypeBadge} text-white px-3 py-1 rounded-full ${fontSize.tiny} font-semibold inline-block mt-2`}>
-                    {getDishTypeLabel(selectedRecipe.type)}
-                  </span>
-                )}
+      {selectedRecipe && (() => {
+        const dishTypeInfo = getDishTypeInfo(selectedRecipe.type);
+        return (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" onClick={() => setSelectedRecipe(null)}>
+            <div className={`${theme.cardBg} ${fontSize.body} rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6`} onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex-1">
+                  <h2 className={`${fontSize.subheading} font-bold ${theme.headerText}`}>{selectedRecipe.title}</h2>
+                  {selectedRecipe.type && (
+                    <span className={`${dishTypeInfo.color} text-white px-3 py-1 rounded-full ${fontSize.tiny} font-semibold inline-block mt-2`}>
+                      {dishTypeInfo.label}
+                    </span>
+                  )}
+                </div>
+                <button onClick={() => setSelectedRecipe(null)} className={`${theme.textSecondary} hover:${theme.text} transition ml-4`}>
+                  <FaTimes size={24} />
+                </button>
               </div>
-              <button onClick={() => setSelectedRecipe(null)} className={`${theme.textSecondary} hover:${theme.text} transition ml-4`}>
-                <FaTimes size={24} />
-              </button>
-            </div>
 
-            <div className={`${theme.textSecondary} ${fontSize.small} mb-4`}>
-              {selectedRecipe.time} {t("мин", "min")} • {selectedRecipe.calories} {t("ккал", "kcal")} • {t("Сложность:", "Difficulty:")} {selectedRecipe.difficulty}
-            </div>
+              <div className={`${theme.textSecondary} ${fontSize.small} mb-4`}>
+                {selectedRecipe.time} {t("мин", "min")} • {selectedRecipe.calories} {t("ккал", "kcal")} • {t("Сложность:", "Difficulty:")} {selectedRecipe.difficulty}
+              </div>
 
-            <div className="mb-6">
-              <h3 className={`${fontSize.cardTitle} font-semibold mb-2 ${theme.headerText}`}>{t("Ингредиенты:", "Ingredients:")}</h3>
-              <ul className={`list-disc list-inside space-y-1 ${fontSize.body}`}>
-                {selectedRecipe.ingredients.map((ing, i) => {
-                  const low = ing.toLowerCase();
-                  const isAllergy = allergyList.some(a => a && low.includes(a));
-                  const cls = isAllergy ? "text-red-600 font-semibold" : "";
-                  return <li key={i} className={cls}>{ing}</li>;
-                })}
-              </ul>
-            </div>
+              <div className="mb-6">
+                <h3 className={`${fontSize.cardTitle} font-semibold mb-2 ${theme.headerText}`}>{t("Ингредиенты:", "Ingredients:")}</h3>
+                <ul className={`list-disc list-inside space-y-1 ${fontSize.body}`}>
+                  {selectedRecipe.ingredients.map((ing, i) => {
+                    const low = ing.toLowerCase();
+                    const isAllergy = allergyList.some(a => a && low.includes(a));
+                    const cls = isAllergy ? "text-red-600 font-semibold" : "";
+                    return <li key={i} className={cls}>{ing}</li>;
+                  })}
+                </ul>
+              </div>
 
-            <div>
-              <h3 className={`${fontSize.cardTitle} font-semibold mb-3 ${theme.headerText}`}>{t("Как готовить:", "How to cook:")}</h3>
-              <ol className={`space-y-3 ${fontSize.body}`}>
-                {selectedRecipe.instructions.map((step, i) => (
-                  <li key={i} className="flex gap-3">
-                    <span className={`${theme.accent} text-white rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0 ${fontSize.small} font-bold`}>{i + 1}</span>
-                    <span>{step}</span>
-                  </li>
+              <div>
+                <h3 className={`${fontSize.cardTitle} font-semibold mb-3 ${theme.headerText}`}>{t("Как готовить:", "How to cook:")}</h3>
+                <ol className={`space-y-3 ${fontSize.body}`}>
+                  {selectedRecipe.instructions.map((step, i) => (
+                    <li key={i} className="flex gap-3">
+                      <span className={`${theme.accent} text-white rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0 ${fontSize.small} font-bold`}>{i + 1}</span>
+                      <span>{step}</span>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+
+              <div className="mt-6 flex gap-2 flex-wrap">
+                {(selectedRecipe.tags || []).map((tag, i) => (
+                  <span key={i} className={`px-3 py-1 ${theme.accent} text-white rounded-full ${fontSize.small}`}>{tag}</span>
                 ))}
-              </ol>
-            </div>
-
-            <div className="mt-6 flex gap-2 flex-wrap">
-              {(selectedRecipe.tags || []).map((tag, i) => (
-                <span key={i} className={`px-3 py-1 ${theme.accent} text-white rounded-full ${fontSize.small}`}>{tag}</span>
-              ))}
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* ------------------ БЛОК 3.4: Аккаунт / Профиль ------------------ */}
       {activeScreen === "account" && (
