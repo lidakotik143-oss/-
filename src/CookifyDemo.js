@@ -219,6 +219,7 @@ export default function CookifyDemo() {
 
   // Модальное окно рецепта
   const [selectedRecipe, setSelectedRecipe] = useState(null);
+  const [selectedRecipeVariantKey, setSelectedRecipeVariantKey] = useState(null);
 
   // Поиск
   const [searchMode, setSearchMode] = useState("name"); // name | ingredients
@@ -351,7 +352,8 @@ export default function CookifyDemo() {
   const normalize = (s) => (s || "").toString().toLowerCase();
 
   const filteredResults = SAMPLE_RECIPES.filter(r => {
-    const ingStr = r.ingredients.join(",").toLowerCase();
+    const baseIngStr = (r.ingredients || []).join(",").toLowerCase();
+    const variantIngStrs = (r.variants || []).map(v => (v.ingredients || []).join(",").toLowerCase());
 
     // 1) Поисковый режим
     let matchesSearch = true;
@@ -360,14 +362,15 @@ export default function CookifyDemo() {
       matchesSearch = r.title.toLowerCase().includes(q) || (r.tags || []).some(t => t.toLowerCase().includes(q));
     } else if (searchMode === "ingredients" && searchQuery.trim()) {
       const terms = searchQuery.split(",").map(t => t.trim().toLowerCase()).filter(Boolean);
-      matchesSearch = terms.every(t => ingStr.includes(t));
+      const pools = [baseIngStr, ...variantIngStrs];
+      matchesSearch = pools.some(pool => terms.every(term => pool.includes(term)));
     }
 
-    // 2) Исключения
+    // 2) Исключения (оставляем по умолчанию — по базовым ингредиентам)
     let matchesExclude = true;
     if (excludeIngredients.trim()) {
       const exs = excludeIngredients.split(",").map(t => t.trim().toLowerCase()).filter(Boolean);
-      matchesExclude = !r.ingredients.some(ing => exs.some(e => ing.toLowerCase().includes(e)));
+      matchesExclude = !(r.ingredients || []).some(ing => exs.some(e => ing.toLowerCase().includes(e)));
     }
 
     // 3) Фильтры
@@ -557,7 +560,10 @@ export default function CookifyDemo() {
             return (
               <div 
                 key={r.id} 
-                onClick={() => setSelectedRecipe(r)}
+                onClick={() => {
+                  setSelectedRecipe(r);
+                  setSelectedRecipeVariantKey(r?.variants?.[0]?.key || null);
+                }}
                 className={`p-4 ${theme.border} border rounded-lg cursor-pointer hover:shadow-lg transition`}
               >
                 <div className="flex items-start justify-between">
@@ -575,7 +581,7 @@ export default function CookifyDemo() {
 
                 <div className={`mt-3 ${fontSize.small}`}>
                   <strong>{t("Ингредиенты:", "Ingredients:")}</strong>{" "}
-                  {r.ingredients.map((ing, i) => {
+                  {(r.ingredients || []).map((ing, i) => {
                     const low = ing.toLowerCase();
                     const isAllergy = allergyList.some(a => a && low.includes(a));
                     const isExcluded = excludeIngredients.toLowerCase().split(",").map(s => s.trim()).filter(Boolean).some(e => e && low.includes(e));
@@ -599,14 +605,27 @@ export default function CookifyDemo() {
       {/* ------------------ МОДАЛЬНОЕ ОКНО РЕЦЕПТА С ИНТЕРАКТИВНЫМ ВРЕМЕНЕМ ------------------ */}
       {selectedRecipe && (() => {
         const dishTypeInfo = getDishTypeInfo(selectedRecipe.type);
-        const timeInfo = getTimeCategory(selectedRecipe.time);
-        const timeMinutes = parseInt(selectedRecipe.time, 10);
+
+        const variants = Array.isArray(selectedRecipe.variants) ? selectedRecipe.variants : [];
+        const activeVariant = variants.length
+          ? (variants.find(v => v.key === selectedRecipeVariantKey) || variants[0])
+          : null;
+        const activeRecipe = activeVariant || selectedRecipe;
+
+        const timeInfo = getTimeCategory(activeRecipe.time ?? selectedRecipe.time);
+        const timeMinutes = parseInt(activeRecipe.time ?? selectedRecipe.time, 10);
         const progressPercentage = Math.min((timeMinutes / 120) * 100, 100); // Макс 120 мин = 100%
-        const kcalPerServing = selectedRecipe.caloriesPerServing ?? selectedRecipe.calories;
+
+        const kcalPerServing = activeRecipe.caloriesPerServing ?? selectedRecipe.caloriesPerServing ?? activeRecipe.calories ?? selectedRecipe.calories;
         const servings = selectedRecipe.servings ?? 2;
+
+        const closeModal = () => {
+          setSelectedRecipe(null);
+          setSelectedRecipeVariantKey(null);
+        };
         
         return (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" onClick={() => setSelectedRecipe(null)}>
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" onClick={closeModal}>
             <div className={`${theme.cardBg} ${fontSize.body} rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6`} onClick={(e) => e.stopPropagation()}>
               <div className="flex items-start justify-between mb-4">
                 <div className="flex-1">
@@ -616,8 +635,25 @@ export default function CookifyDemo() {
                       {dishTypeInfo.label}
                     </span>
                   )}
+
+                  {variants.length > 0 && (
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {variants.map(v => {
+                        const isActive = v.key === activeVariant?.key;
+                        return (
+                          <button
+                            key={v.key}
+                            onClick={() => setSelectedRecipeVariantKey(v.key)}
+                            className={`px-3 py-1 rounded-full ${fontSize.small} transition ${isActive ? `${theme.accent} text-white` : `${theme.cardBg} border ${theme.border}`}`}
+                          >
+                            {language === "ru" ? (v.labelRu || v.key) : (v.labelEn || v.key)}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
-                <button onClick={() => setSelectedRecipe(null)} className={`${theme.textSecondary} hover:${theme.text} transition ml-4`}>
+                <button onClick={closeModal} className={`${theme.textSecondary} hover:${theme.text} transition ml-4`}>
                   <FaTimes size={24} />
                 </button>
               </div>
@@ -654,7 +690,6 @@ export default function CookifyDemo() {
                 </div>
               </div>
 
-              {/* Остальная модалка без изменений */}
               <div className={`${theme.textSecondary} ${fontSize.small} mb-4`}>
                 {t("Сложность:", "Difficulty:")} {selectedRecipe.difficulty}
               </div>
@@ -662,7 +697,7 @@ export default function CookifyDemo() {
               <div className="mb-6">
                 <h3 className={`${fontSize.cardTitle} font-semibold mb-2 ${theme.headerText}`}>{t("Ингредиенты:", "Ingredients:")}</h3>
                 <ul className={`list-disc list-inside space-y-1 ${fontSize.body}`}>
-                  {selectedRecipe.ingredients.map((ing, i) => {
+                  {(activeRecipe.ingredients || []).map((ing, i) => {
                     const low = ing.toLowerCase();
                     const isAllergy = allergyList.some(a => a && low.includes(a));
                     const cls = isAllergy ? "text-red-600 font-semibold" : "";
@@ -674,7 +709,7 @@ export default function CookifyDemo() {
               <div>
                 <h3 className={`${fontSize.cardTitle} font-semibold mb-3 ${theme.headerText}`}>{t("Как готовить:", "How to cook:")}</h3>
                 <ol className={`space-y-3 ${fontSize.body}`}>
-                  {selectedRecipe.instructions.map((step, i) => (
+                  {(activeRecipe.instructions || []).map((step, i) => (
                     <li key={i} className="flex gap-3">
                       <span className={`${theme.accent} text-white rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0 ${fontSize.small} font-bold`}>{i + 1}</span>
                       <span>{step}</span>
