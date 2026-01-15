@@ -50,6 +50,20 @@ const DISH_TYPE_LABELS = {
   }
 };
 
+// Маппинг диет (для более приятного отображения в EN)
+const DIET_LABELS = {
+  "веган": { ru: "Веган", en: "Vegan" },
+  "вегетарианское": { ru: "Вегетарианское", en: "Vegetarian" },
+  "низкокалорийное": { ru: "Низкокалорийное", en: "Low calorie" }
+};
+
+// Маппинг сложности (для более приятного отображения в EN)
+const DIFFICULTY_LABELS = {
+  "легкий": { ru: "Легкий", en: "Easy" },
+  "средний": { ru: "Средний", en: "Medium" },
+  "сложный": { ru: "Сложный", en: "Hard" }
+};
+
 // Функция для определения скорости приготовления и эмодзи
 const getTimeCategory = (minutes) => {
   const time = parseInt(minutes, 10);
@@ -291,7 +305,20 @@ export default function CookifyDemo() {
   // Вспомогательные
   const GOALS = language === "ru" ? GOAL_OPTIONS_RU : GOAL_OPTIONS_EN;
   const LIFESTYLE = language === "ru" ? LIFESTYLE_RU : LIFESTYLE_EN;
-  const CUISINES = language === "ru" ? CUISINES_RU : CUISINES_EN;
+
+  // Для фильтров по кухне всегда храним RU значение (так как в базе кухни на RU),
+  // но отображаем подписи в зависимости от языка.
+  const CUISINE_OPTIONS = CUISINES_RU.map((ruName, idx) => ({
+    value: ruName,
+    label: language === "ru" ? ruName : (CUISINES_EN[idx] || ruName)
+  }));
+
+  // Опции для селектов фильтров
+  const normalize = (s) => (s || "").toString().toLowerCase();
+  const TYPE_OPTIONS = Object.keys(DISH_TYPE_LABELS);
+  const DIET_OPTIONS = Array.from(new Set((SAMPLE_RECIPES || []).map(r => (r.diet || "").trim()).filter(Boolean)));
+  const DIFFICULTY_OPTIONS = Array.from(new Set((SAMPLE_RECIPES || []).map(r => (r.difficulty || "").trim()).filter(Boolean)));
+  const TAG_OPTIONS = Array.from(new Set((SAMPLE_RECIPES || []).flatMap(r => r.tags || []))).filter(Boolean);
 
   // ---------- Текущая тема ----------
   const theme = THEMES[currentTheme];
@@ -349,8 +376,6 @@ export default function CookifyDemo() {
   const clearMealPlan = () => setMealPlan({ breakfast: [], lunch: [], snack: [], dinner: [] });
 
   // ---------- Фильтрация рецептов ----------
-  const normalize = (s) => (s || "").toString().toLowerCase();
-
   const filteredResults = SAMPLE_RECIPES.filter(r => {
     const baseIngStr = (r.ingredients || []).join(",").toLowerCase();
     const variantIngStrs = (r.variants || []).map(v => (v.ingredients || []).join(",").toLowerCase());
@@ -542,8 +567,95 @@ export default function CookifyDemo() {
     {/* Фильтры (скрываемые) */}
     {showFilters && (
       <div className={`${theme.cardBg} p-4 rounded-2xl shadow space-y-3`}>
-        <h3 className={`${fontSize.cardTitle} font-semibold`}>{t("Фильтры", "Filters")}</h3>
-        {/* ... фильтры без изменений ... */}
+        <div className="flex items-center justify-between gap-3">
+          <h3 className={`${fontSize.cardTitle} font-semibold`}>{t("Фильтры", "Filters")}</h3>
+          <button
+            onClick={() => setSelectedFilters({ type: "", diet: "", timeRange: "", cuisine: "", difficulty: "", tag: "" })}
+            className={`px-4 py-2 rounded-xl ${fontSize.small} ${theme.accent} ${theme.accentHover} text-white`}
+          >
+            {t("Сбросить", "Reset")}
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          {/* Тип */}
+          <select
+            value={selectedFilters.type}
+            onChange={(e) => setSelectedFilters(prev => ({ ...prev, type: e.target.value }))}
+            className={`w-full p-2 ${theme.input} ${fontSize.body} rounded-xl`}
+          >
+            <option value="">{t("Тип блюда (все)", "Dish type (all)")}</option>
+            {TYPE_OPTIONS.map(typeKey => (
+              <option key={typeKey} value={typeKey}>
+                {DISH_TYPE_LABELS[typeKey]?.[language] || typeKey}
+              </option>
+            ))}
+          </select>
+
+          {/* Диета */}
+          <select
+            value={selectedFilters.diet}
+            onChange={(e) => setSelectedFilters(prev => ({ ...prev, diet: e.target.value }))}
+            className={`w-full p-2 ${theme.input} ${fontSize.body} rounded-xl`}
+          >
+            <option value="">{t("Диета (все)", "Diet (all)")}</option>
+            {DIET_OPTIONS.map(d => (
+              <option key={d} value={d}>
+                {DIET_LABELS[normalize(d)]?.[language] || d}
+              </option>
+            ))}
+          </select>
+
+          {/* Время */}
+          <select
+            value={selectedFilters.timeRange}
+            onChange={(e) => setSelectedFilters(prev => ({ ...prev, timeRange: e.target.value }))}
+            className={`w-full p-2 ${theme.input} ${fontSize.body} rounded-xl`}
+          >
+            <option value="">{t("Время (любое)", "Time (any)")}</option>
+            <option value="short">{t("До 15 минут", "Up to 15 min")}</option>
+            <option value="medium">{t("16–40 минут", "16–40 min")}</option>
+            <option value="long">{t("Больше 40 минут", "Over 40 min")}</option>
+          </select>
+
+          {/* Кухня */}
+          <select
+            value={selectedFilters.cuisine}
+            onChange={(e) => setSelectedFilters(prev => ({ ...prev, cuisine: e.target.value }))}
+            className={`w-full p-2 ${theme.input} ${fontSize.body} rounded-xl`}
+          >
+            <option value="">{t("Кухня (все)", "Cuisine (all)")}</option>
+            {CUISINE_OPTIONS.map(c => (
+              <option key={c.value} value={c.value}>{c.label}</option>
+            ))}
+          </select>
+
+          {/* Сложность */}
+          <select
+            value={selectedFilters.difficulty}
+            onChange={(e) => setSelectedFilters(prev => ({ ...prev, difficulty: e.target.value }))}
+            className={`w-full p-2 ${theme.input} ${fontSize.body} rounded-xl`}
+          >
+            <option value="">{t("Сложность (любая)", "Difficulty (any)")}</option>
+            {DIFFICULTY_OPTIONS.map(d => (
+              <option key={d} value={d}>
+                {DIFFICULTY_LABELS[normalize(d)]?.[language] || d}
+              </option>
+            ))}
+          </select>
+
+          {/* Тег */}
+          <select
+            value={selectedFilters.tag}
+            onChange={(e) => setSelectedFilters(prev => ({ ...prev, tag: e.target.value }))}
+            className={`w-full p-2 ${theme.input} ${fontSize.body} rounded-xl`}
+          >
+            <option value="">{t("Тег (любой)", "Tag (any)")}</option>
+            {TAG_OPTIONS.map(tag => (
+              <option key={tag} value={tag}>{tag}</option>
+            ))}
+          </select>
+        </div>
       </div>
     )}
 
