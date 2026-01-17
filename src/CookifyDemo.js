@@ -835,12 +835,351 @@ export default function CookifyDemo() {
                   <span key={i} className={`px-3 py-1 ${theme.accent} text-white rounded-full ${fontSize.small}`}>{tag}</span>
                 ))}
               </div>
+
+              {/* Добавление в план питания из модального окна */}
+              {registered && (
+                <div className="mt-6 border-t pt-4">
+                  <h4 className={`${fontSize.body} font-semibold mb-3`}>{t("Добавить в план:", "Add to plan:")}</h4>
+                  <div className="flex gap-2 flex-wrap">
+                    {MEAL_CATEGORIES.map(cat => (
+                      <button
+                        key={cat}
+                        onClick={() => {
+                          addToMealPlan(selectedRecipe, cat);
+                          closeModal();
+                        }}
+                        className={`px-3 py-1 rounded ${fontSize.small} ${theme.accent} ${theme.accentHover} text-white`}
+                      >
+                        {MEAL_LABELS_RU[cat]}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         );
       })()}
 
-      {/* Остальные экраны без изменений */}
+      {/* ------------------ БЛОК 3.4: Мой аккаунт ------------------ */}
+      {activeScreen === "account" && (
+        <div className="max-w-5xl mx-auto space-y-6">
+          {!registered ? (
+            // Незарегистрированный пользователь
+            <div className={`${theme.cardBg} p-6 rounded-xl shadow text-center`}>
+              <FaUser className={`w-16 h-16 mx-auto ${theme.textSecondary} mb-4`} />
+              <h2 className={`${fontSize.subheading} font-semibold mb-3`}>{t("Создайте свой профиль", "Create your profile")}</h2>
+              <p className={`${theme.textSecondary} ${fontSize.body} mb-4`}>
+                {t("Заполните данные, чтобы получать персонализированные рекомендации и управлять планом питания.", 
+                   "Fill in your details to get personalized recommendations and manage your meal plan.")}
+              </p>
+              <button
+                onClick={() => setShowRegisterForm(true)}
+                className={`px-6 py-3 rounded-xl ${fontSize.body} ${theme.accent} ${theme.accentHover} text-white`}
+              >
+                {t("Начать", "Get Started")}
+              </button>
+            </div>
+          ) : (
+            // Зарегистрированный пользователь
+            <>
+              {/* Профиль */}
+              <div className={`${theme.cardBg} p-6 rounded-xl shadow`}>
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex gap-4 items-center">
+                    {userData.avatarURL ? (
+                      <img src={userData.avatarURL} alt="Avatar" className="w-20 h-20 rounded-full object-cover" />
+                    ) : (
+                      <div className={`w-20 h-20 rounded-full ${theme.accent} flex items-center justify-center text-white text-3xl font-bold`}>
+                        {(userData.name || "U").charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                    <div>
+                      <h2 className={`${fontSize.subheading} font-bold`}>{userData.name || t("Пользователь", "User")}</h2>
+                      <p className={`${theme.textSecondary} ${fontSize.small}`}>{userData.email || t("email не указан", "no email")}</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleStartEditProfile}
+                      className={`px-4 py-2 rounded-xl ${fontSize.small} ${theme.accent} ${theme.accentHover} text-white`}
+                    >
+                      {t("Редактировать", "Edit")}
+                    </button>
+                    <button
+                      onClick={handleLogout}
+                      className={`px-4 py-2 rounded-xl ${fontSize.small} bg-red-500 hover:bg-red-600 text-white`}
+                    >
+                      {t("Выйти", "Logout")}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                  {[
+                    { label: t("Возраст", "Age"), value: userData.age },
+                    { label: t("Вес", "Weight"), value: userData.weight ? `${userData.weight} ${t("кг", "kg")}` : "" },
+                    { label: t("Рост", "Height"), value: userData.height ? `${userData.height} ${t("см", "cm")}` : "" },
+                    { label: t("Цель", "Goal"), value: userData.goal },
+                    { label: t("Образ жизни", "Lifestyle"), value: userData.lifestyle },
+                    { label: t("Аллергии", "Allergies"), value: userData.allergies || t("Нет", "None") }
+                  ].map((item, idx) => (
+                    item.value && (
+                      <div key={idx} className={`p-3 ${theme.border} border rounded-lg`}>
+                        <div className={`${fontSize.small} ${theme.textSecondary} mb-1`}>{item.label}</div>
+                        <div className={`${fontSize.body} font-semibold`}>{item.value}</div>
+                      </div>
+                    )
+                  ))}
+                </div>
+              </div>
+
+              {/* План питания */}
+              <div className={`${theme.cardBg} p-6 rounded-xl shadow`}>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className={`${fontSize.subheading} font-semibold`}>{t("Мой план питания", "My Meal Plan")}</h3>
+                  <button
+                    onClick={clearMealPlan}
+                    className={`px-4 py-2 rounded-xl ${fontSize.small} bg-red-500 hover:bg-red-600 text-white`}
+                  >
+                    {t("Очистить план", "Clear plan")}
+                  </button>
+                </div>
+
+                {MEAL_CATEGORIES.map(cat => (
+                  <div key={cat} className="mb-6">
+                    <h4 className={`${fontSize.cardTitle} font-semibold mb-2 ${theme.headerText}`}>
+                      {MEAL_LABELS_RU[cat]} ({mealPlan[cat].length})
+                    </h4>
+                    {mealPlan[cat].length === 0 ? (
+                      <p className={`${theme.textSecondary} ${fontSize.small}`}>{t("Пусто", "Empty")}</p>
+                    ) : (
+                      <div className="space-y-2">
+                        {mealPlan[cat].map(recipe => (
+                          <div key={recipe.id} className={`flex items-center justify-between p-3 ${theme.border} border rounded-lg`}>
+                            <div>
+                              <div className={`${fontSize.body} font-semibold`}>{recipe.title}</div>
+                              <div className={`${fontSize.small} ${theme.textSecondary}`}>
+                                {recipe.time} {t("мин", "min")} • {recipe.calories || recipe.caloriesPerServing} {t("ккал", "kcal")}
+                              </div>
+                            </div>
+                            <button
+                              onClick={() => removeFromMealPlan(cat, recipe.id)}
+                              className="text-red-500 hover:text-red-700"
+                            >
+                              <FaTimes />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              {/* Кастомизация */}
+              <div className={`${theme.cardBg} p-6 rounded-xl shadow`}>
+                <button
+                  onClick={() => setShowCustomization(!showCustomization)}
+                  className={`flex items-center justify-between w-full ${fontSize.cardTitle} font-semibold`}
+                >
+                  <span>{t("Настройки интерфейса", "Interface Settings")}</span>
+                  {showCustomization ? <FaChevronUp /> : <FaChevronDown />}
+                </button>
+
+                {showCustomization && (
+                  <div className="mt-4 space-y-4">
+                    {/* Тема */}
+                    <div>
+                      <label className={`block ${fontSize.body} font-semibold mb-2`}>{t("Цветовая тема", "Color Theme")}</label>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                        {Object.keys(THEMES).map(key => (
+                          <button
+                            key={key}
+                            onClick={() => setCurrentTheme(key)}
+                            className={`p-3 rounded-xl border-2 ${currentTheme === key ? `${theme.border} border-4` : "border-transparent"}`}
+                          >
+                            <div className={`${THEMES[key].preview} h-12 rounded mb-2`}></div>
+                            <div className={`${fontSize.small} text-center`}>{THEMES[key][language === "ru" ? "name" : "nameEn"]}</div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Шрифт */}
+                    <div>
+                      <label className={`block ${fontSize.body} font-semibold mb-2`}>{t("Шрифт", "Font")}</label>
+                      <div className="flex gap-2">
+                        {Object.keys(FONTS).map(key => (
+                          <button
+                            key={key}
+                            onClick={() => setCurrentFont(key)}
+                            className={`px-4 py-2 rounded-xl ${fontSize.small} ${currentFont === key ? `${theme.accent} text-white` : `${theme.border} border`}`}
+                          >
+                            {FONTS[key][language === "ru" ? "nameRu" : "name"]}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Размер текста */}
+                    <div>
+                      <label className={`block ${fontSize.body} font-semibold mb-2`}>{t("Размер текста", "Text Size")}</label>
+                      <div className="flex gap-2">
+                        {Object.keys(FONT_SIZES).map(key => (
+                          <button
+                            key={key}
+                            onClick={() => setCurrentFontSize(key)}
+                            className={`px-4 py-2 rounded-xl ${fontSize.small} ${currentFontSize === key ? `${theme.accent} text-white` : `${theme.border} border`}`}
+                          >
+                            {FONT_SIZES[key][language === "ru" ? "name" : "nameEn"]}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+
+          {/* Форма регистрации/редактирования */}
+          {showRegisterForm && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+              <div className={`${theme.cardBg} rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6`}>
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className={`${fontSize.subheading} font-bold`}>
+                    {isEditingProfile ? t("Редактировать профиль", "Edit Profile") : t("Регистрация", "Registration")}
+                  </h2>
+                  <button
+                    onClick={() => {
+                      setShowRegisterForm(false);
+                      setIsEditingProfile(false);
+                    }}
+                    className={`${theme.textSecondary} hover:${theme.text}`}
+                  >
+                    <FaTimes size={24} />
+                  </button>
+                </div>
+
+                <form onSubmit={handleRegister} className="space-y-4">
+                  {/* Аватар */}
+                  <div className="text-center">
+                    {userData?.avatarURL && (
+                      <img src={userData.avatarURL} alt="Avatar" className="w-24 h-24 rounded-full object-cover mx-auto mb-2" />
+                    )}
+                    <label className={`block ${fontSize.body} font-semibold mb-2`}>{t("Фото профиля", "Profile Photo")}</label>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleAvatarUpload}
+                      className={`w-full p-2 ${theme.input} ${fontSize.body} rounded-xl`}
+                    />
+                  </div>
+
+                  {/* Основные поля */}
+                  <div>
+                    <label className={`block ${fontSize.body} font-semibold mb-2`}>{t("Имя", "Name")} *</label>
+                    <input
+                      type="text"
+                      name="name"
+                      required
+                      defaultValue={userData?.name || ""}
+                      className={`w-full p-3 ${theme.input} ${fontSize.body} rounded-xl`}
+                    />
+                  </div>
+
+                  <div>
+                    <label className={`block ${fontSize.body} font-semibold mb-2`}>{t("Email", "Email")}</label>
+                    <input
+                      type="email"
+                      name="email"
+                      defaultValue={userData?.email || ""}
+                      className={`w-full p-3 ${theme.input} ${fontSize.body} rounded-xl`}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label className={`block ${fontSize.body} font-semibold mb-2`}>{t("Возраст", "Age")}</label>
+                      <input
+                        type="number"
+                        name="age"
+                        defaultValue={userData?.age || ""}
+                        className={`w-full p-3 ${theme.input} ${fontSize.body} rounded-xl`}
+                      />
+                    </div>
+                    <div>
+                      <label className={`block ${fontSize.body} font-semibold mb-2`}>{t("Вес (кг)", "Weight (kg)")}</label>
+                      <input
+                        type="number"
+                        name="weight"
+                        defaultValue={userData?.weight || ""}
+                        className={`w-full p-3 ${theme.input} ${fontSize.body} rounded-xl`}
+                      />
+                    </div>
+                    <div>
+                      <label className={`block ${fontSize.body} font-semibold mb-2`}>{t("Рост (см)", "Height (cm)")}</label>
+                      <input
+                        type="number"
+                        name="height"
+                        defaultValue={userData?.height || ""}
+                        className={`w-full p-3 ${theme.input} ${fontSize.body} rounded-xl`}
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className={`block ${fontSize.body} font-semibold mb-2`}>{t("Цель", "Goal")}</label>
+                    <select
+                      name="goal"
+                      defaultValue={userData?.goal || ""}
+                      className={`w-full p-3 ${theme.input} ${fontSize.body} rounded-xl`}
+                    >
+                      <option value="">{t("Выберите цель", "Select goal")}</option>
+                      {GOALS.map((g, i) => (
+                        <option key={i} value={g}>{g}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className={`block ${fontSize.body} font-semibold mb-2`}>{t("Образ жизни", "Lifestyle")}</label>
+                    <select
+                      name="lifestyle"
+                      defaultValue={userData?.lifestyle || ""}
+                      className={`w-full p-3 ${theme.input} ${fontSize.body} rounded-xl`}
+                    >
+                      <option value="">{t("Выберите образ жизни", "Select lifestyle")}</option>
+                      {LIFESTYLE.map((l, i) => (
+                        <option key={i} value={l}>{l}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className={`block ${fontSize.body} font-semibold mb-2`}>{t("Аллергии", "Allergies")}</label>
+                    <input
+                      type="text"
+                      name="allergies"
+                      defaultValue={userData?.allergies || ""}
+                      placeholder={t("Через запятую или точку с запятой", "Comma or semicolon separated")}
+                      className={`w-full p-3 ${theme.input} ${fontSize.body} rounded-xl`}
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    className={`w-full px-6 py-3 rounded-xl ${fontSize.body} ${theme.accent} ${theme.accentHover} text-white font-semibold`}
+                  >
+                    {isEditingProfile ? t("Сохранить изменения", "Save Changes") : t("Зарегистрироваться", "Register")}
+                  </button>
+                </form>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
