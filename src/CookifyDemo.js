@@ -1,6 +1,6 @@
 // =================== БЛОК 1: Импорты и примерные данные ===================
 import React, { useState, useEffect } from "react";
-import { FaSearch, FaUser, FaClipboardList, FaSun, FaMoon, FaPalette, FaFont, FaChevronDown, FaChevronUp, FaTimes, FaClock, FaExchangeAlt, FaPlus, FaCalendarAlt } from "react-icons/fa";
+import { FaSearch, FaUser, FaClipboardList, FaSun, FaMoon, FaPalette, FaFont, FaChevronDown, FaChevronUp, FaTimes, FaClock, FaExchangeAlt, FaPlus, FaCalendarAlt, FaChevronRight } from "react-icons/fa";
 import { RECIPES_DATABASE } from './recipesData';
 
 // Используем импортированную базу данных вместо примеров
@@ -21,6 +21,11 @@ const LIFESTYLE_EN = ["Sedentary", "Moderately active", "Active"];
 const MEAL_CATEGORIES = ["breakfast", "lunch", "snack", "dinner"];
 const MEAL_LABELS_RU = { breakfast: "Завтрак", lunch: "Обед", snack: "Перекус", dinner: "Ужин" };
 const MEAL_LABELS_EN = { breakfast: "Breakfast", lunch: "Lunch", snack: "Snack", dinner: "Dinner" };
+
+const WEEKDAY_NAMES_RU = ["Воскресенье", "Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота"];
+const WEEKDAY_NAMES_EN = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+const WEEKDAY_SHORT_RU = ["Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"];
+const WEEKDAY_SHORT_EN = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 // Константы конвертации
 const CM_TO_INCH = 0.393701;
@@ -251,6 +256,22 @@ const formatDate = (dateStr, language) => {
   return d.toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' });
 };
 
+// Получить все дни недели для заданной даты
+const getWeekDays = (date) => {
+  const d = new Date(date);
+  const day = d.getDay(); // 0 = Воскресенье, 1 = Понедельник и т.д.
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Приводим к понедельнику
+  const monday = new Date(d.setDate(diff));
+  
+  const days = [];
+  for (let i = 0; i < 7; i++) {
+    const current = new Date(monday);
+    current.setDate(monday.getDate() + i);
+    days.push(getDateKey(current));
+  }
+  return days;
+};
+
 // =================== БЛОК 2: Компонент приложения ===================
 export default function CookifyDemo() {
   // ---------- Стейты ----------
@@ -298,6 +319,7 @@ export default function CookifyDemo() {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [showAddMealModal, setShowAddMealModal] = useState(false);
   const [addMealCategory, setAddMealCategory] = useState("breakfast");
+  const [selectedWeekDay, setSelectedWeekDay] = useState(null); // Для детального просмотра дня в неделе
 
   // ---------- Загрузка из localStorage ----------
   useEffect(() => {
@@ -366,6 +388,8 @@ export default function CookifyDemo() {
   const GOALS = language === "ru" ? GOAL_OPTIONS_RU : GOAL_OPTIONS_EN;
   const LIFESTYLE = language === "ru" ? LIFESTYLE_RU : LIFESTYLE_EN;
   const MEAL_LABELS = language === "ru" ? MEAL_LABELS_RU : MEAL_LABELS_EN;
+  const WEEKDAY_NAMES = language === "ru" ? WEEKDAY_NAMES_RU : WEEKDAY_NAMES_EN;
+  const WEEKDAY_SHORT = language === "ru" ? WEEKDAY_SHORT_RU : WEEKDAY_SHORT_EN;
 
   // Для фильтров по кухне всегда храним RU значение (так как в базе кухни на RU),
   // но отображаем подписи в зависимости от языка.
@@ -520,6 +544,20 @@ export default function CookifyDemo() {
       }
       return true;
     });
+  };
+
+  // Получить приемы пищи для конкретного дня
+  const getMealsForDay = (dateKey) => {
+    return mealHistory.filter(entry => getDateKey(new Date(entry.date)) === dateKey);
+  };
+
+  // Подсчет калорий за день
+  const calculateDayCalories = (dateKey) => {
+    const dayMeals = getMealsForDay(dateKey);
+    return dayMeals.reduce((sum, entry) => {
+      const cal = entry.recipe.caloriesPerServing || entry.recipe.calories || 0;
+      return sum + cal;
+    }, 0);
   };
 
   // Подсчет калорий за период
@@ -1141,7 +1179,10 @@ export default function CookifyDemo() {
                   {['day', 'week', 'month'].map(period => (
                     <button
                       key={period}
-                      onClick={() => setViewPeriod(period)}
+                      onClick={() => {
+                        setViewPeriod(period);
+                        setSelectedWeekDay(null);
+                      }}
                       className={`px-4 py-2 rounded-xl ${fontSize.small} transition ${viewPeriod === period ? `${theme.accent} text-white` : `${theme.border} border`}`}
                     >
                       {period === 'day' && t("День", "Day")}
@@ -1159,7 +1200,10 @@ export default function CookifyDemo() {
                   <input
                     type="date"
                     value={selectedDate}
-                    onChange={(e) => setSelectedDate(e.target.value)}
+                    onChange={(e) => {
+                      setSelectedDate(e.target.value);
+                      setSelectedWeekDay(null);
+                    }}
                     className={`w-full md:w-auto p-2 ${theme.input} ${fontSize.body} rounded-xl`}
                   />
                 </div>
@@ -1185,59 +1229,124 @@ export default function CookifyDemo() {
                   );
                 })()}
 
-                {/* Список приемов пищи за выбранный период */}
-                {(() => {
-                  const filteredHistory = getFilteredHistory();
-                  
-                  if (filteredHistory.length === 0) {
+                {/* Отображение в зависимости от периода */}
+                {viewPeriod === "week" && !selectedWeekDay ? (
+                  // Просмотр недели - показываем дни
+                  (() => {
+                    const weekDays = getWeekDays(selectedDate);
                     return (
-                      <p className={`${theme.textSecondary} ${fontSize.body} text-center py-8`}>
-                        {t("Нет записей за выбранный период", "No meals recorded for this period")}
-                      </p>
-                    );
-                  }
-
-                  // Группируем по категориям
-                  const groupedByCategory = MEAL_CATEGORIES.reduce((acc, cat) => {
-                    acc[cat] = filteredHistory.filter(entry => entry.category === cat);
-                    return acc;
-                  }, {});
-
-                  return (
-                    <div className="space-y-4">
-                      {MEAL_CATEGORIES.map(cat => {
-                        const meals = groupedByCategory[cat];
-                        if (meals.length === 0) return null;
-
-                        return (
-                          <div key={cat} className={`p-4 ${theme.border} border rounded-xl`}>
-                            <h4 className={`${fontSize.cardTitle} font-semibold mb-3 ${theme.headerText}`}>
-                              {MEAL_LABELS[cat]} ({meals.length})
-                            </h4>
-                            <div className="space-y-2">
-                              {meals.map(entry => (
-                                <div key={entry.id} className={`flex items-center justify-between p-3 ${theme.cardBg} rounded-lg`}>
-                                  <div className="flex-1">
-                                    <div className={`${fontSize.body} font-semibold`}>{entry.recipe.title}</div>
-                                    <div className={`${fontSize.small} ${theme.textSecondary}`}>
-                                      {formatDate(entry.date, language)} • {entry.recipe.caloriesPerServing || entry.recipe.calories} {t("ккал", "kcal")}
-                                    </div>
-                                  </div>
-                                  <button
-                                    onClick={() => removeMealFromHistory(entry.id)}
-                                    className="text-red-500 hover:text-red-700 ml-3"
-                                  >
-                                    <FaTimes />
-                                  </button>
+                      <div className="space-y-2">
+                        <h4 className={`${fontSize.cardTitle} font-semibold mb-3 ${theme.headerText}`}>
+                          {t("Дни недели", "Week days")}
+                        </h4>
+                        {weekDays.map((dayKey, idx) => {
+                          const dayMeals = getMealsForDay(dayKey);
+                          const dayCalories = calculateDayCalories(dayKey);
+                          const date = new Date(dayKey);
+                          const dayOfWeek = date.getDay();
+                          const dayName = WEEKDAY_NAMES[dayOfWeek];
+                          const dayShort = WEEKDAY_SHORT[dayOfWeek];
+                          
+                          return (
+                            <div
+                              key={dayKey}
+                              onClick={() => setSelectedWeekDay(dayKey)}
+                              className={`p-4 ${theme.border} border rounded-xl cursor-pointer hover:shadow-lg transition flex items-center justify-between`}
+                            >
+                              <div className="flex-1">
+                                <div className={`${fontSize.body} font-semibold`}>
+                                  {dayName} ({dayShort})
                                 </div>
-                              ))}
+                                <div className={`${fontSize.small} ${theme.textSecondary}`}>
+                                  {formatDate(dayKey, language)}
+                                </div>
+                              </div>
+                              <div className="text-right mr-4">
+                                <div className={`${fontSize.small} ${theme.textSecondary}`}>{t("Приемов:", "Meals:")} {dayMeals.length}</div>
+                                <div className={`${fontSize.body} font-bold ${theme.accentText}`}>{dayCalories} {t("ккал", "kcal")}</div>
+                              </div>
+                              <FaChevronRight className={theme.textSecondary} />
                             </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  );
-                })()}
+                          );
+                        })}
+                      </div>
+                    );
+                  })()
+                ) : (
+                  // Детальный просмотр дня или обычный список
+                  (() => {
+                    const filteredHistory = selectedWeekDay 
+                      ? getMealsForDay(selectedWeekDay)
+                      : getFilteredHistory();
+                    
+                    if (filteredHistory.length === 0) {
+                      return (
+                        <p className={`${theme.textSecondary} ${fontSize.body} text-center py-8`}>
+                          {t("Нет записей за выбранный период", "No meals recorded for this period")}
+                        </p>
+                      );
+                    }
+
+                    // Заголовок с кнопкой назад для детального просмотра
+                    const detailHeader = selectedWeekDay && (
+                      <div className="flex items-center gap-3 mb-4">
+                        <button
+                          onClick={() => setSelectedWeekDay(null)}
+                          className={`px-3 py-2 rounded-xl ${fontSize.small} ${theme.accent} ${theme.accentHover} text-white`}
+                        >
+                          ← {t("Назад к неделе", "Back to week")}
+                        </button>
+                        <div className={`${fontSize.cardTitle} font-semibold`}>
+                          {formatDate(selectedWeekDay, language)}
+                        </div>
+                      </div>
+                    );
+
+                    // Группируем по категориям
+                    const groupedByCategory = MEAL_CATEGORIES.reduce((acc, cat) => {
+                      acc[cat] = filteredHistory.filter(entry => entry.category === cat);
+                      return acc;
+                    }, {});
+
+                    return (
+                      <div>
+                        {detailHeader}
+                        <div className="space-y-4">
+                          {MEAL_CATEGORIES.map(cat => {
+                            const meals = groupedByCategory[cat];
+                            if (meals.length === 0) return null;
+
+                            return (
+                              <div key={cat} className={`p-4 ${theme.border} border rounded-xl`}>
+                                <h4 className={`${fontSize.cardTitle} font-semibold mb-3 ${theme.headerText}`}>
+                                  {MEAL_LABELS[cat]} ({meals.length})
+                                </h4>
+                                <div className="space-y-2">
+                                  {meals.map(entry => (
+                                    <div key={entry.id} className={`flex items-center justify-between p-3 ${theme.cardBg} rounded-lg`}>
+                                      <div className="flex-1">
+                                        <div className={`${fontSize.body} font-semibold`}>{entry.recipe.title}</div>
+                                        <div className={`${fontSize.small} ${theme.textSecondary}`}>
+                                          {!selectedWeekDay && formatDate(entry.date, language)} {selectedWeekDay && ''} {entry.recipe.caloriesPerServing || entry.recipe.calories} {t("ккал", "kcal")}
+                                        </div>
+                                      </div>
+                                      <button
+                                        onClick={() => removeMealFromHistory(entry.id)}
+                                        className="text-red-500 hover:text-red-700 ml-3"
+                                      >
+                                        <FaTimes />
+                                      </button>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })()
+                )}
               </div>
 
               {/* Кастомизация */}
