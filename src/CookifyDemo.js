@@ -1,6 +1,6 @@
 // =================== БЛОК 1: Импорты и примерные данные ===================
 import React, { useState, useEffect } from "react";
-import { FaSearch, FaUser, FaClipboardList, FaSun, FaMoon, FaPalette, FaFont, FaChevronDown, FaChevronUp, FaTimes, FaClock, FaExchangeAlt, FaPlus, FaCalendarAlt, FaChevronRight } from "react-icons/fa";
+import { FaSearch, FaUser, FaClipboardList, FaSun, FaMoon, FaPalette, FaFont, FaChevronDown, FaChevronUp, FaTimes, FaClock, FaExchangeAlt, FaPlus, FaCalendarAlt, FaChevronRight, FaChevronLeft } from "react-icons/fa";
 import { RECIPES_DATABASE } from './recipesData';
 
 // Используем импортированную базу данных вместо примеров
@@ -26,6 +26,9 @@ const WEEKDAY_NAMES_RU = ["Воскресенье", "Понедельник", "�
 const WEEKDAY_NAMES_EN = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 const WEEKDAY_SHORT_RU = ["Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"];
 const WEEKDAY_SHORT_EN = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+const MONTH_NAMES_RU = ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"];
+const MONTH_NAMES_EN = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
 // Константы конвертации
 const CM_TO_INCH = 0.393701;
@@ -272,6 +275,36 @@ const getWeekDays = (date) => {
   return days;
 };
 
+// Получить диапазон недели
+const getWeekRange = (date, language) => {
+  const weekDays = getWeekDays(date);
+  const firstDay = new Date(weekDays[0]);
+  const lastDay = new Date(weekDays[6]);
+  
+  if (language === "ru") {
+    return `${firstDay.getDate()} ${MONTH_NAMES_RU[firstDay.getMonth()].toLowerCase().slice(0, 3)} — ${lastDay.getDate()} ${MONTH_NAMES_RU[lastDay.getMonth()].toLowerCase().slice(0, 3)} ${lastDay.getFullYear()}`;
+  } else {
+    return `${MONTH_NAMES_EN[firstDay.getMonth()].slice(0, 3)} ${firstDay.getDate()} — ${MONTH_NAMES_EN[lastDay.getMonth()].slice(0, 3)} ${lastDay.getDate()}, ${lastDay.getFullYear()}`;
+  }
+};
+
+// Функции навигации по датам
+const addDays = (dateStr, days) => {
+  const d = new Date(dateStr);
+  d.setDate(d.getDate() + days);
+  return getDateKey(d);
+};
+
+const addWeeks = (dateStr, weeks) => {
+  return addDays(dateStr, weeks * 7);
+};
+
+const addMonths = (dateStr, months) => {
+  const d = new Date(dateStr);
+  d.setMonth(d.getMonth() + months);
+  return getDateKey(d);
+};
+
 // =================== БЛОК 2: Компонент приложения ===================
 export default function CookifyDemo() {
   // ---------- Стейты ----------
@@ -390,6 +423,7 @@ export default function CookifyDemo() {
   const MEAL_LABELS = language === "ru" ? MEAL_LABELS_RU : MEAL_LABELS_EN;
   const WEEKDAY_NAMES = language === "ru" ? WEEKDAY_NAMES_RU : WEEKDAY_NAMES_EN;
   const WEEKDAY_SHORT = language === "ru" ? WEEKDAY_SHORT_RU : WEEKDAY_SHORT_EN;
+  const MONTH_NAMES = language === "ru" ? MONTH_NAMES_RU : MONTH_NAMES_EN;
 
   // Для фильтров по кухне всегда храним RU значение (так как в базе кухни на RU),
   // но отображаем подписи в зависимости от языка.
@@ -653,6 +687,35 @@ export default function CookifyDemo() {
       label: dishInfo?.[language] || type,
       color: dishInfo?.color || "bg-gray-500"
     };
+  };
+
+  // Получить текст для отображения выбранного периода
+  const getPeriodDisplayText = () => {
+    const d = new Date(selectedDate);
+    
+    if (viewPeriod === "day") {
+      const today = new Date();
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      
+      if (getDateKey(d) === getDateKey(today)) {
+        return t("Сегодня", "Today");
+      } else if (getDateKey(d) === getDateKey(yesterday)) {
+        return t("Вчера", "Yesterday");
+      } else if (getDateKey(d) === getDateKey(tomorrow)) {
+        return t("Завтра", "Tomorrow");
+      } else {
+        return formatDate(selectedDate, language);
+      }
+    } else if (viewPeriod === "week") {
+      return getWeekRange(selectedDate, language);
+    } else if (viewPeriod === "month") {
+      return `${MONTH_NAMES[d.getMonth()]} ${d.getFullYear()}`;
+    }
+    
+    return formatDate(selectedDate, language);
   };
 
   // =================== БЛОК 3: JSX (UI) ===================
@@ -1158,7 +1221,7 @@ export default function CookifyDemo() {
                 </div>
               </div>
 
-              {/* История питания с разделением по периодам */}
+              {/* История питания с улучшенным навигатором */}
               <div className={`${theme.cardBg} p-6 rounded-xl shadow`}>
                 <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
                   <h3 className={`${fontSize.subheading} font-semibold flex items-center gap-2`}>
@@ -1192,20 +1255,86 @@ export default function CookifyDemo() {
                   ))}
                 </div>
 
-                {/* Выбор даты */}
-                <div className="mb-4">
-                  <label className={`block ${fontSize.body} font-semibold mb-2`}>
-                    {t("Выберите дату:", "Select date:")}
-                  </label>
-                  <input
-                    type="date"
-                    value={selectedDate}
-                    onChange={(e) => {
-                      setSelectedDate(e.target.value);
-                      setSelectedWeekDay(null);
-                    }}
-                    className={`w-full md:w-auto p-2 ${theme.input} ${fontSize.body} rounded-xl`}
-                  />
+                {/* УЛУЧШЕННЫЙ НАВИГАТОР ПО ДАТАМ */}
+                <div className={`mb-6 p-4 ${theme.border} border rounded-xl`}>
+                  {viewPeriod === "day" && (
+                    <div className="space-y-3">
+                      {/* Быстрые кнопки для дня */}
+                      <div className="flex gap-2 flex-wrap justify-center">
+                        <button
+                          onClick={() => setSelectedDate(addDays(selectedDate, -1))}
+                          className={`px-3 py-2 rounded-lg ${fontSize.small} ${theme.accent} ${theme.accentHover} text-white flex items-center gap-1`}
+                        >
+                          ← {t("Вчера", "Yesterday")}
+                        </button>
+                        <button
+                          onClick={() => setSelectedDate(getDateKey(new Date()))}
+                          className={`px-4 py-2 rounded-lg ${fontSize.small} ${theme.cardBg} border-2 ${theme.border} font-semibold`}
+                        >
+                          {t("Сегодня", "Today")}
+                        </button>
+                        <button
+                          onClick={() => setSelectedDate(addDays(selectedDate, 1))}
+                          className={`px-3 py-2 rounded-lg ${fontSize.small} ${theme.accent} ${theme.accentHover} text-white flex items-center gap-1`}
+                        >
+                          {t("Завтра", "Tomorrow")} →
+                        </button>
+                      </div>
+                      
+                      {/* Текущая выбранная дата */}
+                      <div className={`text-center ${fontSize.cardTitle} font-bold ${theme.headerText}`}>
+                        {getPeriodDisplayText()}
+                      </div>
+                    </div>
+                  )}
+
+                  {viewPeriod === "week" && (
+                    <div className="flex items-center justify-between gap-4">
+                      <button
+                        onClick={() => setSelectedDate(addWeeks(selectedDate, -1))}
+                        className={`p-2 rounded-lg ${theme.accent} ${theme.accentHover} text-white`}
+                      >
+                        <FaChevronLeft size={20} />
+                      </button>
+                      
+                      <div className="text-center flex-1">
+                        <div className={`${fontSize.cardTitle} font-bold ${theme.headerText}`}>
+                          {getPeriodDisplayText()}
+                        </div>
+                      </div>
+                      
+                      <button
+                        onClick={() => setSelectedDate(addWeeks(selectedDate, 1))}
+                        className={`p-2 rounded-lg ${theme.accent} ${theme.accentHover} text-white`}
+                      >
+                        <FaChevronRight size={20} />
+                      </button>
+                    </div>
+                  )}
+
+                  {viewPeriod === "month" && (
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between gap-4">
+                        <button
+                          onClick={() => setSelectedDate(addMonths(selectedDate, -1))}
+                          className={`p-2 rounded-lg ${theme.accent} ${theme.accentHover} text-white`}
+                        >
+                          <FaChevronLeft size={20} />
+                        </button>
+                        
+                        <div className={`${fontSize.cardTitle} font-bold ${theme.headerText}`}>
+                          {getPeriodDisplayText()}
+                        </div>
+                        
+                        <button
+                          onClick={() => setSelectedDate(addMonths(selectedDate, 1))}
+                          className={`p-2 rounded-lg ${theme.accent} ${theme.accentHover} text-white`}
+                        >
+                          <FaChevronRight size={20} />
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Статистика за период */}
