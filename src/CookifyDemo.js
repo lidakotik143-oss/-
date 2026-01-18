@@ -305,6 +305,14 @@ const addMonths = (dateStr, months) => {
   return getDateKey(d);
 };
 
+// Установить конкретный месяц и год
+const setMonthYear = (dateStr, month, year) => {
+  const d = new Date(dateStr);
+  d.setFullYear(year);
+  d.setMonth(month);
+  return getDateKey(d);
+};
+
 // =================== БЛОК 2: Компонент приложения ===================
 export default function CookifyDemo() {
   // ---------- Стейты ----------
@@ -1332,6 +1340,35 @@ export default function CookifyDemo() {
                         >
                           <FaChevronRight size={20} />
                         </button>
+                      </div>
+                      
+                      {/* Селектор месяца и года */}
+                      <div className="flex gap-2 justify-center">
+                        <select
+                          value={new Date(selectedDate).getMonth()}
+                          onChange={(e) => {
+                            const d = new Date(selectedDate);
+                            setSelectedDate(setMonthYear(selectedDate, parseInt(e.target.value), d.getFullYear()));
+                          }}
+                          className={`px-3 py-2 rounded-lg ${theme.input} ${fontSize.small}`}
+                        >
+                          {MONTH_NAMES.map((month, idx) => (
+                            <option key={idx} value={idx}>{month}</option>
+                          ))}
+                        </select>
+                        
+                        <select
+                          value={new Date(selectedDate).getFullYear()}
+                          onChange={(e) => {
+                            const d = new Date(selectedDate);
+                            setSelectedDate(setMonthYear(selectedDate, d.getMonth(), parseInt(e.target.value)));
+                          }}
+                          className={`px-3 py-2 rounded-lg ${theme.input} ${fontSize.small}`}
+                        >
+                          {Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - 5 + i).map(year => (
+                            <option key={year} value={year}>{year}</option>
+                          ))}
+                        </select>
                       </div>
                     </div>
                   )}
