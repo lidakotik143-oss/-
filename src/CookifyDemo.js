@@ -1,6 +1,6 @@
 // =================== БЛОК 1: Импорты и примерные данные ===================
 import React, { useState, useEffect } from "react";
-import { FaSearch, FaUser, FaClipboardList, FaSun, FaMoon, FaPalette, FaFont, FaChevronDown, FaChevronUp, FaTimes, FaClock, FaExchangeAlt } from "react-icons/fa";
+import { FaSearch, FaUser, FaClipboardList, FaSun, FaMoon, FaPalette, FaFont, FaChevronDown, FaChevronUp, FaTimes, FaClock, FaExchangeAlt, FaPlus, FaCalendarAlt } from "react-icons/fa";
 import { RECIPES_DATABASE } from './recipesData';
 
 // Используем импортированную базу данных вместо примеров
@@ -20,6 +20,7 @@ const LIFESTYLE_EN = ["Sedentary", "Moderately active", "Active"];
 
 const MEAL_CATEGORIES = ["breakfast", "lunch", "snack", "dinner"];
 const MEAL_LABELS_RU = { breakfast: "Завтрак", lunch: "Обед", snack: "Перекус", dinner: "Ужин" };
+const MEAL_LABELS_EN = { breakfast: "Breakfast", lunch: "Lunch", snack: "Snack", dinner: "Dinner" };
 
 // Константы конвертации
 const CM_TO_INCH = 0.393701;
@@ -223,6 +224,33 @@ const CUISINES_EN = [
   "Vietnamese"
 ];
 
+// Утилиты для работы с датами
+const getDateKey = (date) => {
+  const d = new Date(date);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
+
+const getWeekKey = (date) => {
+  const d = new Date(date);
+  const firstDayOfYear = new Date(d.getFullYear(), 0, 1);
+  const pastDaysOfYear = (d - firstDayOfYear) / 86400000;
+  const weekNumber = Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
+  return `${d.getFullYear()}-W${String(weekNumber).padStart(2, '0')}`;
+};
+
+const getMonthKey = (date) => {
+  const d = new Date(date);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+};
+
+const formatDate = (dateStr, language) => {
+  const d = new Date(dateStr);
+  if (language === "ru") {
+    return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+  }
+  return d.toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' });
+};
+
 // =================== БЛОК 2: Компонент приложения ===================
 export default function CookifyDemo() {
   // ---------- Стейты ----------
@@ -258,14 +286,18 @@ export default function CookifyDemo() {
     tag: ""
   });
 
-  // План питания
+  // План питания и история
   const [mealPlan, setMealPlan] = useState({
     breakfast: [],
     lunch: [],
     snack: [],
     dinner: []
   });
-  const [planPeriod, setPlanPeriod] = useState("day"); // day|week|month
+  const [mealHistory, setMealHistory] = useState([]); // [{date, category, recipe, timestamp}]
+  const [viewPeriod, setViewPeriod] = useState("day"); // day | week | month
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [showAddMealModal, setShowAddMealModal] = useState(false);
+  const [addMealCategory, setAddMealCategory] = useState("breakfast");
 
   // ---------- Загрузка из localStorage ----------
   useEffect(() => {
@@ -275,6 +307,7 @@ export default function CookifyDemo() {
     const savedTheme = localStorage.getItem("cookify_theme");
     const savedFont = localStorage.getItem("cookify_font");
     const savedFontSize = localStorage.getItem("cookify_fontSize");
+    const savedMealHistory = localStorage.getItem("cookify_mealHistory");
     
     if (savedUserData) {
       const parsed = JSON.parse(savedUserData);
@@ -286,6 +319,7 @@ export default function CookifyDemo() {
     if (savedTheme) setCurrentTheme(savedTheme);
     if (savedFont) setCurrentFont(savedFont);
     if (savedFontSize) setCurrentFontSize(savedFontSize);
+    if (savedMealHistory) setMealHistory(JSON.parse(savedMealHistory));
   }, []);
 
   // ---------- Сохранение в localStorage ----------
@@ -315,6 +349,10 @@ export default function CookifyDemo() {
     localStorage.setItem("cookify_fontSize", currentFontSize);
   }, [currentFontSize]);
 
+  useEffect(() => {
+    localStorage.setItem("cookify_mealHistory", JSON.stringify(mealHistory));
+  }, [mealHistory]);
+
   // ---------- Автоматическое переключение системы измерений при смене языка ----------
   useEffect(() => {
     if (language === "en") {
@@ -327,6 +365,7 @@ export default function CookifyDemo() {
   // Вспомогательные
   const GOALS = language === "ru" ? GOAL_OPTIONS_RU : GOAL_OPTIONS_EN;
   const LIFESTYLE = language === "ru" ? LIFESTYLE_RU : LIFESTYLE_EN;
+  const MEAL_LABELS = language === "ru" ? MEAL_LABELS_RU : MEAL_LABELS_EN;
 
   // Для фильтров по кухне всегда храним RU значение (так как в базе кухни на RU),
   // но отображаем подписи в зависимости от языка.
@@ -431,7 +470,9 @@ export default function CookifyDemo() {
     setShowRegisterForm(false);
     setIsEditingProfile(false);
     setMealPlan({ breakfast: [], lunch: [], snack: [], dinner: [] });
+    setMealHistory([]);
     localStorage.removeItem("cookify_user");
+    localStorage.removeItem("cookify_mealHistory");
   };
 
   const toggleUnitSystem = () => {
@@ -446,6 +487,65 @@ export default function CookifyDemo() {
     setMealPlan(prev => ({ ...prev, [category]: prev[category].filter(r => r.id !== recipeId) }));
   };
   const clearMealPlan = () => setMealPlan({ breakfast: [], lunch: [], snack: [], dinner: [] });
+
+  // ---------- История приемов пищи ----------
+  const addMealToHistory = (recipe, category, date = new Date().toISOString().split('T')[0]) => {
+    const newEntry = {
+      id: Date.now(),
+      date,
+      category,
+      recipe,
+      timestamp: new Date().toISOString()
+    };
+    setMealHistory(prev => [...prev, newEntry]);
+  };
+
+  const removeMealFromHistory = (entryId) => {
+    setMealHistory(prev => prev.filter(entry => entry.id !== entryId));
+  };
+
+  // Фильтрация истории по периоду
+  const getFilteredHistory = () => {
+    const selectedDateObj = new Date(selectedDate);
+    
+    return mealHistory.filter(entry => {
+      const entryDate = new Date(entry.date);
+      
+      if (viewPeriod === "day") {
+        return getDateKey(entryDate) === getDateKey(selectedDateObj);
+      } else if (viewPeriod === "week") {
+        return getWeekKey(entryDate) === getWeekKey(selectedDateObj);
+      } else if (viewPeriod === "month") {
+        return getMonthKey(entryDate) === getMonthKey(selectedDateObj);
+      }
+      return true;
+    });
+  };
+
+  // Подсчет калорий за период
+  const calculatePeriodStats = () => {
+    const filtered = getFilteredHistory();
+    const totalCalories = filtered.reduce((sum, entry) => {
+      const cal = entry.recipe.caloriesPerServing || entry.recipe.calories || 0;
+      return sum + cal;
+    }, 0);
+    
+    return {
+      totalMeals: filtered.length,
+      totalCalories,
+      avgCaloriesPerDay: viewPeriod === "day" ? totalCalories : Math.round(totalCalories / getDaysInPeriod())
+    };
+  };
+
+  const getDaysInPeriod = () => {
+    if (viewPeriod === "day") return 1;
+    if (viewPeriod === "week") return 7;
+    if (viewPeriod === "month") {
+      const d = new Date(selectedDate);
+      return new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+    }
+    return 1;
+  };
 
   // ---------- Фильтрация рецептов ----------
   const filteredResults = SAMPLE_RECIPES.filter(r => {
@@ -578,7 +678,7 @@ export default function CookifyDemo() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {[
               { title: t("Поиск рецептов", "Recipe Search"), content: t("Введите ингредиенты или используйте фильтры.", "Enter ingredients or use filters."), screen: "search" },
-              { title: t("Мой аккаунт", "My Account"), content: t("Настройте профиль и добавьте план питания.", "Set up profile and add meal plan."), screen: "account" },
+              { title: t("Мой аккаунт", "My Account"), content: t("Настройте профиль и отслеживайте питание.", "Set up profile and track nutrition."), screen: "account" },
             ].map((tip, idx) => (
               <div key={idx} onClick={() => setActiveScreen(tip.screen)} className={`${theme.cardBg} p-4 rounded-xl shadow border-l-4 ${theme.border} cursor-pointer flex items-start gap-3 hover:shadow-lg transition`}>
                 <FaSearch className={`${theme.accentText} w-6 h-6`} />
@@ -908,21 +1008,21 @@ export default function CookifyDemo() {
                 ))}
               </div>
 
-              {/* Добавление в план питания из модального окна */}
+              {/* Добавление в историю питания из модального окна */}
               {registered && (
                 <div className="mt-6 border-t pt-4">
-                  <h4 className={`${fontSize.body} font-semibold mb-3`}>{t("Добавить в план:", "Add to plan:")}</h4>
+                  <h4 className={`${fontSize.body} font-semibold mb-3`}>{t("Добавить в историю питания:", "Add to meal history:")}</h4>
                   <div className="flex gap-2 flex-wrap">
                     {MEAL_CATEGORIES.map(cat => (
                       <button
                         key={cat}
                         onClick={() => {
-                          addToMealPlan(selectedRecipe, cat);
+                          addMealToHistory(selectedRecipe, cat);
                           closeModal();
                         }}
                         className={`px-3 py-1 rounded ${fontSize.small} ${theme.accent} ${theme.accentHover} text-white`}
                       >
-                        {MEAL_LABELS_RU[cat]}
+                        {MEAL_LABELS[cat]}
                       </button>
                     ))}
                   </div>
@@ -1020,47 +1120,124 @@ export default function CookifyDemo() {
                 </div>
               </div>
 
-              {/* План питания */}
+              {/* История питания с разделением по периодам */}
               <div className={`${theme.cardBg} p-6 rounded-xl shadow`}>
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className={`${fontSize.subheading} font-semibold`}>{t("Мой план питания", "My Meal Plan")}</h3>
+                <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
+                  <h3 className={`${fontSize.subheading} font-semibold flex items-center gap-2`}>
+                    <FaCalendarAlt />
+                    {t("История питания", "Meal History")}
+                  </h3>
                   <button
-                    onClick={clearMealPlan}
-                    className={`px-4 py-2 rounded-xl ${fontSize.small} bg-red-500 hover:bg-red-600 text-white`}
+                    onClick={() => setShowAddMealModal(true)}
+                    className={`px-4 py-2 rounded-xl ${fontSize.small} ${theme.accent} ${theme.accentHover} text-white flex items-center gap-2`}
                   >
-                    {t("Очистить план", "Clear plan")}
+                    <FaPlus />
+                    {t("Добавить прием пищи", "Add meal")}
                   </button>
                 </div>
 
-                {MEAL_CATEGORIES.map(cat => (
-                  <div key={cat} className="mb-6">
-                    <h4 className={`${fontSize.cardTitle} font-semibold mb-2 ${theme.headerText}`}>
-                      {MEAL_LABELS_RU[cat]} ({mealPlan[cat].length})
-                    </h4>
-                    {mealPlan[cat].length === 0 ? (
-                      <p className={`${theme.textSecondary} ${fontSize.small}`}>{t("Пусто", "Empty")}</p>
-                    ) : (
-                      <div className="space-y-2">
-                        {mealPlan[cat].map(recipe => (
-                          <div key={recipe.id} className={`flex items-center justify-between p-3 ${theme.border} border rounded-lg`}>
-                            <div>
-                              <div className={`${fontSize.body} font-semibold`}>{recipe.title}</div>
-                              <div className={`${fontSize.small} ${theme.textSecondary}`}>
-                                {recipe.time} {t("мин", "min")} • {recipe.calories || recipe.caloriesPerServing} {t("ккал", "kcal")}
-                              </div>
-                            </div>
-                            <button
-                              onClick={() => removeFromMealPlan(cat, recipe.id)}
-                              className="text-red-500 hover:text-red-700"
-                            >
-                              <FaTimes />
-                            </button>
-                          </div>
-                        ))}
+                {/* Переключатель периодов */}
+                <div className="flex gap-2 mb-4 flex-wrap">
+                  {['day', 'week', 'month'].map(period => (
+                    <button
+                      key={period}
+                      onClick={() => setViewPeriod(period)}
+                      className={`px-4 py-2 rounded-xl ${fontSize.small} transition ${viewPeriod === period ? `${theme.accent} text-white` : `${theme.border} border`}`}
+                    >
+                      {period === 'day' && t("День", "Day")}
+                      {period === 'week' && t("Неделя", "Week")}
+                      {period === 'month' && t("Месяц", "Month")}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Выбор даты */}
+                <div className="mb-4">
+                  <label className={`block ${fontSize.body} font-semibold mb-2`}>
+                    {t("Выберите дату:", "Select date:")}
+                  </label>
+                  <input
+                    type="date"
+                    value={selectedDate}
+                    onChange={(e) => setSelectedDate(e.target.value)}
+                    className={`w-full md:w-auto p-2 ${theme.input} ${fontSize.body} rounded-xl`}
+                  />
+                </div>
+
+                {/* Статистика за период */}
+                {(() => {
+                  const stats = calculatePeriodStats();
+                  return (
+                    <div className={`grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 p-4 ${theme.border} border rounded-xl`}>
+                      <div>
+                        <div className={`${fontSize.small} ${theme.textSecondary}`}>{t("Всего приемов пищи", "Total meals")}</div>
+                        <div className={`${fontSize.cardTitle} font-bold ${theme.accentText}`}>{stats.totalMeals}</div>
                       </div>
-                    )}
-                  </div>
-                ))}
+                      <div>
+                        <div className={`${fontSize.small} ${theme.textSecondary}`}>{t("Всего калорий", "Total calories")}</div>
+                        <div className={`${fontSize.cardTitle} font-bold ${theme.accentText}`}>{stats.totalCalories} {t("ккал", "kcal")}</div>
+                      </div>
+                      <div>
+                        <div className={`${fontSize.small} ${theme.textSecondary}`}>{t("Среднее в день", "Avg per day")}</div>
+                        <div className={`${fontSize.cardTitle} font-bold ${theme.accentText}`}>{stats.avgCaloriesPerDay} {t("ккал", "kcal")}</div>
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* Список приемов пищи за выбранный период */}
+                {(() => {
+                  const filteredHistory = getFilteredHistory();
+                  
+                  if (filteredHistory.length === 0) {
+                    return (
+                      <p className={`${theme.textSecondary} ${fontSize.body} text-center py-8`}>
+                        {t("Нет записей за выбранный период", "No meals recorded for this period")}
+                      </p>
+                    );
+                  }
+
+                  // Группируем по категориям
+                  const groupedByCategory = MEAL_CATEGORIES.reduce((acc, cat) => {
+                    acc[cat] = filteredHistory.filter(entry => entry.category === cat);
+                    return acc;
+                  }, {});
+
+                  return (
+                    <div className="space-y-4">
+                      {MEAL_CATEGORIES.map(cat => {
+                        const meals = groupedByCategory[cat];
+                        if (meals.length === 0) return null;
+
+                        return (
+                          <div key={cat} className={`p-4 ${theme.border} border rounded-xl`}>
+                            <h4 className={`${fontSize.cardTitle} font-semibold mb-3 ${theme.headerText}`}>
+                              {MEAL_LABELS[cat]} ({meals.length})
+                            </h4>
+                            <div className="space-y-2">
+                              {meals.map(entry => (
+                                <div key={entry.id} className={`flex items-center justify-between p-3 ${theme.cardBg} rounded-lg`}>
+                                  <div className="flex-1">
+                                    <div className={`${fontSize.body} font-semibold`}>{entry.recipe.title}</div>
+                                    <div className={`${fontSize.small} ${theme.textSecondary}`}>
+                                      {formatDate(entry.date, language)} • {entry.recipe.caloriesPerServing || entry.recipe.calories} {t("ккал", "kcal")}
+                                    </div>
+                                  </div>
+                                  <button
+                                    onClick={() => removeMealFromHistory(entry.id)}
+                                    className="text-red-500 hover:text-red-700 ml-3"
+                                  >
+                                    <FaTimes />
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })()}
               </div>
 
               {/* Кастомизация */}
@@ -1275,6 +1452,61 @@ export default function CookifyDemo() {
                     {isEditingProfile ? t("Сохранить изменения", "Save Changes") : t("Зарегистрироваться", "Register")}
                   </button>
                 </form>
+              </div>
+            </div>
+          )}
+
+          {/* Модальное окно добавления приема пищи */}
+          {showAddMealModal && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+              <div className={`${theme.cardBg} rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto p-6`}>
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className={`${fontSize.subheading} font-bold`}>{t("Добавить прием пищи", "Add Meal")}</h2>
+                  <button
+                    onClick={() => setShowAddMealModal(false)}
+                    className={`${theme.textSecondary} hover:${theme.text}`}
+                  >
+                    <FaTimes size={24} />
+                  </button>
+                </div>
+
+                {/* Выбор категории */}
+                <div className="mb-4">
+                  <label className={`block ${fontSize.body} font-semibold mb-2`}>{t("Тип приема пищи:", "Meal type:")}</label>
+                  <div className="flex gap-2 flex-wrap">
+                    {MEAL_CATEGORIES.map(cat => (
+                      <button
+                        key={cat}
+                        onClick={() => setAddMealCategory(cat)}
+                        className={`px-4 py-2 rounded-xl ${fontSize.small} transition ${addMealCategory === cat ? `${theme.accent} text-white` : `${theme.border} border`}`}
+                      >
+                        {MEAL_LABELS[cat]}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Список рецептов для выбора */}
+                <div>
+                  <h3 className={`${fontSize.cardTitle} font-semibold mb-3`}>{t("Выберите рецепт:", "Select recipe:")}</h3>
+                  <div className="grid gap-2 max-h-96 overflow-y-auto">
+                    {SAMPLE_RECIPES.map(r => (
+                      <div
+                        key={r.id}
+                        onClick={() => {
+                          addMealToHistory(r, addMealCategory);
+                          setShowAddMealModal(false);
+                        }}
+                        className={`p-3 ${theme.border} border rounded-lg cursor-pointer hover:shadow-lg transition`}
+                      >
+                        <div className={`${fontSize.body} font-semibold`}>{r.title}</div>
+                        <div className={`${fontSize.small} ${theme.textSecondary}`}>
+                          {r.caloriesPerServing || r.calories} {t("ккал", "kcal")} • {r.time} {t("мин", "min")}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
           )}
