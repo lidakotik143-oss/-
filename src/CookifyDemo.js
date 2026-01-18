@@ -1,6 +1,6 @@
 // =================== БЛОК 1: Импорты и примерные данные ===================
 import React, { useState, useEffect } from "react";
-import { FaSearch, FaUser, FaClipboardList, FaSun, FaMoon, FaPalette, FaFont, FaChevronDown, FaChevronUp, FaTimes, FaClock } from "react-icons/fa";
+import { FaSearch, FaUser, FaClipboardList, FaSun, FaMoon, FaPalette, FaFont, FaChevronDown, FaChevronUp, FaTimes, FaClock, FaExchangeAlt } from "react-icons/fa";
 import { RECIPES_DATABASE } from './recipesData';
 
 // Используем импортированную базу данных вместо примеров
@@ -20,6 +20,12 @@ const LIFESTYLE_EN = ["Sedentary", "Moderately active", "Active"];
 
 const MEAL_CATEGORIES = ["breakfast", "lunch", "snack", "dinner"];
 const MEAL_LABELS_RU = { breakfast: "Завтрак", lunch: "Обед", snack: "Перекус", dinner: "Ужин" };
+
+// Константы конвертации
+const CM_TO_INCH = 0.393701;
+const KG_TO_LB = 2.20462;
+const INCH_TO_CM = 2.54;
+const LB_TO_KG = 0.453592;
 
 // Маппинг типов блюд на русском с уникальными цветами
 const DISH_TYPE_LABELS = {
@@ -222,6 +228,7 @@ export default function CookifyDemo() {
   // ---------- Стейты ----------
   const [activeScreen, setActiveScreen] = useState("home"); // home, search, account
   const [language, setLanguage] = useState("ru");
+  const [unitSystem, setUnitSystem] = useState("metric"); // metric | imperial
   const [currentTheme, setCurrentTheme] = useState("olive"); // Текущая тема
   const [currentFont, setCurrentFont] = useState("inter"); // Текущий шрифт
   const [currentFontSize, setCurrentFontSize] = useState("small"); // Размер шрифта
@@ -264,6 +271,7 @@ export default function CookifyDemo() {
   useEffect(() => {
     const savedUserData = localStorage.getItem("cookify_user");
     const savedLanguage = localStorage.getItem("cookify_language");
+    const savedUnitSystem = localStorage.getItem("cookify_unitSystem");
     const savedTheme = localStorage.getItem("cookify_theme");
     const savedFont = localStorage.getItem("cookify_font");
     const savedFontSize = localStorage.getItem("cookify_fontSize");
@@ -274,6 +282,7 @@ export default function CookifyDemo() {
       setRegistered(true);
     }
     if (savedLanguage) setLanguage(savedLanguage);
+    if (savedUnitSystem) setUnitSystem(savedUnitSystem);
     if (savedTheme) setCurrentTheme(savedTheme);
     if (savedFont) setCurrentFont(savedFont);
     if (savedFontSize) setCurrentFontSize(savedFontSize);
@@ -291,6 +300,10 @@ export default function CookifyDemo() {
   }, [language]);
 
   useEffect(() => {
+    localStorage.setItem("cookify_unitSystem", unitSystem);
+  }, [unitSystem]);
+
+  useEffect(() => {
     localStorage.setItem("cookify_theme", currentTheme);
   }, [currentTheme]);
 
@@ -301,6 +314,15 @@ export default function CookifyDemo() {
   useEffect(() => {
     localStorage.setItem("cookify_fontSize", currentFontSize);
   }, [currentFontSize]);
+
+  // ---------- Автоматическое переключение системы измерений при смене языка ----------
+  useEffect(() => {
+    if (language === "en") {
+      setUnitSystem("imperial");
+    } else {
+      setUnitSystem("metric");
+    }
+  }, [language]);
 
   // Вспомогательные
   const GOALS = language === "ru" ? GOAL_OPTIONS_RU : GOAL_OPTIONS_EN;
@@ -325,6 +347,43 @@ export default function CookifyDemo() {
   const font = FONTS[currentFont];
   const fontSize = FONT_SIZES[currentFontSize];
 
+  // ---------- Функции конвертации единиц ----------
+  const convertWeight = (value, fromUnit) => {
+    if (!value) return value;
+    const num = parseFloat(value);
+    if (isNaN(num)) return value;
+    if (fromUnit === "metric") {
+      return (num * KG_TO_LB).toFixed(1);
+    } else {
+      return (num * LB_TO_KG).toFixed(1);
+    }
+  };
+
+  const convertHeight = (value, fromUnit) => {
+    if (!value) return value;
+    const num = parseFloat(value);
+    if (isNaN(num)) return value;
+    if (fromUnit === "metric") {
+      return (num * CM_TO_INCH).toFixed(1);
+    } else {
+      return (num * INCH_TO_CM).toFixed(1);
+    }
+  };
+
+  const getDisplayWeight = () => {
+    if (!userData?.weight) return "";
+    const value = unitSystem === "metric" ? userData.weight : convertWeight(userData.weight, "metric");
+    const unit = unitSystem === "metric" ? (language === "ru" ? "кг" : "kg") : "lb";
+    return `${value} ${unit}`;
+  };
+
+  const getDisplayHeight = () => {
+    if (!userData?.height) return "";
+    const value = unitSystem === "metric" ? userData.height : convertHeight(userData.height, "metric");
+    const unit = unitSystem === "metric" ? (language === "ru" ? "см" : "cm") : "in";
+    return `${value} ${unit}`;
+  };
+
   // ---------- Обработчики профиля ----------
   const handleAvatarUpload = (e) => {
     const file = e.target.files?.[0];
@@ -346,6 +405,15 @@ export default function CookifyDemo() {
     if (userData?.avatarURL) {
       data.avatarURL = userData.avatarURL;
     }
+    // Всегда сохраняем в метрической системе
+    if (unitSystem === "imperial") {
+      if (data.weight) {
+        data.weight = convertWeight(data.weight, "imperial");
+      }
+      if (data.height) {
+        data.height = convertHeight(data.height, "imperial");
+      }
+    }
     setUserData(data);
     setRegistered(true);
     setShowRegisterForm(false);
@@ -364,6 +432,10 @@ export default function CookifyDemo() {
     setIsEditingProfile(false);
     setMealPlan({ breakfast: [], lunch: [], snack: [], dinner: [] });
     localStorage.removeItem("cookify_user");
+  };
+
+  const toggleUnitSystem = () => {
+    setUnitSystem(prev => prev === "metric" ? "imperial" : "metric");
   };
 
   // ---------- План питания ----------
@@ -915,11 +987,25 @@ export default function CookifyDemo() {
                   </div>
                 </div>
 
+                {/* Переключатель единиц измерения */}
+                <div className="mb-4 flex items-center justify-end gap-2">
+                  <span className={`${fontSize.small} ${theme.textSecondary}`}>
+                    {unitSystem === "metric" ? t("Метрическая", "Metric") : t("Имперская", "Imperial")}
+                  </span>
+                  <button
+                    onClick={toggleUnitSystem}
+                    className={`px-3 py-1 rounded-xl ${fontSize.small} ${theme.accent} ${theme.accentHover} text-white flex items-center gap-2`}
+                  >
+                    <FaExchangeAlt />
+                    {t("Переключить", "Switch")}
+                  </button>
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                   {[
                     { label: t("Возраст", "Age"), value: userData.age },
-                    { label: t("Вес", "Weight"), value: userData.weight ? `${userData.weight} ${t("кг", "kg")}` : "" },
-                    { label: t("Рост", "Height"), value: userData.height ? `${userData.height} ${t("см", "cm")}` : "" },
+                    { label: t("Вес", "Weight"), value: getDisplayWeight() },
+                    { label: t("Рост", "Height"), value: getDisplayHeight() },
                     { label: t("Цель", "Goal"), value: userData.goal },
                     { label: t("Образ жизни", "Lifestyle"), value: userData.lifestyle },
                     { label: t("Аллергии", "Allergies"), value: userData.allergies || t("Нет", "None") }
@@ -1110,20 +1196,34 @@ export default function CookifyDemo() {
                       />
                     </div>
                     <div>
-                      <label className={`block ${fontSize.body} font-semibold mb-2`}>{t("Вес (кг)", "Weight (kg)")}</label>
+                      <label className={`block ${fontSize.body} font-semibold mb-2`}>
+                        {t("Вес", "Weight")} ({unitSystem === "metric" ? (language === "ru" ? "кг" : "kg") : "lb"})
+                      </label>
                       <input
                         type="number"
+                        step="0.1"
                         name="weight"
-                        defaultValue={userData?.weight || ""}
+                        defaultValue={
+                          userData?.weight
+                            ? (unitSystem === "metric" ? userData.weight : convertWeight(userData.weight, "metric"))
+                            : ""
+                        }
                         className={`w-full p-3 ${theme.input} ${fontSize.body} rounded-xl`}
                       />
                     </div>
                     <div>
-                      <label className={`block ${fontSize.body} font-semibold mb-2`}>{t("Рост (см)", "Height (cm)")}</label>
+                      <label className={`block ${fontSize.body} font-semibold mb-2`}>
+                        {t("Рост", "Height")} ({unitSystem === "metric" ? (language === "ru" ? "см" : "cm") : "in"})
+                      </label>
                       <input
                         type="number"
+                        step="0.1"
                         name="height"
-                        defaultValue={userData?.height || ""}
+                        defaultValue={
+                          userData?.height
+                            ? (unitSystem === "metric" ? userData.height : convertHeight(userData.height, "metric"))
+                            : ""
+                        }
                         className={`w-full p-3 ${theme.input} ${fontSize.body} rounded-xl`}
                       />
                     </div>
