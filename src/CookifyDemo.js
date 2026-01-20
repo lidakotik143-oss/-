@@ -2025,9 +2025,7 @@ export default function CookifyDemo() {
                   </button>
                 </div>
 
-                <div className={`${fontSize.small} ${theme.textSecondary} mb-3`}>
-                  {t("Подходящие блюда будут сверху, но можно выбрать любой рецепт.", "Best matches are on top, but you can pick any recipe.")}
-                </div>
+                
 
                 <div className="grid gap-2 max-h-96 overflow-y-auto">
                   {getSortedRecipesForPlanner(plannerModalCategory).map(r => (
