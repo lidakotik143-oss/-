@@ -144,21 +144,6 @@ const THEMES = {
     accentHover: "hover:bg-[#283618]",
     preview: "bg-gradient-to-br from-[#FEFAE0] via-[#DDA15E] to-[#606C38]"
   },
-  beige: {
-    name: "Бежевая",
-    nameEn: "Beige",
-    bg: "bg-[#FEFAE0]",
-    cardBg: "bg-[#FAEDCD]",
-    text: "text-[#6C584C]",
-    textSecondary: "text-[#A98467]",
-    border: "border-[#D4A373]",
-    input: "bg-[#FAEDCD] border-[#CCD5AE] text-[#6C584C] placeholder-[#A98467]",
-    headerText: "text-[#A98467]",
-    accentText: "text-[#D4A373]",
-    accent: "bg-[#CCD5AE]",
-    accentHover: "hover:bg-[#E9EDC9]",
-    preview: "bg-gradient-to-br from-[#FEFAE0] via-[#FAEDCD] to-[#CCD5AE]"
-  },
   sage: {
     name: "Шалфейная",
     nameEn: "Sage",
