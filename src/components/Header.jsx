@@ -12,7 +12,7 @@ export default function Header({
   const t = (ru, en) => (language === "ru" ? ru : en);
 
   return (
-    <header className="max-w-6xl mx-auto flex items-center justify-between mb-6">
+    <header className={`sticky top-0 z-50 ${theme.bg} max-w-6xl mx-auto flex items-center justify-between mb-6 py-4`}>
       <div>
         <h1 className={`${fontSize.heading} font-bold ${theme.headerText}`}>Cookify</h1>
         <p className={`${fontSize.small} ${theme.textSecondary}`}>
