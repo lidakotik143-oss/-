@@ -243,6 +243,7 @@ export default function CookifyDemo() {
   // Новое состояние для списка покупок
   const [shoppingList, setShoppingList] = useState([]);
 
+  // ✅ ЗАГРУЗКА ИЗ localStorage ПРИ СТАРТЕ
   useEffect(() => {
     const savedUserData = localStorage.getItem("cookify_user");
     const savedLanguage = localStorage.getItem("cookify_language");
@@ -250,6 +251,7 @@ export default function CookifyDemo() {
     const savedTheme = localStorage.getItem("cookify_theme");
     const savedFont = localStorage.getItem("cookify_font");
     const savedFontSize = localStorage.getItem("cookify_fontSize");
+    const savedMealPlan = localStorage.getItem("cookify_mealPlan"); // ✅ ДОБАВЛЕНО
     const savedMealHistory = localStorage.getItem("cookify_mealHistory");
     const savedWeeklyPlan = localStorage.getItem("cookify_weeklyPlan");
     const savedShoppingList = localStorage.getItem("cookify_shoppingList");
@@ -264,17 +266,20 @@ export default function CookifyDemo() {
     if (savedTheme) setCurrentTheme(savedTheme);
     if (savedFont) setCurrentFont(savedFont);
     if (savedFontSize) setCurrentFontSize(savedFontSize);
+    if (savedMealPlan) setMealPlan(JSON.parse(savedMealPlan)); // ✅ ДОБАВЛЕНО
     if (savedMealHistory) setMealHistory(JSON.parse(savedMealHistory));
     if (savedWeeklyPlan) setWeeklyPlan(JSON.parse(savedWeeklyPlan));
     if (savedShoppingList) setShoppingList(JSON.parse(savedShoppingList));
   }, []);
 
+  // ✅ АВТОСОХРАНЕНИЕ ПРИ ИЗМЕНЕНИИ
   useEffect(() => { if (userData) localStorage.setItem("cookify_user", JSON.stringify(userData)); }, [userData]);
   useEffect(() => { localStorage.setItem("cookify_language", language); }, [language]);
   useEffect(() => { localStorage.setItem("cookify_unitSystem", unitSystem); }, [unitSystem]);
   useEffect(() => { localStorage.setItem("cookify_theme", currentTheme); }, [currentTheme]);
   useEffect(() => { localStorage.setItem("cookify_font", currentFont); }, [currentFont]);
   useEffect(() => { localStorage.setItem("cookify_fontSize", currentFontSize); }, [currentFontSize]);
+  useEffect(() => { localStorage.setItem("cookify_mealPlan", JSON.stringify(mealPlan)); }, [mealPlan]); // ✅ ДОБАВЛЕНО
   useEffect(() => { localStorage.setItem("cookify_mealHistory", JSON.stringify(mealHistory)); }, [mealHistory]);
   useEffect(() => { localStorage.setItem("cookify_weeklyPlan", JSON.stringify(weeklyPlan)); }, [weeklyPlan]);
   useEffect(() => { localStorage.setItem("cookify_shoppingList", JSON.stringify(shoppingList)); }, [shoppingList]);
@@ -367,6 +372,7 @@ export default function CookifyDemo() {
     setWeeklyPlan({});
     setShoppingList([]);
     localStorage.removeItem("cookify_user");
+    localStorage.removeItem("cookify_mealPlan"); // ✅ ДОБАВЛЕНО
     localStorage.removeItem("cookify_mealHistory");
     localStorage.removeItem("cookify_weeklyPlan");
     localStorage.removeItem("cookify_shoppingList");
