@@ -68,9 +68,14 @@ const getTimeCategory = (minutes) => {
   return { category: "slow", emoji: "🕐", label_ru: "Не спеша", label_en: "Slow", color: "#EF4444" };
 };
 
+// 🔤 РАСШИРЕННЫЙ СПИСОК ШРИФТОВ
 const FONTS = {
   inter: { name: "Inter", nameRu: "Inter", class: "font-sans" },
-  roboto: { name: "Roboto", nameRu: "Roboto", class: "font-['Roboto']" }
+  roboto: { name: "Roboto", nameRu: "Roboto", class: "font-['Roboto']" },
+  opensans: { name: "Open Sans", nameRu: "Open Sans", class: "font-['Open_Sans']" },
+  lato: { name: "Lato", nameRu: "Lato", class: "font-['Lato']" },
+  montserrat: { name: "Montserrat", nameRu: "Montserrat", class: "font-['Montserrat']" },
+  poppins: { name: "Poppins", nameRu: "Poppins", class: "font-['Poppins']" }
 };
 
 const FONT_SIZES = {
