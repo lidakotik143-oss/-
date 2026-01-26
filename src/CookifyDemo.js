@@ -10,8 +10,6 @@ import SearchScreen from "./components/SearchScreen";
 import AccountScreen from "./components/AccountScreen";
 
 // Используем импортированную базу данных вместо примеров
-// По умолчанию считаем, что рецепты рассчитаны на 2 порции,
-// а поле calories (если не задано caloriesPerServing) — это ккал на 1 порцию.
 const SAMPLE_RECIPES = (RECIPES_DATABASE || []).map(r => ({
   ...r,
   servings: r.servings ?? 2,
@@ -42,50 +40,27 @@ const KG_TO_LB = 2.20462;
 const INCH_TO_CM = 2.54;
 const LB_TO_KG = 0.453592;
 
-// Маппинг типов блюд на русском с уникальными цветами
+// Маппинг типов блюд
 const DISH_TYPE_LABELS = {
-  "завтрак": { 
-    ru: "Завтрак", 
-    en: "Breakfast",
-    color: "bg-[#F4A460]" // Sandy Brown - утренний теплый оттенок
-  },
-  "обед": { 
-    ru: "Обед", 
-    en: "Lunch",
-    color: "bg-[#8B7355]" // Burlywood Dark - сытный коричневый
-  },
-  "ужин": { 
-    ru: "Ужин", 
-    en: "Dinner",
-    color: "bg-[#6B8E23]" // Olive Drab - вечерний зеленый
-  },
-  "перекус": { 
-    ru: "Перекус", 
-    en: "Snack",
-    color: "bg-[#DAA520]" // Goldenrod - золотистый
-  },
-  "десерт": { 
-    ru: "Десерт", 
-    en: "Dessert",
-    color: "bg-[#CD853F]" // Peru - сладкий персиковый
-  }
+  "завтрак": { ru: "Завтрак", en: "Breakfast", color: "bg-[#F4A460]" },
+  "обед": { ru: "Обед", en: "Lunch", color: "bg-[#8B7355]" },
+  "ужин": { ru: "Ужин", en: "Dinner", color: "bg-[#6B8E23]" },
+  "перекус": { ru: "Перекус", en: "Snack", color: "bg-[#DAA520]" },
+  "десерт": { ru: "Десерт", en: "Dessert", color: "bg-[#CD853F]" }
 };
 
-// Маппинг диет (для более приятного отображения в EN)
 const DIET_LABELS = {
   "веган": { ru: "Веган", en: "Vegan" },
   "вегетарианское": { ru: "Вегетарианское", en: "Vegetarian" },
   "низкокалорийное": { ru: "Низкокалорийное", en: "Low calorie" }
 };
 
-// Маппинг сложности (для более приятного отображения в EN)
 const DIFFICULTY_LABELS = {
   "легкий": { ru: "Легкий", en: "Easy" },
   "средний": { ru: "Средний", en: "Medium" },
   "сложный": { ru: "Сложный", en: "Hard" }
 };
 
-// Функция для определения скорости приготовления и эмодзи
 const getTimeCategory = (minutes) => {
   const time = parseInt(minutes, 10);
   if (time <= 15) return { category: "fast", emoji: "⚡", label_ru: "Быстро", label_en: "Fast", color: "#10B981" };
@@ -93,135 +68,25 @@ const getTimeCategory = (minutes) => {
   return { category: "slow", emoji: "🕐", label_ru: "Не спеша", label_en: "Slow", color: "#EF4444" };
 };
 
-// Доступные шрифты (только работающие)
 const FONTS = {
   inter: { name: "Inter", nameRu: "Inter", class: "font-sans" },
   roboto: { name: "Roboto", nameRu: "Roboto", class: "font-['Roboto']" }
 };
 
-// Размеры шрифта (применяется КО ВСЕМУ ТЕКСТУ)
 const FONT_SIZES = {
-  small: { 
-    name: "Обычный", 
-    nameEn: "Normal", 
-    body: "text-base",
-    heading: "text-3xl",
-    subheading: "text-xl",
-    cardTitle: "text-lg",
-    small: "text-sm",
-    tiny: "text-xs"
-  },
-  medium: { 
-    name: "Увеличенный", 
-    nameEn: "Large", 
-    body: "text-lg",
-    heading: "text-4xl",
-    subheading: "text-2xl",
-    cardTitle: "text-xl",
-    small: "text-base",
-    tiny: "text-sm"
-  },
-  large: { 
-    name: "Крупный", 
-    nameEn: "Extra Large", 
-    body: "text-xl",
-    heading: "text-5xl",
-    subheading: "text-3xl",
-    cardTitle: "text-2xl",
-    small: "text-lg",
-    tiny: "text-base"
-  }
+  small: { name: "Обычный", nameEn: "Normal", body: "text-base", heading: "text-3xl", subheading: "text-xl", cardTitle: "text-lg", small: "text-sm", tiny: "text-xs" },
+  medium: { name: "Увеличенный", nameEn: "Large", body: "text-lg", heading: "text-4xl", subheading: "text-2xl", cardTitle: "text-xl", small: "text-base", tiny: "text-sm" },
+  large: { name: "Крупный", nameEn: "Extra Large", body: "text-xl", heading: "text-5xl", subheading: "text-3xl", cardTitle: "text-2xl", small: "text-lg", tiny: "text-base" }
 };
 
-// Цветовые темы на основе природных палитр
 const THEMES = {
-  olive: {
-    name: "Оливковая",
-    nameEn: "Olive",
-    bg: "bg-[#FEFAE0]",
-    cardBg: "bg-white",
-    text: "text-[#283618]",
-    textSecondary: "text-[#606C38]",
-    border: "border-[#DDA15E]",
-    input: "bg-white border-[#DDA15E] text-[#283618] placeholder-[#606C38]",
-    headerText: "text-[#606C38]",
-    accentText: "text-[#BC6C25]",
-    accent: "bg-[#606C38]",
-    accentHover: "hover:bg-[#283618]",
-    preview: "bg-gradient-to-br from-[#FEFAE0] via-[#DDA15E] to-[#606C38]"
-  },
-  sage: {
-    name: "Шалфейная",
-    nameEn: "Sage",
-    bg: "bg-[#F0EAD2]",
-    cardBg: "bg-[#DDE5B6]",
-    text: "text-[#6C584C]",
-    textSecondary: "text-[#A98467]",
-    border: "border-[#A98467]",
-    input: "bg-[#F0EAD2] border-[#DDE5B6] text-[#6C584C] placeholder-[#A98467]",
-    headerText: "text-[#6C584C]",
-    accentText: "text-[#A98467]",
-    accent: "bg-[#A98467]",
-    accentHover: "hover:bg-[#6C584C]",
-    preview: "bg-gradient-to-br from-[#F0EAD2] via-[#DDE5B6] to-[#A98467]"
-  },
-  forest: {
-    name: "Лесная",
-    nameEn: "Forest",
-    bg: "bg-[#172815]",
-    cardBg: "bg-[#3E5622]",
-    text: "text-[#EDEEC9]",
-    textSecondary: "text-[#95B46A]",
-    border: "border-[#709255]",
-    input: "bg-[#3E5622] border-[#709255] text-[#EDEEC9] placeholder-[#95B46A]",
-    headerText: "text-[#95B46A]",
-    accentText: "text-[#83781B]",
-    accent: "bg-[#709255]",
-    accentHover: "hover:bg-[#95B46A]",
-    preview: "bg-gradient-to-br from-[#172815] via-[#3E5622] to-[#709255]"
-  }
+  olive: { name: "Оливковая", nameEn: "Olive", bg: "bg-[#FEFAE0]", cardBg: "bg-white", text: "text-[#283618]", textSecondary: "text-[#606C38]", border: "border-[#DDA15E]", input: "bg-white border-[#DDA15E] text-[#283618] placeholder-[#606C38]", headerText: "text-[#606C38]", accentText: "text-[#BC6C25]", accent: "bg-[#606C38]", accentHover: "hover:bg-[#283618]", preview: "bg-gradient-to-br from-[#FEFAE0] via-[#DDA15E] to-[#606C38]" },
+  sage: { name: "Шалфейная", nameEn: "Sage", bg: "bg-[#F0EAD2]", cardBg: "bg-[#DDE5B6]", text: "text-[#6C584C]", textSecondary: "text-[#A98467]", border: "border-[#A98467]", input: "bg-[#F0EAD2] border-[#DDE5B6] text-[#6C584C] placeholder-[#A98467]", headerText: "text-[#6C584C]", accentText: "text-[#A98467]", accent: "bg-[#A98467]", accentHover: "hover:bg-[#6C584C]", preview: "bg-gradient-to-br from-[#F0EAD2] via-[#DDE5B6] to-[#A98467]" },
+  forest: { name: "Лесная", nameEn: "Forest", bg: "bg-[#172815]", cardBg: "bg-[#3E5622]", text: "text-[#EDEEC9]", textSecondary: "text-[#95B46A]", border: "border-[#709255]", input: "bg-[#3E5622] border-[#709255] text-[#EDEEC9] placeholder-[#95B46A]", headerText: "text-[#95B46A]", accentText: "text-[#83781B]", accent: "bg-[#709255]", accentHover: "hover:bg-[#95B46A]", preview: "bg-gradient-to-br from-[#172815] via-[#3E5622] to-[#709255]" }
 };
 
-// Список кухонь (сортированный по алфавиту)
-const CUISINES_RU = [
-  "американская",
-  "вьетнамская",
-  "греческая",
-  "грузинская",
-  "индийская",
-  "испанская",
-  "итальянская",
-  "китайская",
-  "корейская",
-  "мексиканская",
-  "русская",
-  "средиземноморская",
-  "тайская",
-  "турецкая",
-  "украинская",
-  "французская",
-  "японская"
-];
-
-const CUISINES_EN = [
-  "American",
-  "Chinese",
-  "French",
-  "Georgian",
-  "Greek",
-  "Indian",
-  "Italian",
-  "Japanese",
-  "Korean",
-  "Mediterranean",
-  "Mexican",
-  "Russian",
-  "Spanish",
-  "Thai",
-  "Turkish",
-  "Ukrainian",
-  "Vietnamese"
-];
+const CUISINES_RU = ["американская", "вьетнамская", "греческая", "грузинская", "индийская", "испанская", "итальянская", "китайская", "корейская", "мексиканская", "русская", "средиземноморская", "тайская", "турецкая", "украинская", "французская", "японская"];
+const CUISINES_EN = ["American", "Chinese", "French", "Georgian", "Greek", "Indian", "Italian", "Japanese", "Korean", "Mediterranean", "Mexican", "Russian", "Spanish", "Thai", "Turkish", "Ukrainian", "Vietnamese"];
 
 // Утилиты для работы с датами
 const getDateKey = (date) => {
@@ -298,6 +163,39 @@ const setMonthYear = (dateStr, month, year) => {
   return getDateKey(d);
 };
 
+// Категоризация ингредиентов (умный анализатор)
+const categorizeIngredient = (ingredient) => {
+  const ing = ingredient.toLowerCase();
+  
+  // Овощи и фрукты
+  if (/(помидор|огурец|перец|лук|чеснок|морковь|капуста|картофель|баклажан|кабачок|тыква|свекла|редис|салат|шпинат|петрушка|укроп|базилик|кинза|руккола|авокадо|яблок|банан|апельсин|лимон|груша|персик|ягод|клубник|малин|черник|виноград|киви|манго|ананас|арбуз|дыня)/i.test(ing)) {
+    return "Овощи и фрукты";
+  }
+  
+  // Мясо и рыба
+  if (/(мясо|курица|говядина|свинина|баранина|индейка|утка|фарш|филе|рыба|лосось|тунец|форель|семга|треска|креветк|кальмар|мидии|краб)/i.test(ing)) {
+    return "Мясо и рыба";
+  }
+  
+  // Молочные продукты
+  if (/(молоко|сливки|сметана|йогурт|кефир|творог|сыр|масло сливочное|ряженка|простокваша)/i.test(ing)) {
+    return "Молочные продукты";
+  }
+  
+  // Зелень и приправы
+  if (/(соль|перец|специи|приправ|пряност|зелень|трав|орегано|тимьян|розмарин|паприка|куркума|карри|имбирь|корица|ваниль|мускатный|кориандр|тмин|анис|гвоздика|лавровый|майоран)/i.test(ing)) {
+    return "Зелень и приправы";
+  }
+  
+  // Крупы и макароны
+  if (/(рис|гречка|овсянка|пшено|перловка|манка|кукурузная крупа|киноа|булгур|макарон|паста|спагетти|лапша|вермишель)/i.test(ing)) {
+    return "Крупы и макароны";
+  }
+  
+  // По умолчанию
+  return "Продукты";
+};
+
 // =================== БЛОК 2: Компонент приложения ===================
 export default function CookifyDemo() {
   const [activeScreen, setActiveScreen] = useState("home");
@@ -321,12 +219,7 @@ export default function CookifyDemo() {
 
   const [showFilters, setShowFilters] = useState(false);
   const [selectedFilters, setSelectedFilters] = useState({
-    type: "",
-    diet: "",
-    timeRange: "",
-    cuisine: "",
-    difficulty: "",
-    tag: ""
+    type: "", diet: "", timeRange: "", cuisine: "", difficulty: "", tag: ""
   });
 
   const [mealPlan, setMealPlan] = useState({ breakfast: [], lunch: [], snack: [], dinner: [] });
@@ -343,6 +236,9 @@ export default function CookifyDemo() {
   const [showPlannerModal, setShowPlannerModal] = useState(false);
   const [plannerModalDate, setPlannerModalDate] = useState(null);
   const [plannerModalCategory, setPlannerModalCategory] = useState("breakfast");
+  
+  // Новое состояние для списка покупок
+  const [shoppingList, setShoppingList] = useState([]);
 
   useEffect(() => {
     const savedUserData = localStorage.getItem("cookify_user");
@@ -353,6 +249,7 @@ export default function CookifyDemo() {
     const savedFontSize = localStorage.getItem("cookify_fontSize");
     const savedMealHistory = localStorage.getItem("cookify_mealHistory");
     const savedWeeklyPlan = localStorage.getItem("cookify_weeklyPlan");
+    const savedShoppingList = localStorage.getItem("cookify_shoppingList");
 
     if (savedUserData) {
       const parsed = JSON.parse(savedUserData);
@@ -366,48 +263,22 @@ export default function CookifyDemo() {
     if (savedFontSize) setCurrentFontSize(savedFontSize);
     if (savedMealHistory) setMealHistory(JSON.parse(savedMealHistory));
     if (savedWeeklyPlan) setWeeklyPlan(JSON.parse(savedWeeklyPlan));
+    if (savedShoppingList) setShoppingList(JSON.parse(savedShoppingList));
   }, []);
 
-  useEffect(() => {
-    if (userData) {
-      localStorage.setItem("cookify_user", JSON.stringify(userData));
-    }
-  }, [userData]);
+  useEffect(() => { if (userData) localStorage.setItem("cookify_user", JSON.stringify(userData)); }, [userData]);
+  useEffect(() => { localStorage.setItem("cookify_language", language); }, [language]);
+  useEffect(() => { localStorage.setItem("cookify_unitSystem", unitSystem); }, [unitSystem]);
+  useEffect(() => { localStorage.setItem("cookify_theme", currentTheme); }, [currentTheme]);
+  useEffect(() => { localStorage.setItem("cookify_font", currentFont); }, [currentFont]);
+  useEffect(() => { localStorage.setItem("cookify_fontSize", currentFontSize); }, [currentFontSize]);
+  useEffect(() => { localStorage.setItem("cookify_mealHistory", JSON.stringify(mealHistory)); }, [mealHistory]);
+  useEffect(() => { localStorage.setItem("cookify_weeklyPlan", JSON.stringify(weeklyPlan)); }, [weeklyPlan]);
+  useEffect(() => { localStorage.setItem("cookify_shoppingList", JSON.stringify(shoppingList)); }, [shoppingList]);
 
   useEffect(() => {
-    localStorage.setItem("cookify_language", language);
-  }, [language]);
-
-  useEffect(() => {
-    localStorage.setItem("cookify_unitSystem", unitSystem);
-  }, [unitSystem]);
-
-  useEffect(() => {
-    localStorage.setItem("cookify_theme", currentTheme);
-  }, [currentTheme]);
-
-  useEffect(() => {
-    localStorage.setItem("cookify_font", currentFont);
-  }, [currentFont]);
-
-  useEffect(() => {
-    localStorage.setItem("cookify_fontSize", currentFontSize);
-  }, [currentFontSize]);
-
-  useEffect(() => {
-    localStorage.setItem("cookify_mealHistory", JSON.stringify(mealHistory));
-  }, [mealHistory]);
-
-  useEffect(() => {
-    localStorage.setItem("cookify_weeklyPlan", JSON.stringify(weeklyPlan));
-  }, [weeklyPlan]);
-
-  useEffect(() => {
-    if (language === "en") {
-      setUnitSystem("imperial");
-    } else {
-      setUnitSystem("metric");
-    }
+    if (language === "en") setUnitSystem("imperial");
+    else setUnitSystem("metric");
   }, [language]);
 
   const GOALS = language === "ru" ? GOAL_OPTIONS_RU : GOAL_OPTIONS_EN;
@@ -417,10 +288,7 @@ export default function CookifyDemo() {
   const WEEKDAY_SHORT = language === "ru" ? WEEKDAY_SHORT_RU : WEEKDAY_SHORT_EN;
   const MONTH_NAMES = language === "ru" ? MONTH_NAMES_RU : MONTH_NAMES_EN;
 
-  const CUISINE_OPTIONS = CUISINES_RU.map((ruName, idx) => ({
-    value: ruName,
-    label: language === "ru" ? ruName : (CUISINES_EN[idx] || ruName)
-  }));
+  const CUISINE_OPTIONS = CUISINES_RU.map((ruName, idx) => ({ value: ruName, label: language === "ru" ? ruName : (CUISINES_EN[idx] || ruName) }));
 
   const normalize = (s) => (s || "").toString().toLowerCase();
   const TYPE_OPTIONS = Object.keys(DISH_TYPE_LABELS);
@@ -436,22 +304,14 @@ export default function CookifyDemo() {
     if (!value) return value;
     const num = parseFloat(value);
     if (isNaN(num)) return value;
-    if (fromUnit === "metric") {
-      return (num * KG_TO_LB).toFixed(1);
-    } else {
-      return (num * LB_TO_KG).toFixed(1);
-    }
+    return fromUnit === "metric" ? (num * KG_TO_LB).toFixed(1) : (num * LB_TO_KG).toFixed(1);
   };
 
   const convertHeight = (value, fromUnit) => {
     if (!value) return value;
     const num = parseFloat(value);
     if (isNaN(num)) return value;
-    if (fromUnit === "metric") {
-      return (num * CM_TO_INCH).toFixed(1);
-    } else {
-      return (num * INCH_TO_CM).toFixed(1);
-    }
+    return fromUnit === "metric" ? (num * CM_TO_INCH).toFixed(1) : (num * INCH_TO_CM).toFixed(1);
   };
 
   const getDisplayWeight = () => {
@@ -472,9 +332,7 @@ export default function CookifyDemo() {
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onloadend = () => {
-      setUserData(prev => ({ ...prev, avatarURL: reader.result }));
-    };
+    reader.onloadend = () => { setUserData(prev => ({ ...prev, avatarURL: reader.result })); };
     reader.readAsDataURL(file);
   };
 
@@ -483,16 +341,10 @@ export default function CookifyDemo() {
     const form = new FormData(e.target);
     const data = Object.fromEntries(form.entries());
     Object.keys(data).forEach(k => { if (data[k] === "") data[k] = ""; });
-    if (userData?.avatarURL) {
-      data.avatarURL = userData.avatarURL;
-    }
+    if (userData?.avatarURL) data.avatarURL = userData.avatarURL;
     if (unitSystem === "imperial") {
-      if (data.weight) {
-        data.weight = convertWeight(data.weight, "imperial");
-      }
-      if (data.height) {
-        data.height = convertHeight(data.height, "imperial");
-      }
+      if (data.weight) data.weight = convertWeight(data.weight, "imperial");
+      if (data.height) data.height = convertHeight(data.height, "imperial");
     }
     setUserData(data);
     setRegistered(true);
@@ -500,10 +352,7 @@ export default function CookifyDemo() {
     setIsEditingProfile(false);
   };
 
-  const handleStartEditProfile = () => {
-    setIsEditingProfile(true);
-    setShowRegisterForm(true);
-  };
+  const handleStartEditProfile = () => { setIsEditingProfile(true); setShowRegisterForm(true); };
 
   const handleLogout = () => {
     setUserData(null);
@@ -513,68 +362,45 @@ export default function CookifyDemo() {
     setMealPlan({ breakfast: [], lunch: [], snack: [], dinner: [] });
     setMealHistory([]);
     setWeeklyPlan({});
+    setShoppingList([]);
     localStorage.removeItem("cookify_user");
     localStorage.removeItem("cookify_mealHistory");
     localStorage.removeItem("cookify_weeklyPlan");
+    localStorage.removeItem("cookify_shoppingList");
   };
 
-  const toggleUnitSystem = () => {
-    setUnitSystem(prev => prev === "metric" ? "imperial" : "metric");
-  };
+  const toggleUnitSystem = () => { setUnitSystem(prev => prev === "metric" ? "imperial" : "metric"); };
 
-  const addToMealPlan = (recipe, category) => {
-    setMealPlan(prev => ({ ...prev, [category]: [...prev[category], recipe] }));
-  };
+  const addToMealPlan = (recipe, category) => { setMealPlan(prev => ({ ...prev, [category]: [...prev[category], recipe] })); };
 
   const addMealToHistory = (recipe, category, date = new Date().toISOString().split('T')[0]) => {
-    const newEntry = {
-      id: Date.now(),
-      date,
-      category,
-      recipe,
-      timestamp: new Date().toISOString()
-    };
+    const newEntry = { id: Date.now(), date, category, recipe, timestamp: new Date().toISOString() };
     setMealHistory(prev => [...prev, newEntry]);
   };
 
-  const removeMealFromHistory = (entryId) => {
-    setMealHistory(prev => prev.filter(entry => entry.id !== entryId));
-  };
+  const removeMealFromHistory = (entryId) => { setMealHistory(prev => prev.filter(entry => entry.id !== entryId)); };
 
   const getFilteredHistory = () => {
     const selectedDateObj = new Date(selectedDate);
     return mealHistory.filter(entry => {
       const entryDate = new Date(entry.date);
-      if (viewPeriod === "day") {
-        return getDateKey(entryDate) === getDateKey(selectedDateObj);
-      } else if (viewPeriod === "week") {
-        return getWeekKey(entryDate) === getWeekKey(selectedDateObj);
-      } else if (viewPeriod === "month") {
-        return getMonthKey(entryDate) === getMonthKey(selectedDateObj);
-      }
+      if (viewPeriod === "day") return getDateKey(entryDate) === getDateKey(selectedDateObj);
+      if (viewPeriod === "week") return getWeekKey(entryDate) === getWeekKey(selectedDateObj);
+      if (viewPeriod === "month") return getMonthKey(entryDate) === getMonthKey(selectedDateObj);
       return true;
     });
   };
 
-  const getMealsForDay = (dateKey) => {
-    return mealHistory.filter(entry => getDateKey(new Date(entry.date)) === dateKey);
-  };
+  const getMealsForDay = (dateKey) => mealHistory.filter(entry => getDateKey(new Date(entry.date)) === dateKey);
 
   const calculateDayCalories = (dateKey) => {
     const dayMeals = getMealsForDay(dateKey);
-    return dayMeals.reduce((sum, entry) => {
-      const cal = entry.recipe.caloriesPerServing || entry.recipe.calories || 0;
-      return sum + cal;
-    }, 0);
+    return dayMeals.reduce((sum, entry) => sum + (entry.recipe.caloriesPerServing || entry.recipe.calories || 0), 0);
   };
 
   const calculatePeriodStats = () => {
     const filtered = getFilteredHistory();
-    const totalCalories = filtered.reduce((sum, entry) => {
-      const cal = entry.recipe.caloriesPerServing || entry.recipe.calories || 0;
-      return sum + cal;
-    }, 0);
-
+    const totalCalories = filtered.reduce((sum, entry) => sum + (entry.recipe.caloriesPerServing || entry.recipe.calories || 0), 0);
     const getDaysInPeriod = () => {
       if (viewPeriod === "day") return 1;
       if (viewPeriod === "week") return 7;
@@ -584,24 +410,13 @@ export default function CookifyDemo() {
       }
       return 1;
     };
-
-    return {
-      totalMeals: filtered.length,
-      totalCalories,
-      avgCaloriesPerDay: viewPeriod === "day" ? totalCalories : Math.round(totalCalories / getDaysInPeriod())
-    };
+    return { totalMeals: filtered.length, totalCalories, avgCaloriesPerDay: viewPeriod === "day" ? totalCalories : Math.round(totalCalories / getDaysInPeriod()) };
   };
 
   const addRecipeToPlanner = (dateKey, category, recipeId) => {
     setWeeklyPlan(prev => {
       const dayPlan = prev[dateKey] || { breakfast: [], lunch: [], snack: [], dinner: [] };
-      return {
-        ...prev,
-        [dateKey]: {
-          ...dayPlan,
-          [category]: [...(dayPlan[category] || []), recipeId]
-        }
-      };
+      return { ...prev, [dateKey]: { ...dayPlan, [category]: [...(dayPlan[category] || []), recipeId] } };
     });
   };
 
@@ -609,13 +424,7 @@ export default function CookifyDemo() {
     setWeeklyPlan(prev => {
       const dayPlan = prev[dateKey];
       if (!dayPlan) return prev;
-      return {
-        ...prev,
-        [dateKey]: {
-          ...dayPlan,
-          [category]: (dayPlan[category] || []).filter(id => id !== recipeId)
-        }
-      };
+      return { ...prev, [dateKey]: { ...dayPlan, [category]: (dayPlan[category] || []).filter(id => id !== recipeId) } };
     });
   };
 
@@ -632,11 +441,46 @@ export default function CookifyDemo() {
     let total = 0;
     MEAL_CATEGORIES.forEach(cat => {
       const recipes = getPlannerRecipes(dateKey, cat);
-      recipes.forEach(r => {
-        total += r.caloriesPerServing || r.calories || 0;
-      });
+      recipes.forEach(r => { total += r.caloriesPerServing || r.calories || 0; });
     });
     return total;
+  };
+
+  // Генерация списка покупок из недельного плана
+  const generateShoppingListFromPlanner = () => {
+    const weekDays = getWeekDays(plannerWeekDate);
+    const allIngredients = [];
+    
+    weekDays.forEach(dateKey => {
+      MEAL_CATEGORIES.forEach(cat => {
+        const recipes = getPlannerRecipes(dateKey, cat);
+        recipes.forEach(recipe => {
+          (recipe.ingredients || []).forEach(ing => {
+            allIngredients.push(ing);
+          });
+        });
+      });
+    });
+
+    // Удаляем дубликаты и категоризируем
+    const uniqueIngredients = [...new Set(allIngredients)];
+    const newItems = uniqueIngredients.map(ing => ({
+      id: Date.now() + Math.random(),
+      name: ing,
+      category: categorizeIngredient(ing),
+      checked: false
+    }));
+
+    // Добавляем к существующему списку (без дублирования)
+    setShoppingList(prev => {
+      const existingNames = new Set(prev.map(item => item.name.toLowerCase()));
+      const filtered = newItems.filter(item => !existingNames.has(item.name.toLowerCase()));
+      return [...prev, ...filtered];
+    });
+
+    alert(language === "ru" 
+      ? `Добавлено ${newItems.length} продуктов из плана меню на неделю!` 
+      : `Added ${newItems.length} items from your weekly meal plan!`);
   };
 
   const getSortedRecipesForPlanner = (category) => {
@@ -647,14 +491,11 @@ export default function CookifyDemo() {
       dinner: ["ужин"]
     };
     const preferredTypes = categoryTypeMap[category] || [];
-
     return [...SAMPLE_RECIPES].sort((a, b) => {
       const aType = normalize(a.type);
       const bType = normalize(b.type);
-
       const aMatch = preferredTypes.some(t => normalize(t) === aType);
       const bMatch = preferredTypes.some(t => normalize(t) === bType);
-
       if (aMatch && !bMatch) return -1;
       if (!aMatch && bMatch) return 1;
       return 0;
@@ -682,21 +523,11 @@ export default function CookifyDemo() {
     }
 
     let matchesFilters = true;
-    if (selectedFilters.type) {
-      matchesFilters = matchesFilters && normalize(r.type) === normalize(selectedFilters.type);
-    }
-    if (selectedFilters.diet) {
-      matchesFilters = matchesFilters && normalize(r.diet).includes(normalize(selectedFilters.diet));
-    }
-    if (selectedFilters.cuisine) {
-      matchesFilters = matchesFilters && normalize(r.cuisine) === normalize(selectedFilters.cuisine);
-    }
-    if (selectedFilters.difficulty) {
-      matchesFilters = matchesFilters && normalize(r.difficulty) === normalize(selectedFilters.difficulty);
-    }
-    if (selectedFilters.tag) {
-      matchesFilters = matchesFilters && (r.tags || []).map(t => t.toLowerCase()).includes(selectedFilters.tag.toLowerCase());
-    }
+    if (selectedFilters.type) matchesFilters = matchesFilters && normalize(r.type) === normalize(selectedFilters.type);
+    if (selectedFilters.diet) matchesFilters = matchesFilters && normalize(r.diet).includes(normalize(selectedFilters.diet));
+    if (selectedFilters.cuisine) matchesFilters = matchesFilters && normalize(r.cuisine) === normalize(selectedFilters.cuisine);
+    if (selectedFilters.difficulty) matchesFilters = matchesFilters && normalize(r.difficulty) === normalize(selectedFilters.difficulty);
+    if (selectedFilters.tag) matchesFilters = matchesFilters && (r.tags || []).map(t => t.toLowerCase()).includes(selectedFilters.tag.toLowerCase());
     if (selectedFilters.timeRange) {
       const tVal = parseInt(r.time || "0", 10);
       if (selectedFilters.timeRange === "short") matchesFilters = matchesFilters && tVal <= 15;
@@ -718,115 +549,55 @@ export default function CookifyDemo() {
   const getDishTypeInfo = (type) => {
     const normalized = normalize(type);
     const dishInfo = DISH_TYPE_LABELS[normalized];
-    return {
-      label: dishInfo?.[language] || type,
-      color: dishInfo?.color || "bg-gray-500"
-    };
+    return { label: dishInfo?.[language] || type, color: dishInfo?.color || "bg-gray-500" };
   };
 
   const getPeriodDisplayText = () => {
     const d = new Date(selectedDate);
-
     if (viewPeriod === "day") {
       const today = new Date();
-      const yesterday = new Date(today);
-      yesterday.setDate(yesterday.getDate() - 1);
-      const tomorrow = new Date(today);
-      tomorrow.setDate(tomorrow.getDate() + 1);
-
-      if (getDateKey(d) === getDateKey(today)) {
-        return t("Сегодня", "Today");
-      } else if (getDateKey(d) === getDateKey(yesterday)) {
-        return t("Вчера", "Yesterday");
-      } else if (getDateKey(d) === getDateKey(tomorrow)) {
-        return t("Завтра", "Tomorrow");
-      } else {
-        return formatDate(selectedDate, language);
-      }
+      const yesterday = new Date(today); yesterday.setDate(yesterday.getDate() - 1);
+      const tomorrow = new Date(today); tomorrow.setDate(tomorrow.getDate() + 1);
+      if (getDateKey(d) === getDateKey(today)) return t("Сегодня", "Today");
+      if (getDateKey(d) === getDateKey(yesterday)) return t("Вчера", "Yesterday");
+      if (getDateKey(d) === getDateKey(tomorrow)) return t("Завтра", "Tomorrow");
+      return formatDate(selectedDate, language);
     } else if (viewPeriod === "week") {
       return getWeekRange(selectedDate, language);
     } else if (viewPeriod === "month") {
       return `${MONTH_NAMES[d.getMonth()]} ${d.getFullYear()}`;
     }
-
     return formatDate(selectedDate, language);
   };
 
   return (
     <div className={`min-h-screen ${theme.bg} ${theme.text} ${font.class} ${fontSize.body} p-6 transition-all duration-500`}>
-      <Header
-        activeScreen={activeScreen}
-        setActiveScreen={setActiveScreen}
-        language={language}
-        setLanguage={setLanguage}
-        theme={theme}
-        fontSize={fontSize}
-      />
+      <Header activeScreen={activeScreen} setActiveScreen={setActiveScreen} language={language} setLanguage={setLanguage} theme={theme} fontSize={fontSize} />
 
-      {activeScreen === "home" && (
-        <HomeScreen
-          userData={userData}
-          language={language}
-          setLanguage={setLanguage}
-          setActiveScreen={setActiveScreen}
-          theme={theme}
-          fontSize={fontSize}
-        />
-      )}
+      {activeScreen === "home" && <HomeScreen userData={userData} language={language} setLanguage={setLanguage} setActiveScreen={setActiveScreen} theme={theme} fontSize={fontSize} />}
 
       {activeScreen === "search" && (
         <SearchScreen
-          t={t}
-          theme={theme}
-          fontSize={fontSize}
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-          searchMode={searchMode}
-          setSearchMode={setSearchMode}
-          excludeIngredients={excludeIngredients}
-          setExcludeIngredients={setExcludeIngredients}
-          showFilters={showFilters}
-          setShowFilters={setShowFilters}
-          selectedFilters={selectedFilters}
-          setSelectedFilters={setSelectedFilters}
-          TYPE_OPTIONS={TYPE_OPTIONS}
-          DIET_OPTIONS={DIET_OPTIONS}
-          DIFFICULTY_OPTIONS={DIFFICULTY_OPTIONS}
-          TAG_OPTIONS={TAG_OPTIONS}
-          CUISINE_OPTIONS={CUISINE_OPTIONS}
-          DISH_TYPE_LABELS={DISH_TYPE_LABELS}
-          DIET_LABELS={DIET_LABELS}
-          DIFFICULTY_LABELS={DIFFICULTY_LABELS}
-          language={language}
-          normalize={normalize}
-          filteredResults={filteredResults}
-          getDishTypeInfo={getDishTypeInfo}
-          allergyList={allergyList}
-          setSelectedRecipe={setSelectedRecipe}
-          setSelectedRecipeVariantKey={setSelectedRecipeVariantKey}
+          t={t} theme={theme} fontSize={fontSize} searchQuery={searchQuery} setSearchQuery={setSearchQuery} searchMode={searchMode} setSearchMode={setSearchMode}
+          excludeIngredients={excludeIngredients} setExcludeIngredients={setExcludeIngredients} showFilters={showFilters} setShowFilters={setShowFilters}
+          selectedFilters={selectedFilters} setSelectedFilters={setSelectedFilters} TYPE_OPTIONS={TYPE_OPTIONS} DIET_OPTIONS={DIET_OPTIONS}
+          DIFFICULTY_OPTIONS={DIFFICULTY_OPTIONS} TAG_OPTIONS={TAG_OPTIONS} CUISINE_OPTIONS={CUISINE_OPTIONS} DISH_TYPE_LABELS={DISH_TYPE_LABELS}
+          DIET_LABELS={DIET_LABELS} DIFFICULTY_LABELS={DIFFICULTY_LABELS} language={language} normalize={normalize} filteredResults={filteredResults}
+          getDishTypeInfo={getDishTypeInfo} allergyList={allergyList} setSelectedRecipe={setSelectedRecipe} setSelectedRecipeVariantKey={setSelectedRecipeVariantKey}
         />
       )}
 
       {selectedRecipe && (() => {
         const dishTypeInfo = getDishTypeInfo(selectedRecipe.type);
-
         const variants = Array.isArray(selectedRecipe.variants) ? selectedRecipe.variants : [];
-        const activeVariant = variants.length
-          ? (variants.find(v => v.key === selectedRecipeVariantKey) || variants[0])
-          : null;
+        const activeVariant = variants.length ? (variants.find(v => v.key === selectedRecipeVariantKey) || variants[0]) : null;
         const activeRecipe = activeVariant || selectedRecipe;
-
         const timeInfo = getTimeCategory(activeRecipe.time ?? selectedRecipe.time);
         const timeMinutes = parseInt(activeRecipe.time ?? selectedRecipe.time, 10);
         const progressPercentage = Math.min((timeMinutes / 120) * 100, 100);
-
         const kcalPerServing = activeRecipe.caloriesPerServing ?? selectedRecipe.caloriesPerServing ?? activeRecipe.calories ?? selectedRecipe.calories;
         const servings = selectedRecipe.servings ?? 2;
-
-        const closeModal = () => {
-          setSelectedRecipe(null);
-          setSelectedRecipeVariantKey(null);
-        };
+        const closeModal = () => { setSelectedRecipe(null); setSelectedRecipeVariantKey(null); };
 
         return (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" onClick={closeModal}>
@@ -834,22 +605,14 @@ export default function CookifyDemo() {
               <div className="flex items-start justify-between mb-4">
                 <div className="flex-1">
                   <h2 className={`${fontSize.subheading} font-bold ${theme.headerText}`}>{selectedRecipe.title}</h2>
-                  {selectedRecipe.type && (
-                    <span className={`${dishTypeInfo.color} text-white px-3 py-1 rounded-full ${fontSize.tiny} font-semibold inline-block mt-2`}>
-                      {dishTypeInfo.label}
-                    </span>
-                  )}
-
+                  {selectedRecipe.type && <span className={`${dishTypeInfo.color} text-white px-3 py-1 rounded-full ${fontSize.tiny} font-semibold inline-block mt-2`}>{dishTypeInfo.label}</span>}
                   {variants.length > 0 && (
                     <div className="mt-3 flex flex-wrap gap-2">
                       {variants.map(v => {
                         const isActive = v.key === activeVariant?.key;
                         return (
-                          <button
-                            key={v.key}
-                            onClick={() => setSelectedRecipeVariantKey(v.key)}
-                            className={`px-3 py-1 rounded-full ${fontSize.small} transition ${isActive ? `${theme.accent} text-white` : `${theme.cardBg} border ${theme.border}`}`}
-                          >
+                          <button key={v.key} onClick={() => setSelectedRecipeVariantKey(v.key)}
+                            className={`px-3 py-1 rounded-full ${fontSize.small} transition ${isActive ? `${theme.accent} text-white` : `${theme.cardBg} border ${theme.border}`}`}>
                             {language === "ru" ? (v.labelRu || v.key) : (v.labelEn || v.key)}
                           </button>
                         );
@@ -857,9 +620,7 @@ export default function CookifyDemo() {
                     </div>
                   )}
                 </div>
-                <button onClick={closeModal} className={`${theme.textSecondary} hover:${theme.text} transition ml-4`}>
-                  <FaTimes size={24} />
-                </button>
+                <button onClick={closeModal} className={`${theme.textSecondary} hover:${theme.text} transition ml-4`}><FaTimes size={24} /></button>
               </div>
 
               <div className={`${theme.cardBg} border-2 rounded-xl p-4 mb-6 shadow-md`} style={{ borderColor: timeInfo.color }}>
@@ -867,12 +628,8 @@ export default function CookifyDemo() {
                   <div className="flex items-center gap-3">
                     <span className="text-4xl">{timeInfo.emoji}</span>
                     <div>
-                      <div className={`${fontSize.body} font-bold`} style={{ color: timeInfo.color }}>
-                        {timeMinutes} {t("минут", "minutes")}
-                      </div>
-                      <div className={`${fontSize.small} ${theme.textSecondary}`}>
-                        {language === "ru" ? timeInfo.label_ru : timeInfo.label_en}
-                      </div>
+                      <div className={`${fontSize.body} font-bold`} style={{ color: timeInfo.color }}>{timeMinutes} {t("минут", "minutes")}</div>
+                      <div className={`${fontSize.small} ${theme.textSecondary}`}>{language === "ru" ? timeInfo.label_ru : timeInfo.label_en}</div>
                     </div>
                   </div>
                   <div className="text-right">
@@ -881,24 +638,16 @@ export default function CookifyDemo() {
                     <div className={`${fontSize.tiny} ${theme.textSecondary} mt-1`}>{t("Порции:", "Servings:")} {servings}</div>
                   </div>
                 </div>
-
                 <div className="w-full bg-gray-200 rounded-full h-2.5 mb-2">
-                  <div
-                    className="h-2.5 rounded-full transition-all duration-500"
-                    style={{ width: `${progressPercentage}%`, backgroundColor: timeInfo.color }}
-                  ></div>
+                  <div className="h-2.5 rounded-full transition-all duration-500" style={{ width: `${progressPercentage}%`, backgroundColor: timeInfo.color }}></div>
                 </div>
                 <div className={`${fontSize.tiny} ${theme.textSecondary} text-center`}>
-                  {t(
-                    `${timeMinutes <= 15 ? 'Быстрое приготовление!' : timeMinutes <= 40 ? 'Умеренное время' : 'Требуется терпение'}`,
-                    `${timeMinutes <= 15 ? 'Quick cooking!' : timeMinutes <= 40 ? 'Moderate time' : 'Takes patience'}`
-                  )}
+                  {t(`${timeMinutes <= 15 ? 'Быстрое приготовление!' : timeMinutes <= 40 ? 'Умеренное время' : 'Требуется терпение'}`,
+                     `${timeMinutes <= 15 ? 'Quick cooking!' : timeMinutes <= 40 ? 'Moderate time' : 'Takes patience'}`)}
                 </div>
               </div>
 
-              <div className={`${theme.textSecondary} ${fontSize.small} mb-4`}>
-                {t("Сложность:", "Difficulty:")} {selectedRecipe.difficulty}
-              </div>
+              <div className={`${theme.textSecondary} ${fontSize.small} mb-4`}>{t("Сложность:", "Difficulty:")} {selectedRecipe.difficulty}</div>
 
               <div className="mb-6">
                 <h3 className={`${fontSize.cardTitle} font-semibold mb-2 ${theme.headerText}`}>{t("Ингредиенты:", "Ingredients:")}</h3>
@@ -925,9 +674,7 @@ export default function CookifyDemo() {
               </div>
 
               <div className="mt-6 flex gap-2 flex-wrap">
-                {(selectedRecipe.tags || []).map((tag, i) => (
-                  <span key={i} className={`px-3 py-1 ${theme.accent} text-white rounded-full ${fontSize.small}`}>{tag}</span>
-                ))}
+                {(selectedRecipe.tags || []).map((tag, i) => <span key={i} className={`px-3 py-1 ${theme.accent} text-white rounded-full ${fontSize.small}`}>{tag}</span>)}
               </div>
 
               {registered && (
@@ -935,16 +682,8 @@ export default function CookifyDemo() {
                   <h4 className={`${fontSize.body} font-semibold mb-3`}>{t("Добавить в историю питания:", "Add to meal history:")}</h4>
                   <div className="flex gap-2 flex-wrap">
                     {MEAL_CATEGORIES.map(cat => (
-                      <button
-                        key={cat}
-                        onClick={() => {
-                          addMealToHistory(selectedRecipe, cat);
-                          closeModal();
-                        }}
-                        className={`px-3 py-1 rounded ${fontSize.small} ${theme.accent} ${theme.accentHover} text-white`}
-                      >
-                        {MEAL_LABELS[cat]}
-                      </button>
+                      <button key={cat} onClick={() => { addMealToHistory(selectedRecipe, cat); closeModal(); }}
+                        className={`px-3 py-1 rounded ${fontSize.small} ${theme.accent} ${theme.accentHover} text-white`}>{MEAL_LABELS[cat]}</button>
                     ))}
                   </div>
                 </div>
@@ -956,98 +695,28 @@ export default function CookifyDemo() {
 
       {activeScreen === "account" && (
         <AccountScreen
-          t={t}
-          theme={theme}
-          fontSize={fontSize}
-          language={language}
-
-          registered={registered}
-          userData={userData}
-          unitSystem={unitSystem}
-          currentTheme={currentTheme}
-          currentFont={currentFont}
-          currentFontSize={currentFontSize}
-          showCustomization={showCustomization}
-          setShowCustomization={setShowCustomization}
-          showRegisterForm={showRegisterForm}
-          setShowRegisterForm={setShowRegisterForm}
-          isEditingProfile={isEditingProfile}
-          setIsEditingProfile={setIsEditingProfile}
-          GOALS={GOALS}
-          LIFESTYLE={LIFESTYLE}
-
-          accountTab={accountTab}
-          setAccountTab={setAccountTab}
-
-          viewPeriod={viewPeriod}
-          setViewPeriod={setViewPeriod}
-          selectedDate={selectedDate}
-          setSelectedDate={setSelectedDate}
-          selectedWeekDay={selectedWeekDay}
-          setSelectedWeekDay={setSelectedWeekDay}
-          MONTH_NAMES={MONTH_NAMES}
-          WEEKDAY_NAMES={WEEKDAY_NAMES}
-          WEEKDAY_SHORT={WEEKDAY_SHORT}
-          MEAL_CATEGORIES={MEAL_CATEGORIES}
-          MEAL_LABELS={MEAL_LABELS}
-
-          SAMPLE_RECIPES={SAMPLE_RECIPES}
-          getFilteredHistory={getFilteredHistory}
-          getMealsForDay={getMealsForDay}
-          calculateDayCalories={calculateDayCalories}
-          calculatePeriodStats={calculatePeriodStats}
-          getWeekDays={getWeekDays}
-          getWeekRange={getWeekRange}
-          formatDate={formatDate}
-          getPeriodDisplayText={getPeriodDisplayText}
-          addDays={addDays}
-          addWeeks={addWeeks}
-          addMonths={addMonths}
-          setMonthYear={setMonthYear}
-
-          plannerWeekDate={plannerWeekDate}
-          setPlannerWeekDate={setPlannerWeekDate}
-          weeklyPlan={weeklyPlan}
-          getPlannerRecipes={getPlannerRecipes}
-          calculatePlannerDayCalories={calculatePlannerDayCalories}
-
-          showAddMealModal={showAddMealModal}
-          setShowAddMealModal={setShowAddMealModal}
-          addMealCategory={addMealCategory}
-          setAddMealCategory={setAddMealCategory}
-          showPlannerModal={showPlannerModal}
-          setShowPlannerModal={setShowPlannerModal}
-          plannerModalDate={plannerModalDate}
-          setPlannerModalDate={setPlannerModalDate}
-          plannerModalCategory={plannerModalCategory}
-          setPlannerModalCategory={setPlannerModalCategory}
-          getSortedRecipesForPlanner={getSortedRecipesForPlanner}
-
-          handleStartEditProfile={handleStartEditProfile}
-          handleLogout={handleLogout}
-          toggleUnitSystem={toggleUnitSystem}
-          handleRegister={handleRegister}
-          handleAvatarUpload={handleAvatarUpload}
-          setCurrentTheme={setCurrentTheme}
-          setCurrentFont={setCurrentFont}
-          setCurrentFontSize={setCurrentFontSize}
-          getDisplayWeight={getDisplayWeight}
-          getDisplayHeight={getDisplayHeight}
-          removeMealFromHistory={removeMealFromHistory}
-          addMealToHistory={addMealToHistory}
-          addRecipeToPlanner={addRecipeToPlanner}
-          removeRecipeFromPlanner={removeRecipeFromPlanner}
-
-          setSelectedRecipe={setSelectedRecipe}
-          setSelectedRecipeVariantKey={setSelectedRecipeVariantKey}
-
-          DISH_TYPE_LABELS={DISH_TYPE_LABELS}
-          normalize={normalize}
-          THEMES={THEMES}
-          FONTS={FONTS}
-          FONT_SIZES={FONT_SIZES}
-          convertWeight={convertWeight}
-          convertHeight={convertHeight}
+          t={t} theme={theme} fontSize={fontSize} language={language} registered={registered} userData={userData} unitSystem={unitSystem}
+          currentTheme={currentTheme} currentFont={currentFont} currentFontSize={currentFontSize} showCustomization={showCustomization}
+          setShowCustomization={setShowCustomization} showRegisterForm={showRegisterForm} setShowRegisterForm={setShowRegisterForm}
+          isEditingProfile={isEditingProfile} setIsEditingProfile={setIsEditingProfile} GOALS={GOALS} LIFESTYLE={LIFESTYLE}
+          accountTab={accountTab} setAccountTab={setAccountTab} viewPeriod={viewPeriod} setViewPeriod={setViewPeriod}
+          selectedDate={selectedDate} setSelectedDate={setSelectedDate} selectedWeekDay={selectedWeekDay} setSelectedWeekDay={setSelectedWeekDay}
+          MONTH_NAMES={MONTH_NAMES} WEEKDAY_NAMES={WEEKDAY_NAMES} WEEKDAY_SHORT={WEEKDAY_SHORT} MEAL_CATEGORIES={MEAL_CATEGORIES} MEAL_LABELS={MEAL_LABELS}
+          SAMPLE_RECIPES={SAMPLE_RECIPES} getFilteredHistory={getFilteredHistory} getMealsForDay={getMealsForDay} calculateDayCalories={calculateDayCalories}
+          calculatePeriodStats={calculatePeriodStats} getWeekDays={getWeekDays} getWeekRange={getWeekRange} formatDate={formatDate}
+          getPeriodDisplayText={getPeriodDisplayText} addDays={addDays} addWeeks={addWeeks} addMonths={addMonths} setMonthYear={setMonthYear}
+          plannerWeekDate={plannerWeekDate} setPlannerWeekDate={setPlannerWeekDate} weeklyPlan={weeklyPlan} getPlannerRecipes={getPlannerRecipes}
+          calculatePlannerDayCalories={calculatePlannerDayCalories} showAddMealModal={showAddMealModal} setShowAddMealModal={setShowAddMealModal}
+          addMealCategory={addMealCategory} setAddMealCategory={setAddMealCategory} showPlannerModal={showPlannerModal} setShowPlannerModal={setShowPlannerModal}
+          plannerModalDate={plannerModalDate} setPlannerModalDate={setPlannerModalDate} plannerModalCategory={plannerModalCategory}
+          setPlannerModalCategory={setPlannerModalCategory} getSortedRecipesForPlanner={getSortedRecipesForPlanner} handleStartEditProfile={handleStartEditProfile}
+          handleLogout={handleLogout} toggleUnitSystem={toggleUnitSystem} handleRegister={handleRegister} handleAvatarUpload={handleAvatarUpload}
+          setCurrentTheme={setCurrentTheme} setCurrentFont={setCurrentFont} setCurrentFontSize={setCurrentFontSize} getDisplayWeight={getDisplayWeight}
+          getDisplayHeight={getDisplayHeight} removeMealFromHistory={removeMealFromHistory} addMealToHistory={addMealToHistory}
+          addRecipeToPlanner={addRecipeToPlanner} removeRecipeFromPlanner={removeRecipeFromPlanner} setSelectedRecipe={setSelectedRecipe}
+          setSelectedRecipeVariantKey={setSelectedRecipeVariantKey} DISH_TYPE_LABELS={DISH_TYPE_LABELS} normalize={normalize} THEMES={THEMES}
+          FONTS={FONTS} FONT_SIZES={FONT_SIZES} convertWeight={convertWeight} convertHeight={convertHeight}
+          shoppingList={shoppingList} setShoppingList={setShoppingList} generateShoppingListFromPlanner={generateShoppingListFromPlanner}
         />
       )}
     </div>
