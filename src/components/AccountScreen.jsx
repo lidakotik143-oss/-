@@ -26,7 +26,9 @@ export default function AccountScreen({
   showCustomization,
   setShowCustomization,
   showRegisterForm,
+  setShowRegisterForm,
   isEditingProfile,
+  setIsEditingProfile,
   GOALS,
   LIFESTYLE,
   accountTab,
@@ -248,7 +250,7 @@ export default function AccountScreen({
                             ← {t("Вчера", "Yesterday")}
                           </button>
                           <button
-                            onClick={() => setSelectedDate(getDateKey(new Date()))}
+                            onClick={() => setSelectedDate(new Date().toISOString().split('T')[0])}
                             className={`px-4 py-2 rounded-lg ${fontSize.small} ${theme.cardBg} border-2 ${theme.border} font-semibold`}
                           >
                             {t("Сегодня", "Today")}
@@ -909,7 +911,7 @@ export default function AccountScreen({
                     >
                       <div className={`${fontSize.body} font-semibold`}>{r.title}</div>
                       <div className={`${fontSize.small} ${theme.textSecondary}`}>
-                        {(r.caloriesPerServing || r.calories) || 0} {t("ккал", "kcal")} • {r.time} {t("мин", "min")} • {DISH_TYPE_LABELS[normalize(r.type)]?.[language] || r.type}
+                        {(r.caloriesPerServing || r.calories) || 0} {t("ккал", "kcal")} • {r.time} {t("мин", "min")}
                       </div>
                     </div>
                   ))}
@@ -918,7 +920,5 @@ export default function AccountScreen({
             </div>
           )}
         </div>
-      
   );
 }
-
