@@ -89,27 +89,45 @@ export default function PlannerTab({
                       return (
                         <td key={`${dayKey}-${cat}`} className="p-2 align-top min-w-[200px]">
                           <div className="space-y-2">
-                            {recipes.map(r => (
-                              <div key={r.id} className={`flex items-center justify-between gap-2 p-2 rounded-lg ${theme.border} border`}>
-                                <button
-                                  onClick={() => {
-                                    setSelectedRecipe(r);
-                                    setSelectedRecipeVariantKey(r?.variants?.[0]?.key || null);
-                                  }}
-                                  className="text-left flex-1"
-                                >
-                                  <div className="font-semibold leading-snug">{r.title}</div>
-                                  <div className={`text-xs ${theme.textSecondary}`}>{(r.caloriesPerServing || r.calories) || 0} {t("ккал", "kcal")} • {r.time} {t("мин", "min")}</div>
-                                </button>
-                                <button
-                                  onClick={() => removeRecipeFromPlanner(dayKey, cat, r.id)}
-                                  className="text-red-500 hover:text-red-700"
-                                  title={t("Удалить", "Remove")}
-                                >
-                                  <FaTimes />
-                                </button>
-                              </div>
-                            ))}
+                            {recipes.map((r, index) => {
+                              // 🔥 ИСПРАВЛЕНО: Учитываем данные варианта
+                              let displayTime = r.time;
+                              let displayCalories = r.caloriesPerServing || r.calories || 0;
+                              let displayTitle = r.title;
+
+                              // Если выбран вариант, используем его данные
+                              if (r.selectedVariantKey && r.variants) {
+                                const variant = r.variants.find(v => v.key === r.selectedVariantKey);
+                                if (variant) {
+                                  displayTime = variant.time ?? r.time;
+                                  displayCalories = variant.caloriesPerServing ?? variant.calories ?? r.caloriesPerServing ?? r.calories ?? 0;
+                                  const variantLabel = language === "ru" ? (variant.labelRu || variant.key) : (variant.labelEn || variant.key);
+                                  displayTitle = `${r.title} (${variantLabel})`;
+                                }
+                              }
+
+                              return (
+                                <div key={`${r.id}-${index}`} className={`flex items-center justify-between gap-2 p-2 rounded-lg ${theme.border} border`}>
+                                  <button
+                                    onClick={() => {
+                                      setSelectedRecipe(r);
+                                      setSelectedRecipeVariantKey(r.selectedVariantKey || r?.variants?.[0]?.key || null);
+                                    }}
+                                    className="text-left flex-1"
+                                  >
+                                    <div className="font-semibold leading-snug">{displayTitle}</div>
+                                    <div className={`text-xs ${theme.textSecondary}`}>{displayCalories} {t("ккал", "kcal")} • {displayTime} {t("мин", "min")}</div>
+                                  </button>
+                                  <button
+                                    onClick={() => removeRecipeFromPlanner(dayKey, cat, index)}
+                                    className="text-red-500 hover:text-red-700"
+                                    title={t("Удалить", "Remove")}
+                                  >
+                                    <FaTimes />
+                                  </button>
+                                </div>
+                              );
+                            })}
 
                             <button
                               onClick={() => {
