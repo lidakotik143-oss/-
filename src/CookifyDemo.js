@@ -751,10 +751,15 @@ export default function CookifyDemo() {
         const variants = Array.isArray(selectedRecipe.variants) ? selectedRecipe.variants : [];
         const activeVariant = variants.length ? (variants.find(v => v.key === selectedRecipeVariantKey) || variants[0]) : null;
         const activeRecipe = activeVariant || selectedRecipe;
-        const timeInfo = getTimeCategory(activeRecipe.time ?? selectedRecipe.time);
-        const timeMinutes = parseInt(activeRecipe.time ?? selectedRecipe.time, 10);
+        
+        // 🔥 ИСПРАВЛЕНО: Берем время и калории из варианта, если есть, иначе из базового рецепта
+        const recipeTime = activeVariant?.time ?? selectedRecipe.time;
+        const recipeCalories = activeVariant?.caloriesPerServing ?? activeVariant?.calories ?? selectedRecipe.caloriesPerServing ?? selectedRecipe.calories;
+        
+        const timeInfo = getTimeCategory(recipeTime);
+        const timeMinutes = parseInt(recipeTime, 10);
         const progressPercentage = Math.min((timeMinutes / 120) * 100, 100);
-        const kcalPerServing = activeRecipe.caloriesPerServing ?? selectedRecipe.caloriesPerServing ?? activeRecipe.calories ?? selectedRecipe.calories;
+        const kcalPerServing = recipeCalories;
         const servings = selectedRecipe.servings ?? 2;
         const closeModal = () => { setSelectedRecipe(null); setSelectedRecipeVariantKey(null); };
 
