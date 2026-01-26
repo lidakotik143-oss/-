@@ -29,16 +29,16 @@ export default function CustomizationPanel({
       </button>
 
       {showCustomization && (
-        <div className="mt-4 space-y-4">
+        <div className="mt-4 space-y-6">
           {/* Тема */}
-          <div>
-            <label className={`block ${fontSize.body} font-semibold mb-2`}>{t("Цветовая тема", "Color Theme")}</label>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+          <div className="text-center">
+            <label className={`block ${fontSize.body} font-semibold mb-3`}>{t("Цветовая тема", "Color Theme")}</label>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 max-w-2xl mx-auto">
               {Object.keys(THEMES).map(key => (
                 <button
                   key={key}
                   onClick={() => setCurrentTheme(key)}
-                  className={`p-3 rounded-xl border-2 ${currentTheme === key ? `${theme.border} border-4` : "border-transparent"}`}
+                  className={`p-3 rounded-xl border-2 transition-all ${currentTheme === key ? `${theme.border} border-4 shadow-lg` : "border-transparent hover:border-gray-300"}`}
                 >
                   <div className={`${THEMES[key].preview} h-12 rounded mb-2`}></div>
                   <div className={`${fontSize.small} text-center`}>{THEMES[key][language === "ru" ? "name" : "nameEn"]}</div>
@@ -48,14 +48,14 @@ export default function CustomizationPanel({
           </div>
 
           {/* Шрифт */}
-          <div>
-            <label className={`block ${fontSize.body} font-semibold mb-2`}>{t("Шрифт", "Font")}</label>
-            <div className="flex gap-2">
+          <div className="text-center">
+            <label className={`block ${fontSize.body} font-semibold mb-3`}>{t("Шрифт", "Font")}</label>
+            <div className="flex gap-2 justify-center flex-wrap">
               {Object.keys(FONTS).map(key => (
                 <button
                   key={key}
                   onClick={() => setCurrentFont(key)}
-                  className={`px-4 py-2 rounded-xl ${fontSize.small} ${currentFont === key ? `${theme.accent} text-white` : `${theme.border} border`}`}
+                  className={`px-6 py-3 rounded-xl ${fontSize.small} transition ${currentFont === key ? `${theme.accent} text-white shadow-lg` : `${theme.border} border hover:shadow`}`}
                 >
                   {FONTS[key][language === "ru" ? "nameRu" : "name"]}
                 </button>
@@ -64,14 +64,14 @@ export default function CustomizationPanel({
           </div>
 
           {/* Размер текста */}
-          <div>
-            <label className={`block ${fontSize.body} font-semibold mb-2`}>{t("Размер текста", "Text Size")}</label>
-            <div className="flex gap-2">
+          <div className="text-center">
+            <label className={`block ${fontSize.body} font-semibold mb-3`}>{t("Размер текста", "Text Size")}</label>
+            <div className="flex gap-2 justify-center flex-wrap">
               {Object.keys(FONT_SIZES).map(key => (
                 <button
                   key={key}
                   onClick={() => setCurrentFontSize(key)}
-                  className={`px-4 py-2 rounded-xl ${fontSize.small} ${currentFontSize === key ? `${theme.accent} text-white` : `${theme.border} border`}`}
+                  className={`px-6 py-3 rounded-xl ${fontSize.small} transition ${currentFontSize === key ? `${theme.accent} text-white shadow-lg` : `${theme.border} border hover:shadow`}`}
                 >
                   {FONT_SIZES[key][language === "ru" ? "name" : "nameEn"]}
                 </button>
