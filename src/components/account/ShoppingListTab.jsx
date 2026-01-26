@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { FaShoppingCart, FaPlus, FaTrash, FaCheckCircle, FaCircle, FaMagic, FaEdit, FaSave, FaTimes } from "react-icons/fa";
+import { FaShoppingCart, FaPlus, FaTrash, FaCheckCircle, FaCircle, FaMagic, FaEdit, FaSave, FaTimes, FaUsers } from "react-icons/fa";
 
 export default function ShoppingListTab({
   t,
@@ -19,6 +19,8 @@ export default function ShoppingListTab({
   const [editingId, setEditingId] = useState(null);
   const [editQuantity, setEditQuantity] = useState("");
   const [editUnit, setEditUnit] = useState("");
+  const [servingMultiplier, setServingMultiplier] = useState(1);
+  const [showMultiplierInput, setShowMultiplierInput] = useState(false);
 
   const categories = [
     { ru: "Продукты", en: "Groceries" },
@@ -52,15 +54,28 @@ export default function ShoppingListTab({
     return language === "ru" ? (unit?.ru || unitRu) : (unit?.en || unitRu);
   };
 
+  // Расчет фактического количества с учетом множителя
+  const getScaledQuantity = (item) => {
+    if (!item.quantity || !item.baseQuantity) return item.quantity || "";
+    const base = parseFloat(item.baseQuantity);
+    if (isNaN(base)) return item.quantity;
+    const scaled = base * servingMultiplier;
+    // Округление до 2 знаков после запятой
+    return scaled % 1 === 0 ? scaled.toString() : scaled.toFixed(2);
+  };
+
   const addItem = () => {
     if (!newItemName.trim()) return;
+    const qty = newItemQuantity.trim();
     const newItem = {
       id: Date.now(),
       name: newItemName.trim(),
-      quantity: newItemQuantity.trim(),
+      quantity: qty,
+      baseQuantity: qty, // Базовое количество для масштабирования
       unit: newItemUnit,
       category: newItemCategory,
-      checked: false
+      checked: false,
+      isManual: true // Отметка что добавлено вручную
     };
     setShoppingList(prev => [...prev, newItem]);
     setNewItemName("");
@@ -82,14 +97,15 @@ export default function ShoppingListTab({
 
   const startEditing = (item) => {
     setEditingId(item.id);
-    setEditQuantity(item.quantity || "");
+    setEditQuantity(item.baseQuantity || item.quantity || "");
     setEditUnit(item.unit || "шт");
   };
 
   const saveEdit = (id) => {
+    const qty = editQuantity.trim();
     setShoppingList(prev =>
       prev.map(item =>
-        item.id === id ? { ...item, quantity: editQuantity.trim(), unit: editUnit } : item
+        item.id === id ? { ...item, quantity: qty, baseQuantity: qty, unit: editUnit } : item
       )
     );
     setEditingId(null);
@@ -103,6 +119,39 @@ export default function ShoppingListTab({
     setEditUnit("");
   };
 
+  const applyMultiplier = () => {
+    const multiplier = parseFloat(servingMultiplier);
+    if (isNaN(multiplier) || multiplier <= 0) {
+      alert(t("Введите корректное число порций", "Enter a valid serving number"));
+      return;
+    }
+    
+    // Обновляем quantity для всех элементов (кроме добавленных вручную)
+    setShoppingList(prev => prev.map(item => {
+      // Ручные элементы не масштабируем
+      if (item.isManual) return item;
+      
+      if (!item.baseQuantity) return item;
+      const base = parseFloat(item.baseQuantity);
+      if (isNaN(base)) return item;
+      
+      const scaled = base * multiplier;
+      const newQty = scaled % 1 === 0 ? scaled.toString() : scaled.toFixed(2);
+      
+      return { ...item, quantity: newQty };
+    }));
+    
+    setShowMultiplierInput(false);
+  };
+
+  const resetMultiplier = () => {
+    setServingMultiplier(1);
+    setShoppingList(prev => prev.map(item => ({
+      ...item,
+      quantity: item.baseQuantity || item.quantity
+    })));
+  };
+
   const clearChecked = () => {
     setShoppingList(prev => prev.filter(item => !item.checked));
   };
@@ -110,6 +159,7 @@ export default function ShoppingListTab({
   const clearAll = () => {
     if (window.confirm(t("Удалить все элементы?", "Delete all items?"))) {
       setShoppingList([]);
+      setServingMultiplier(1);
     }
   };
 
@@ -122,6 +172,8 @@ export default function ShoppingListTab({
   const totalItems = shoppingList.length;
   const checkedItems = shoppingList.filter(item => item.checked).length;
   const progress = totalItems > 0 ? Math.round((checkedItems / totalItems) * 100) : 0;
+  
+  const generatedItemsCount = shoppingList.filter(item => !item.isManual).length;
 
   return (
     <div className={`${theme.cardBg} p-6 rounded-xl shadow`}>
@@ -139,6 +191,66 @@ export default function ShoppingListTab({
           {t("Генерировать из плана", "Generate from plan")}
         </button>
       </div>
+
+      {/* Множитель порций */}
+      {generatedItemsCount > 0 && (
+        <div className={`mb-4 p-4 ${theme.border} border rounded-xl bg-blue-50`}>
+          <div className="flex items-center justify-between flex-wrap gap-3">
+            <div className="flex items-center gap-2">
+              <FaUsers className="text-blue-600" />
+              <span className={`${fontSize.body} font-semibold`}>
+                {t("Множитель порций:", "Serving multiplier:")}
+              </span>
+              {!showMultiplierInput ? (
+                <>
+                  <span className={`${fontSize.body} font-bold text-blue-600`}>x{servingMultiplier}</span>
+                  <button
+                    onClick={() => setShowMultiplierInput(true)}
+                    className="ml-2 text-blue-600 hover:text-blue-800"
+                  >
+                    <FaEdit />
+                  </button>
+                </>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    min="0.1"
+                    step="0.5"
+                    value={servingMultiplier}
+                    onChange={(e) => setServingMultiplier(e.target.value)}
+                    className={`w-20 p-2 ${theme.input} ${fontSize.small} rounded`}
+                  />
+                  <button
+                    onClick={applyMultiplier}
+                    className="px-3 py-2 rounded ${theme.accent} ${theme.accentHover} text-white ${fontSize.small}"
+                  >
+                    {t("Применить", "Apply")}
+                  </button>
+                  <button
+                    onClick={() => setShowMultiplierInput(false)}
+                    className="text-gray-500 hover:text-gray-700"
+                  >
+                    <FaTimes />
+                  </button>
+                </div>
+              )}
+            </div>
+            {servingMultiplier != 1 && (
+              <button
+                onClick={resetMultiplier}
+                className={`px-3 py-2 rounded-xl ${fontSize.small} ${theme.border} border hover:shadow transition`}
+              >
+                {t("Сбросить на x1", "Reset to x1")}
+              </button>
+            )}
+          </div>
+          <p className={`${fontSize.small} ${theme.textSecondary} mt-2`}>
+            {t("Умножьте количество продуктов, если готовите на больше/меньше порций.",
+               "Multiply ingredient quantities if cooking for more/fewer servings.")}
+          </p>
+        </div>
+      )}
 
       {/* Прогресс-бар */}
       {totalItems > 0 && (
@@ -250,81 +362,85 @@ export default function ShoppingListTab({
                 {getCategoryLabel(category)} ({items.length})
               </h4>
               <div className="space-y-2">
-                {items.map(item => (
-                  <div
-                    key={item.id}
-                    className={`flex items-center justify-between p-3 rounded-lg transition ${item.checked ? 'bg-gray-100 opacity-60' : theme.cardBg}`}
-                  >
-                    <div className="flex items-center gap-3 flex-1">
-                      <button
-                        onClick={() => toggleItem(item.id)}
-                        className={`transition ${item.checked ? theme.accentText : theme.textSecondary}`}
-                      >
-                        {item.checked ? <FaCheckCircle size={20} /> : <FaCircle size={20} />}
-                      </button>
-                      <div className="flex-1">
-                        <span className={`${fontSize.body} ${item.checked ? 'line-through' : ''}`}>
-                          {item.name}
-                        </span>
-                        {editingId === item.id ? (
-                          <div className="flex gap-2 mt-2">
-                            <input
-                              type="text"
-                              value={editQuantity}
-                              onChange={(e) => setEditQuantity(e.target.value)}
-                              placeholder={t("Кол-во", "Qty")}
-                              className={`w-20 p-2 ${theme.input} ${fontSize.small} rounded`}
-                            />
-                            <select
-                              value={editUnit}
-                              onChange={(e) => setEditUnit(e.target.value)}
-                              className={`p-2 ${theme.input} ${fontSize.small} rounded`}
-                            >
-                              {units.map(unit => (
-                                <option key={unit.ru} value={unit.ru}>
-                                  {getUnitLabel(unit.ru)}
-                                </option>
-                              ))}
-                            </select>
-                            <button
-                              onClick={() => saveEdit(item.id)}
-                              className="text-green-600 hover:text-green-800"
-                            >
-                              <FaSave />
-                            </button>
-                            <button
-                              onClick={cancelEdit}
-                              className="text-gray-500 hover:text-gray-700"
-                            >
-                              <FaTimes />
-                            </button>
-                          </div>
-                        ) : (
-                          item.quantity && (
-                            <div className={`${fontSize.small} ${theme.textSecondary} flex items-center gap-2 mt-1`}>
-                              <span>{item.quantity} {getUnitLabel(item.unit)}</span>
-                              <button
-                                onClick={() => startEditing(item)}
-                                className="hover:text-blue-600"
-                                title={t("Редактировать", "Edit")}
+                {items.map(item => {
+                  const displayQty = item.isManual ? (item.quantity || "") : getScaledQuantity(item);
+                  
+                  return (
+                    <div
+                      key={item.id}
+                      className={`flex items-center justify-between p-3 rounded-lg transition ${item.checked ? 'bg-gray-100 opacity-60' : theme.cardBg}`}
+                    >
+                      <div className="flex items-center gap-3 flex-1">
+                        <button
+                          onClick={() => toggleItem(item.id)}
+                          className={`transition ${item.checked ? theme.accentText : theme.textSecondary}`}
+                        >
+                          {item.checked ? <FaCheckCircle size={20} /> : <FaCircle size={20} />}
+                        </button>
+                        <div className="flex-1">
+                          <span className={`${fontSize.body} ${item.checked ? 'line-through' : ''}`}>
+                            {item.name}
+                          </span>
+                          {editingId === item.id ? (
+                            <div className="flex gap-2 mt-2">
+                              <input
+                                type="text"
+                                value={editQuantity}
+                                onChange={(e) => setEditQuantity(e.target.value)}
+                                placeholder={t("Кол-во", "Qty")}
+                                className={`w-20 p-2 ${theme.input} ${fontSize.small} rounded`}
+                              />
+                              <select
+                                value={editUnit}
+                                onChange={(e) => setEditUnit(e.target.value)}
+                                className={`p-2 ${theme.input} ${fontSize.small} rounded`}
                               >
-                                <FaEdit size={14} />
+                                {units.map(unit => (
+                                  <option key={unit.ru} value={unit.ru}>
+                                    {getUnitLabel(unit.ru)}
+                                  </option>
+                                ))}
+                              </select>
+                              <button
+                                onClick={() => saveEdit(item.id)}
+                                className="text-green-600 hover:text-green-800"
+                              >
+                                <FaSave />
+                              </button>
+                              <button
+                                onClick={cancelEdit}
+                                className="text-gray-500 hover:text-gray-700"
+                              >
+                                <FaTimes />
                               </button>
                             </div>
-                          )
-                        )}
+                          ) : (
+                            displayQty && (
+                              <div className={`${fontSize.small} ${theme.textSecondary} flex items-center gap-2 mt-1`}>
+                                <span>{displayQty} {getUnitLabel(item.unit)}</span>
+                                <button
+                                  onClick={() => startEditing(item)}
+                                  className="hover:text-blue-600"
+                                  title={t("Редактировать", "Edit")}
+                                >
+                                  <FaEdit size={14} />
+                                </button>
+                              </div>
+                            )
+                          )}
+                        </div>
                       </div>
+                      {editingId !== item.id && (
+                        <button
+                          onClick={() => deleteItem(item.id)}
+                          className="text-red-500 hover:text-red-700 ml-3"
+                        >
+                          <FaTrash />
+                        </button>
+                      )}
                     </div>
-                    {editingId !== item.id && (
-                      <button
-                        onClick={() => deleteItem(item.id)}
-                        className="text-red-500 hover:text-red-700 ml-3"
-                      >
-                        <FaTrash />
-                      </button>
-                    )}
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           ))}
