@@ -19,8 +19,10 @@ export default function ShoppingListTab({
   const [editingId, setEditingId] = useState(null);
   const [editQuantity, setEditQuantity] = useState("");
   const [editUnit, setEditUnit] = useState("");
-  const [servingMultiplier, setServingMultiplier] = useState(1);
-  const [showMultiplierInput, setShowMultiplierInput] = useState(false);
+  
+  const [servingsCount, setServingsCount] = useState(2); // Количество человек
+  const [baseServings, setBaseServings] = useState(2); // Базовое количество из рецептов
+  const [scaleManualItems, setScaleManualItems] = useState(false); // Масштабировать ручные
 
   const categories = [
     { ru: "Продукты", en: "Groceries" },
@@ -54,13 +56,21 @@ export default function ShoppingListTab({
     return language === "ru" ? (unit?.ru || unitRu) : (unit?.en || unitRu);
   };
 
-  // Расчет фактического количества с учетом множителя
+  // Расчет количества с учетом количества человек
   const getScaledQuantity = (item) => {
+    // Если ручной и не масштабируем - возвращаем как есть
+    if (item.isManual && !scaleManualItems) {
+      return item.quantity || "";
+    }
+    
     if (!item.quantity || !item.baseQuantity) return item.quantity || "";
+    
     const base = parseFloat(item.baseQuantity);
     if (isNaN(base)) return item.quantity;
-    const scaled = base * servingMultiplier;
-    // Округление до 2 знаков после запятой
+    
+    const multiplier = servingsCount / baseServings;
+    const scaled = base * multiplier;
+    
     return scaled % 1 === 0 ? scaled.toString() : scaled.toFixed(2);
   };
 
@@ -71,11 +81,11 @@ export default function ShoppingListTab({
       id: Date.now(),
       name: newItemName.trim(),
       quantity: qty,
-      baseQuantity: qty, // Базовое количество для масштабирования
+      baseQuantity: qty,
       unit: newItemUnit,
       category: newItemCategory,
       checked: false,
-      isManual: true // Отметка что добавлено вручную
+      isManual: true
     };
     setShoppingList(prev => [...prev, newItem]);
     setNewItemName("");
@@ -119,39 +129,6 @@ export default function ShoppingListTab({
     setEditUnit("");
   };
 
-  const applyMultiplier = () => {
-    const multiplier = parseFloat(servingMultiplier);
-    if (isNaN(multiplier) || multiplier <= 0) {
-      alert(t("Введите корректное число порций", "Enter a valid serving number"));
-      return;
-    }
-    
-    // Обновляем quantity для всех элементов (кроме добавленных вручную)
-    setShoppingList(prev => prev.map(item => {
-      // Ручные элементы не масштабируем
-      if (item.isManual) return item;
-      
-      if (!item.baseQuantity) return item;
-      const base = parseFloat(item.baseQuantity);
-      if (isNaN(base)) return item;
-      
-      const scaled = base * multiplier;
-      const newQty = scaled % 1 === 0 ? scaled.toString() : scaled.toFixed(2);
-      
-      return { ...item, quantity: newQty };
-    }));
-    
-    setShowMultiplierInput(false);
-  };
-
-  const resetMultiplier = () => {
-    setServingMultiplier(1);
-    setShoppingList(prev => prev.map(item => ({
-      ...item,
-      quantity: item.baseQuantity || item.quantity
-    })));
-  };
-
   const clearChecked = () => {
     setShoppingList(prev => prev.filter(item => !item.checked));
   };
@@ -159,7 +136,8 @@ export default function ShoppingListTab({
   const clearAll = () => {
     if (window.confirm(t("Удалить все элементы?", "Delete all items?"))) {
       setShoppingList([]);
-      setServingMultiplier(1);
+      setServingsCount(2);
+      setBaseServings(2);
     }
   };
 
@@ -192,63 +170,72 @@ export default function ShoppingListTab({
         </button>
       </div>
 
-      {/* Множитель порций */}
-      {generatedItemsCount > 0 && (
-        <div className={`mb-4 p-4 ${theme.border} border rounded-xl bg-blue-50`}>
-          <div className="flex items-center justify-between flex-wrap gap-3">
-            <div className="flex items-center gap-2">
-              <FaUsers className="text-blue-600" />
-              <span className={`${fontSize.body} font-semibold`}>
-                {t("Множитель порций:", "Serving multiplier:")}
-              </span>
-              {!showMultiplierInput ? (
-                <>
-                  <span className={`${fontSize.body} font-bold text-blue-600`}>x{servingMultiplier}</span>
-                  <button
-                    onClick={() => setShowMultiplierInput(true)}
-                    className="ml-2 text-blue-600 hover:text-blue-800"
-                  >
-                    <FaEdit />
-                  </button>
-                </>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <input
-                    type="number"
-                    min="0.1"
-                    step="0.5"
-                    value={servingMultiplier}
-                    onChange={(e) => setServingMultiplier(e.target.value)}
-                    className={`w-20 p-2 ${theme.input} ${fontSize.small} rounded`}
-                  />
-                  <button
-                    onClick={applyMultiplier}
-                    className="px-3 py-2 rounded ${theme.accent} ${theme.accentHover} text-white ${fontSize.small}"
-                  >
-                    {t("Применить", "Apply")}
-                  </button>
-                  <button
-                    onClick={() => setShowMultiplierInput(false)}
-                    className="text-gray-500 hover:text-gray-700"
-                  >
-                    <FaTimes />
-                  </button>
+      {/* Панель количества порций */}
+      {totalItems > 0 && (
+        <div className={`mb-4 p-4 ${theme.border} border rounded-xl bg-gradient-to-r from-blue-50 to-purple-50`}>
+          <div className="space-y-3">
+            {/* Выбор количества человек */}
+            <div className="flex items-center gap-3 flex-wrap">
+              <div className="flex items-center gap-2">
+                <FaUsers className="text-blue-600 text-xl" />
+                <span className={`${fontSize.body} font-semibold`}>
+                  {t("Готовим на:", "Cooking for:")}
+                </span>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setServingsCount(Math.max(1, servingsCount - 1))}
+                  className={`w-8 h-8 rounded-lg ${theme.accent} ${theme.accentHover} text-white font-bold flex items-center justify-center`}
+                >
+                  −
+                </button>
+                
+                <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg border-2 border-blue-300">
+                  <span className={`${fontSize.cardTitle} font-bold text-blue-600`}>{servingsCount}</span>
+                  <span className={`${fontSize.small} ${theme.textSecondary}`}>
+                    {t("чел.", "people")}
+                  </span>
                 </div>
+                
+                <button
+                  onClick={() => setServingsCount(servingsCount + 1)}
+                  className={`w-8 h-8 rounded-lg ${theme.accent} ${theme.accentHover} text-white font-bold flex items-center justify-center`}
+                >
+                  +
+                </button>
+              </div>
+              
+              {servingsCount !== baseServings && (
+                <span className={`${fontSize.small} ${theme.textSecondary} italic`}>
+                  {t(`(Рецепты на ${baseServings} чел.)`, `(Recipes for ${baseServings} people)`)}
+                </span>
               )}
             </div>
-            {servingMultiplier != 1 && (
-              <button
-                onClick={resetMultiplier}
-                className={`px-3 py-2 rounded-xl ${fontSize.small} ${theme.border} border hover:shadow transition`}
-              >
-                {t("Сбросить на x1", "Reset to x1")}
-              </button>
-            )}
+
+            {/* Чекбокс для ручных продуктов */}
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={scaleManualItems}
+                onChange={(e) => setScaleManualItems(e.target.checked)}
+                className="w-4 h-4 rounded"
+              />
+              <span className={`${fontSize.small} ${theme.textSecondary}`}>
+                {t("Масштабировать также ручно добавленные продукты", 
+                   "Scale manually added items too")}
+              </span>
+            </label>
+
+            {/* Подсказка */}
+            <p className={`${fontSize.small} text-blue-700 flex items-start gap-2`}>
+              <span>💡</span>
+              <span>
+                {t("Количество продуктов автоматически пересчитывается при изменении количества человек.",
+                   "Ingredient quantities are automatically recalculated when you change the number of people.")}
+              </span>
+            </p>
           </div>
-          <p className={`${fontSize.small} ${theme.textSecondary} mt-2`}>
-            {t("Умножьте количество продуктов, если готовите на больше/меньше порций.",
-               "Multiply ingredient quantities if cooking for more/fewer servings.")}
-          </p>
         </div>
       )}
 
@@ -363,7 +350,7 @@ export default function ShoppingListTab({
               </h4>
               <div className="space-y-2">
                 {items.map(item => {
-                  const displayQty = item.isManual ? (item.quantity || "") : getScaledQuantity(item);
+                  const displayQty = getScaledQuantity(item);
                   
                   return (
                     <div
@@ -378,9 +365,16 @@ export default function ShoppingListTab({
                           {item.checked ? <FaCheckCircle size={20} /> : <FaCircle size={20} />}
                         </button>
                         <div className="flex-1">
-                          <span className={`${fontSize.body} ${item.checked ? 'line-through' : ''}`}>
-                            {item.name}
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <span className={`${fontSize.body} ${item.checked ? 'line-through' : ''}`}>
+                              {item.name}
+                            </span>
+                            {item.isManual && !scaleManualItems && (
+                              <span className={`${fontSize.tiny} px-2 py-0.5 rounded-full bg-gray-200 ${theme.textSecondary}`}>
+                                {t("ручн.", "manual")}
+                              </span>
+                            )}
+                          </div>
                           {editingId === item.id ? (
                             <div className="flex gap-2 mt-2">
                               <input
