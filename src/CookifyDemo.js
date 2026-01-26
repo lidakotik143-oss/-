@@ -3,6 +3,10 @@ import React, { useState, useEffect } from "react";
 import { FaSearch, FaUser, FaClipboardList, FaSun, FaMoon, FaPalette, FaFont, FaChevronDown, FaChevronUp, FaTimes, FaClock, FaExchangeAlt, FaPlus, FaCalendarAlt, FaChevronRight, FaChevronLeft, FaUtensils } from "react-icons/fa";
 import { RECIPES_DATABASE } from './recipesData';
 
+// Вынесенные компоненты
+import Header from "./components/Header";
+import HomeScreen from "./components/HomeScreen";
+
 // Используем импортированную базу данных вместо примеров
 // По умолчанию считаем, что рецепты рассчитаны на 2 порции,
 // а поле calories (если не задано caloriesPerServing) — это ккал на 1 порцию.
@@ -800,76 +804,26 @@ export default function CookifyDemo() {
   // =================== БЛОК 3: JSX (UI) ===================
   return (
     <div className={`min-h-screen ${theme.bg} ${theme.text} ${font.class} ${fontSize.body} p-6 transition-all duration-500`}>
-      {/* ------------------ БЛОК 3.1: Хедер ------------------ */}
-      <header className="max-w-6xl mx-auto flex items-center justify-between mb-6">
-        <div>
-          <h1 className={`${fontSize.heading} font-bold ${theme.headerText}`}>Cookify</h1>
-          <p className={`${fontSize.small} ${theme.textSecondary}`}>{t("Интерактивная имитация приложения", "Interactive demo")}</p>
-        </div>
+      {/* Header: вынесли в компонент */}
+      <Header
+        activeScreen={activeScreen}
+        setActiveScreen={setActiveScreen}
+        language={language}
+        setLanguage={setLanguage}
+        theme={theme}
+        fontSize={fontSize}
+      />
 
-        <div className="flex gap-3 items-center">
-          <nav className="flex gap-3">
-            <button
-              onClick={() => setActiveScreen("home")}
-              className={`px-3 py-2 rounded ${fontSize.small} transition ${activeScreen === "home" ? `${theme.accent} ${theme.accentHover} text-white` : `${theme.cardBg} shadow-sm`}`}
-            >{t("Главная", "Home")}</button>
-
-            <button
-              onClick={() => setActiveScreen("search")}
-              className={`px-3 py-2 rounded ${fontSize.small} transition ${activeScreen === "search" ? `${theme.accent} ${theme.accentHover} text-white` : `${theme.cardBg} shadow-sm`}`}
-            >{t("Поиск", "Search")}</button>
-
-            <button
-              onClick={() => setActiveScreen("account")}
-              className={`px-3 py-2 rounded ${fontSize.small} transition ${activeScreen === "account" ? `${theme.accent} ${theme.accentHover} text-white` : `${theme.cardBg} shadow-sm`}`}
-            >{t("Мой аккаунт", "My Account")}</button>
-          </nav>
-        </div>
-      </header>
-
-      {/* ------------------ БЛОК 3.2: Главная с подсказками ------------------ */}
+      {/* Главная: вынесли в компонент */}
       {activeScreen === "home" && (
-        <div className="max-w-5xl mx-auto space-y-6">
-          <div className={`${theme.cardBg} p-6 rounded-xl shadow`}>
-            <div className="flex items-center justify-between mb-3">
-              <h2 className={`${fontSize.subheading} font-semibold ${theme.headerText}`}>
-                {t("Добро пожаловать, ", "Welcome, ")}{userData?.name || t("Пользователь", "User")}!
-              </h2>
-              
-              {/* Переключатель языка на главной */}
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setLanguage("ru")}
-                  className={`px-3 py-1 rounded transition ${fontSize.small} ${language === "ru" ? `${theme.accent} text-white` : `${theme.cardBg} border ${theme.border}`}`}
-                >
-                  🇷🇺 RU
-                </button>
-                <button
-                  onClick={() => setLanguage("en")}
-                  className={`px-3 py-1 rounded transition ${fontSize.small} ${language === "en" ? `${theme.accent} text-white` : `${theme.cardBg} border ${theme.border}`}`}
-                >
-                  🇬🇧 EN
-                </button>
-              </div>
-            </div>
-            <p className={`${theme.textSecondary} ${fontSize.body} mb-4`}>{t("Используйте вкладки сверху для перехода по функциям приложения.", "Use the tabs above to navigate app features.")}</p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {[
-              { title: t("Поиск рецептов", "Recipe Search"), content: t("Введите ингредиенты или используйте фильтры.", "Enter ingredients or use filters."), screen: "search" },
-              { title: t("Мой аккаунт", "My Account"), content: t("Настройте профиль и отслеживайте питание.", "Set up profile and track nutrition."), screen: "account" },
-            ].map((tip, idx) => (
-              <div key={idx} onClick={() => setActiveScreen(tip.screen)} className={`${theme.cardBg} p-4 rounded-xl shadow border-l-4 ${theme.border} cursor-pointer flex items-start gap-3 hover:shadow-lg transition`}>
-                <FaSearch className={`${theme.accentText} w-6 h-6`} />
-                <div>
-                  <h4 className={`font-semibold ${fontSize.body} ${theme.headerText}`}>{tip.title}</h4>
-                  <p className={`${theme.textSecondary} ${fontSize.small} mt-1`}>{tip.content}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+        <HomeScreen
+          userData={userData}
+          language={language}
+          setLanguage={setLanguage}
+          setActiveScreen={setActiveScreen}
+          theme={theme}
+          fontSize={fontSize}
+        />
       )}
 
       {/* ------------------ БЛОК 3.3: Поиск (с панелью, режимами, фильтрами) ------------------ */}
