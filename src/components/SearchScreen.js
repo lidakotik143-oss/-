@@ -229,7 +229,10 @@ export default function SearchScreen({
                   <div className={`mt-3 ${fontSize.small}`}>
                     <strong>{t("Ингредиенты:", "Ingredients:")}</strong>{" "}
                     {(r.ingredients || []).map((ing, i) => {
-                      const low = ing.toLowerCase();
+                      // ИСПРАВЛЕНО: обработка объектов и строк
+                      const ingName = typeof ing === 'object' ? ing.name : ing;
+                      const low = ingName.toLowerCase();
+                      
                       const isAllergy = allergyList.some((a) => a && low.includes(a));
                       const isExcluded =
                         excludeIngredients
@@ -239,9 +242,15 @@ export default function SearchScreen({
                           .filter(Boolean)
                           .some((e) => e && low.includes(e));
                       const cls = isAllergy || isExcluded ? "text-red-600 font-semibold" : "";
+                      
+                      // Форматируем отображение
+                      const displayText = typeof ing === 'object'
+                        ? `${ing.name} ${ing.quantity ? `— ${ing.quantity}` : ''} ${ing.unit || ''}`.trim()
+                        : ing;
+                      
                       return (
                         <span key={i} className={`${cls} mr-2`}>
-                          {ing}
+                          {displayText}
                           {i < r.ingredients.length - 1 ? "," : ""}
                         </span>
                       );
