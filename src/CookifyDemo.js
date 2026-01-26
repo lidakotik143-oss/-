@@ -201,9 +201,6 @@ const categorizeIngredient = (ingredientName) => {
   return "Продукты";
 };
 
-// УБРАЛИ СТАРУЮ ФУНКЦИЮ parseIngredientQuantity - она больше не нужна!
-// Ингредиенты теперь уже объекты { name, quantity, unit }
-
 // =================== БЛОК 2: Компонент приложения ===================
 export default function CookifyDemo() {
   const [activeScreen, setActiveScreen] = useState("home");
@@ -248,6 +245,11 @@ export default function CookifyDemo() {
   // Новое состояние для списка покупок
   const [shoppingList, setShoppingList] = useState([]);
 
+  // ✨ НОВОЕ: Состояние для модального окна выбора варианта
+  const [showVariantSelectionModal, setShowVariantSelectionModal] = useState(false);
+  const [variantSelectionRecipe, setVariantSelectionRecipe] = useState(null);
+  const [variantSelectionCallback, setVariantSelectionCallback] = useState(null);
+
   // ✅ ЗАГРУЗКА ИЗ localStorage ПРИ СТАРТЕ
   useEffect(() => {
     const savedUserData = localStorage.getItem("cookify_user");
@@ -256,7 +258,7 @@ export default function CookifyDemo() {
     const savedTheme = localStorage.getItem("cookify_theme");
     const savedFont = localStorage.getItem("cookify_font");
     const savedFontSize = localStorage.getItem("cookify_fontSize");
-    const savedMealPlan = localStorage.getItem("cookify_mealPlan"); // ✅ ДОБАВЛЕНО
+    const savedMealPlan = localStorage.getItem("cookify_mealPlan");
     const savedMealHistory = localStorage.getItem("cookify_mealHistory");
     const savedWeeklyPlan = localStorage.getItem("cookify_weeklyPlan");
     const savedShoppingList = localStorage.getItem("cookify_shoppingList");
@@ -271,7 +273,7 @@ export default function CookifyDemo() {
     if (savedTheme) setCurrentTheme(savedTheme);
     if (savedFont) setCurrentFont(savedFont);
     if (savedFontSize) setCurrentFontSize(savedFontSize);
-    if (savedMealPlan) setMealPlan(JSON.parse(savedMealPlan)); // ✅ ДОБАВЛЕНО
+    if (savedMealPlan) setMealPlan(JSON.parse(savedMealPlan));
     if (savedMealHistory) setMealHistory(JSON.parse(savedMealHistory));
     if (savedWeeklyPlan) setWeeklyPlan(JSON.parse(savedWeeklyPlan));
     if (savedShoppingList) setShoppingList(JSON.parse(savedShoppingList));
@@ -284,7 +286,7 @@ export default function CookifyDemo() {
   useEffect(() => { localStorage.setItem("cookify_theme", currentTheme); }, [currentTheme]);
   useEffect(() => { localStorage.setItem("cookify_font", currentFont); }, [currentFont]);
   useEffect(() => { localStorage.setItem("cookify_fontSize", currentFontSize); }, [currentFontSize]);
-  useEffect(() => { localStorage.setItem("cookify_mealPlan", JSON.stringify(mealPlan)); }, [mealPlan]); // ✅ ДОБАВЛЕНО
+  useEffect(() => { localStorage.setItem("cookify_mealPlan", JSON.stringify(mealPlan)); }, [mealPlan]);
   useEffect(() => { localStorage.setItem("cookify_mealHistory", JSON.stringify(mealHistory)); }, [mealHistory]);
   useEffect(() => { localStorage.setItem("cookify_weeklyPlan", JSON.stringify(weeklyPlan)); }, [weeklyPlan]);
   useEffect(() => { localStorage.setItem("cookify_shoppingList", JSON.stringify(shoppingList)); }, [shoppingList]);
@@ -377,7 +379,7 @@ export default function CookifyDemo() {
     setWeeklyPlan({});
     setShoppingList([]);
     localStorage.removeItem("cookify_user");
-    localStorage.removeItem("cookify_mealPlan"); // ✅ ДОБАВЛЕНО
+    localStorage.removeItem("cookify_mealPlan");
     localStorage.removeItem("cookify_mealHistory");
     localStorage.removeItem("cookify_weeklyPlan");
     localStorage.removeItem("cookify_shoppingList");
@@ -387,8 +389,27 @@ export default function CookifyDemo() {
 
   const addToMealPlan = (recipe, category) => { setMealPlan(prev => ({ ...prev, [category]: [...prev[category], recipe] })); };
 
-  const addMealToHistory = (recipe, category, date = new Date().toISOString().split('T')[0]) => {
-    const newEntry = { id: Date.now(), date, category, recipe, timestamp: new Date().toISOString() };
+  // ✨ ОБНОВЛЕННАЯ ФУНКЦИЯ: Добавление в историю с проверкой вариантов
+  const addMealToHistory = (recipe, category, date = new Date().toISOString().split('T')[0], variantKey = null) => {
+    // Если у рецепта есть варианты и вариант не указан, показываем модальное окно выбора
+    if (recipe.variants && recipe.variants.length > 0 && !variantKey) {
+      setVariantSelectionRecipe(recipe);
+      setVariantSelectionCallback(() => (selectedVariantKey) => {
+        addMealToHistory(recipe, category, date, selectedVariantKey);
+        setShowVariantSelectionModal(false);
+      });
+      setShowVariantSelectionModal(true);
+      return;
+    }
+
+    const newEntry = { 
+      id: Date.now(), 
+      date, 
+      category, 
+      recipe, 
+      variantKey, // Сохраняем выбранный вариант
+      timestamp: new Date().toISOString() 
+    };
     setMealHistory(prev => [...prev, newEntry]);
   };
 
@@ -409,12 +430,25 @@ export default function CookifyDemo() {
 
   const calculateDayCalories = (dateKey) => {
     const dayMeals = getMealsForDay(dateKey);
-    return dayMeals.reduce((sum, entry) => sum + (entry.recipe.caloriesPerServing || entry.recipe.calories || 0), 0);
+    return dayMeals.reduce((sum, entry) => {
+      // Учитываем калории варианта, если он выбран
+      if (entry.variantKey && entry.recipe.variants) {
+        const variant = entry.recipe.variants.find(v => v.key === entry.variantKey);
+        if (variant) return sum + (variant.caloriesPerServing || variant.calories || entry.recipe.caloriesPerServing || entry.recipe.calories || 0);
+      }
+      return sum + (entry.recipe.caloriesPerServing || entry.recipe.calories || 0);
+    }, 0);
   };
 
   const calculatePeriodStats = () => {
     const filtered = getFilteredHistory();
-    const totalCalories = filtered.reduce((sum, entry) => sum + (entry.recipe.caloriesPerServing || entry.recipe.calories || 0), 0);
+    const totalCalories = filtered.reduce((sum, entry) => {
+      if (entry.variantKey && entry.recipe.variants) {
+        const variant = entry.recipe.variants.find(v => v.key === entry.variantKey);
+        if (variant) return sum + (variant.caloriesPerServing || variant.calories || entry.recipe.caloriesPerServing || entry.recipe.calories || 0);
+      }
+      return sum + (entry.recipe.caloriesPerServing || entry.recipe.calories || 0);
+    }, 0);
     const getDaysInPeriod = () => {
       if (viewPeriod === "day") return 1;
       if (viewPeriod === "week") return 7;
@@ -427,26 +461,50 @@ export default function CookifyDemo() {
     return { totalMeals: filtered.length, totalCalories, avgCaloriesPerDay: viewPeriod === "day" ? totalCalories : Math.round(totalCalories / getDaysInPeriod()) };
   };
 
-  const addRecipeToPlanner = (dateKey, category, recipeId) => {
+  // ✨ ОБНОВЛЕННАЯ ФУНКЦИЯ: Добавление в планировщик с проверкой вариантов
+  const addRecipeToPlanner = (dateKey, category, recipeIdOrRecipe, variantKey = null) => {
+    const recipe = typeof recipeIdOrRecipe === 'object' ? recipeIdOrRecipe : SAMPLE_RECIPES.find(r => r.id === recipeIdOrRecipe);
+    const recipeId = typeof recipeIdOrRecipe === 'object' ? recipeIdOrRecipe.id : recipeIdOrRecipe;
+
+    // Если у рецепта есть варианты и вариант не указан, показываем модальное окно выбора
+    if (recipe && recipe.variants && recipe.variants.length > 0 && !variantKey) {
+      setVariantSelectionRecipe(recipe);
+      setVariantSelectionCallback(() => (selectedVariantKey) => {
+        addRecipeToPlanner(dateKey, category, recipeId, selectedVariantKey);
+        setShowVariantSelectionModal(false);
+      });
+      setShowVariantSelectionModal(true);
+      return;
+    }
+
     setWeeklyPlan(prev => {
       const dayPlan = prev[dateKey] || { breakfast: [], lunch: [], snack: [], dinner: [] };
-      return { ...prev, [dateKey]: { ...dayPlan, [category]: [...(dayPlan[category] || []), recipeId] } };
+      const planEntry = { recipeId, variantKey }; // Сохраняем и id рецепта и вариант
+      return { ...prev, [dateKey]: { ...dayPlan, [category]: [...(dayPlan[category] || []), planEntry] } };
     });
   };
 
-  const removeRecipeFromPlanner = (dateKey, category, recipeId) => {
+  const removeRecipeFromPlanner = (dateKey, category, index) => {
     setWeeklyPlan(prev => {
       const dayPlan = prev[dateKey];
       if (!dayPlan) return prev;
-      return { ...prev, [dateKey]: { ...dayPlan, [category]: (dayPlan[category] || []).filter(id => id !== recipeId) } };
+      const newCategoryItems = [...(dayPlan[category] || [])];
+      newCategoryItems.splice(index, 1);
+      return { ...prev, [dateKey]: { ...dayPlan, [category]: newCategoryItems } };
     });
   };
 
   const getPlannerRecipes = (dateKey, category) => {
     const dayPlan = weeklyPlan[dateKey];
     if (!dayPlan) return [];
-    const ids = dayPlan[category] || [];
-    return ids.map(id => SAMPLE_RECIPES.find(r => r.id === id)).filter(Boolean);
+    const entries = dayPlan[category] || [];
+    return entries.map(entry => {
+      // Поддержка старого формата (просто ID) и нового (объект с recipeId и variantKey)
+      const recipeId = typeof entry === 'object' ? entry.recipeId : entry;
+      const variantKey = typeof entry === 'object' ? entry.variantKey : null;
+      const recipe = SAMPLE_RECIPES.find(r => r.id === recipeId);
+      return recipe ? { ...recipe, selectedVariantKey: variantKey } : null;
+    }).filter(Boolean);
   };
 
   const calculatePlannerDayCalories = (dateKey) => {
@@ -455,7 +513,17 @@ export default function CookifyDemo() {
     let total = 0;
     MEAL_CATEGORIES.forEach(cat => {
       const recipes = getPlannerRecipes(dateKey, cat);
-      recipes.forEach(r => { total += r.caloriesPerServing || r.calories || 0; });
+      recipes.forEach(r => { 
+        // Учитываем калории варианта, если он выбран
+        if (r.selectedVariantKey && r.variants) {
+          const variant = r.variants.find(v => v.key === r.selectedVariantKey);
+          if (variant) {
+            total += variant.caloriesPerServing || variant.calories || r.caloriesPerServing || r.calories || 0;
+            return;
+          }
+        }
+        total += r.caloriesPerServing || r.calories || 0; 
+      });
     });
     return total;
   };
@@ -468,30 +536,32 @@ export default function CookifyDemo() {
     weekDays.forEach(dateKey => {
       MEAL_CATEGORIES.forEach(cat => {
         const recipes = getPlannerRecipes(dateKey, cat);
-        recipes.forEach(recipe => {
-          const ingredients = recipe.ingredients || [];
+        recipes.forEach(recipeWithVariant => {
+          // Определяем какой набор ингредиентов использовать
+          let ingredients = recipeWithVariant.ingredients || [];
+          
+          // Если выбран вариант, используем его ингредиенты
+          if (recipeWithVariant.selectedVariantKey && recipeWithVariant.variants) {
+            const variant = recipeWithVariant.variants.find(v => v.key === recipeWithVariant.selectedVariantKey);
+            if (variant && variant.ingredients) {
+              ingredients = variant.ingredients;
+            }
+          }
           
           ingredients.forEach(ing => {
-            // Проверяем тип ингредиента
             if (typeof ing === 'object' && ing.name) {
-              // Новый формат: объект { name, quantity, unit }
               allIngredients.push({
                 name: ing.name,
                 quantity: ing.quantity || '',
                 unit: ing.unit || 'шт'
               });
             } else if (typeof ing === 'string') {
-              // Старый формат: строка "название — количество единица"
-              // Парсим вручную
               const parts = ing.split('—').map(s => s.trim());
               const name = parts[0] || ing;
               const quantityStr = parts[1] || '';
-              
-              // Извлекаем число и единицу из строки
               const match = quantityStr.match(/(\d+(?:[.,]\d+)?)\s*([а-яА-Яa-zA-Z.\s]+)?/);
               const quantity = match ? match[1].replace(',', '.') : '';
               const unit = match && match[2] ? match[2].trim() : 'шт';
-              
               allIngredients.push({ name, quantity, unit });
             }
           });
@@ -499,7 +569,6 @@ export default function CookifyDemo() {
       });
     });
 
-    // Удаляем дубликаты и категоризируем
     const uniqueIngredients = [];
     const seen = new Set();
     
@@ -515,14 +584,13 @@ export default function CookifyDemo() {
       id: Date.now() + Math.random(),
       name: ing.name,
       quantity: ing.quantity,
-      baseQuantity: ing.quantity, // Для масштабирования
+      baseQuantity: ing.quantity,
       unit: ing.unit,
       category: categorizeIngredient(ing.name),
       checked: false,
       isManual: false
     }));
 
-    // Добавляем к существующему списку (без дублирования)
     setShoppingList(prev => {
       const existingNames = new Set(prev.map(item => item.name.toLowerCase()));
       const filtered = newItems.filter(item => !existingNames.has(item.name.toLowerCase()));
@@ -648,6 +716,36 @@ export default function CookifyDemo() {
         />
       )}
 
+      {/* ✨ НОВОЕ: Модальное окно выбора варианта */}
+      {showVariantSelectionModal && variantSelectionRecipe && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" onClick={() => setShowVariantSelectionModal(false)}>
+          <div className={`${theme.cardBg} ${fontSize.body} rounded-2xl max-w-md w-full p-6`} onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-start justify-between mb-4">
+              <h3 className={`${fontSize.cardTitle} font-bold ${theme.headerText}`}>
+                {t("Выберите вариант рецепта", "Choose recipe variant")}
+              </h3>
+              <button onClick={() => setShowVariantSelectionModal(false)} className={`${theme.textSecondary} hover:${theme.text} transition`}>
+                <FaTimes size={20} />
+              </button>
+            </div>
+            
+            <p className={`${fontSize.small} ${theme.textSecondary} mb-4`}>{variantSelectionRecipe.title}</p>
+            
+            <div className="space-y-2">
+              {variantSelectionRecipe.variants.map(variant => (
+                <button
+                  key={variant.key}
+                  onClick={() => variantSelectionCallback && variantSelectionCallback(variant.key)}
+                  className={`w-full p-3 rounded-lg ${theme.accent} ${theme.accentHover} text-white transition ${fontSize.body}`}
+                >
+                  {language === "ru" ? (variant.labelRu || variant.key) : (variant.labelEn || variant.key)}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       {selectedRecipe && (() => {
         const dishTypeInfo = getDishTypeInfo(selectedRecipe.type);
         const variants = Array.isArray(selectedRecipe.variants) ? selectedRecipe.variants : [];
@@ -719,7 +817,6 @@ export default function CookifyDemo() {
                     const isAllergy = allergyList.some(a => a && low.includes(a));
                     const cls = isAllergy ? "text-red-600 font-semibold" : "";
                     
-                    // Форматируем вывод
                     const displayText = typeof ing === 'object' 
                       ? `${ing.name} ${ing.quantity ? `— ${ing.quantity}` : ''} ${ing.unit || ''}`.trim()
                       : ing;
@@ -750,7 +847,11 @@ export default function CookifyDemo() {
                   <h4 className={`${fontSize.body} font-semibold mb-3`}>{t("Добавить в историю питания:", "Add to meal history:")}</h4>
                   <div className="flex gap-2 flex-wrap">
                     {MEAL_CATEGORIES.map(cat => (
-                      <button key={cat} onClick={() => { addMealToHistory(selectedRecipe, cat); closeModal(); }}
+                      <button key={cat} onClick={() => { 
+                        // Передаем текущий выбранный вариант при добавлении
+                        addMealToHistory(selectedRecipe, cat, new Date().toISOString().split('T')[0], selectedRecipeVariantKey); 
+                        closeModal(); 
+                      }}
                         className={`px-3 py-1 rounded ${fontSize.small} ${theme.accent} ${theme.accentHover} text-white`}>{MEAL_LABELS[cat]}</button>
                     ))}
                   </div>
