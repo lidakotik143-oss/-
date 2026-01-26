@@ -196,6 +196,44 @@ const categorizeIngredient = (ingredient) => {
   return "Продукты";
 };
 
+// Парсинг количества из строки ингредиента
+const parseIngredientQuantity = (ingredient) => {
+  const ing = ingredient.trim();
+  
+  // Паттерны для извлечения количества и единиц
+  const patterns = [
+    /^(\d+(?:[.,]\d+)?)[\s]*(кг|г|л|мл|шт|ст\.?\s*л\.?|ч\.?\s*л\.?|стакан|упак|пучок)/i,
+    /^(\d+(?:[.,]\d+)?)[\s]*$/
+  ];
+  
+  for (const pattern of patterns) {
+    const match = ing.match(pattern);
+    if (match) {
+      const quantity = match[1].replace(',', '.');
+      const unitRaw = match[2] || 'шт';
+      
+      // Нормализация единиц измерения
+      let unit = 'шт';
+      const u = unitRaw.toLowerCase().replace(/[.\s]/g, '');
+      
+      if (u === 'кг') unit = 'кг';
+      else if (u === 'г') unit = 'г';
+      else if (u === 'л') unit = 'л';
+      else if (u === 'мл') unit = 'мл';
+      else if (u.includes('стл') || u.includes('столовая')) unit = 'ст. л.';
+      else if (u.includes('чл') || u.includes('чайная')) unit = 'ч. л.';
+      else if (u.includes('пучок')) unit = 'пучок';
+      else if (u.includes('упак') || u.includes('пак')) unit = 'уп';
+      else if (u.includes('стакан')) unit = 'шт';
+      
+      return { quantity, unit };
+    }
+  }
+  
+  // Если не нашли числовое значение, возвращаем пустые
+  return { quantity: '', unit: 'шт' };
+};
+
 // =================== БЛОК 2: Компонент приложения ===================
 export default function CookifyDemo() {
   const [activeScreen, setActiveScreen] = useState("home");
@@ -446,7 +484,7 @@ export default function CookifyDemo() {
     return total;
   };
 
-  // Генерация списка покупок из недельного плана
+  // Генерация списка покупок из недельного плана (ИСПРАВЛЕНО)
   const generateShoppingListFromPlanner = () => {
     const weekDays = getWeekDays(plannerWeekDate);
     const allIngredients = [];
@@ -464,12 +502,20 @@ export default function CookifyDemo() {
 
     // Удаляем дубликаты и категоризируем
     const uniqueIngredients = [...new Set(allIngredients)];
-    const newItems = uniqueIngredients.map(ing => ({
-      id: Date.now() + Math.random(),
-      name: ing,
-      category: categorizeIngredient(ing),
-      checked: false
-    }));
+    const newItems = uniqueIngredients.map(ing => {
+      const { quantity, unit } = parseIngredientQuantity(ing);
+      
+      return {
+        id: Date.now() + Math.random(),
+        name: ing,
+        quantity: quantity,
+        baseQuantity: quantity, // ВАЖНО: базовое количество для масштабирования
+        unit: unit,
+        category: categorizeIngredient(ing),
+        checked: false,
+        isManual: false // Помечаем как сгенерированное
+      };
+    });
 
     // Добавляем к существующему списку (без дублирования)
     setShoppingList(prev => {
