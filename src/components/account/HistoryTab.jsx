@@ -285,22 +285,38 @@ export default function HistoryTab({
                         {MEAL_LABELS[cat]} ({meals.length})
                       </h4>
                       <div className="space-y-2">
-                        {meals.map(entry => (
-                          <div key={entry.id} className={`flex items-center justify-between p-3 ${theme.cardBg} rounded-lg`}>
-                            <div className="flex-1">
-                              <div className={`${fontSize.body} font-semibold`}>{entry.recipe.title}</div>
-                              <div className={`${fontSize.small} ${theme.textSecondary}`}>
-                                {!selectedWeekDay && formatDate(entry.date, language)} {selectedWeekDay && ''} {entry.recipe.caloriesPerServing || entry.recipe.calories} {t("ккал", "kcal")}
+                        {meals.map(entry => {
+                          // 🔥 ИСПРАВЛЕНО: Учитываем данные варианта
+                          let displayTitle = entry.recipe.title;
+                          let displayCalories = entry.recipe.caloriesPerServing || entry.recipe.calories || 0;
+
+                          // Если выбран вариант, используем его данные
+                          if (entry.variantKey && entry.recipe.variants) {
+                            const variant = entry.recipe.variants.find(v => v.key === entry.variantKey);
+                            if (variant) {
+                              displayCalories = variant.caloriesPerServing ?? variant.calories ?? entry.recipe.caloriesPerServing ?? entry.recipe.calories ?? 0;
+                              const variantLabel = language === "ru" ? (variant.labelRu || variant.key) : (variant.labelEn || variant.key);
+                              displayTitle = `${entry.recipe.title} (${variantLabel})`;
+                            }
+                          }
+
+                          return (
+                            <div key={entry.id} className={`flex items-center justify-between p-3 ${theme.cardBg} rounded-lg`}>
+                              <div className="flex-1">
+                                <div className={`${fontSize.body} font-semibold`}>{displayTitle}</div>
+                                <div className={`${fontSize.small} ${theme.textSecondary}`}>
+                                  {!selectedWeekDay && formatDate(entry.date, language)} {selectedWeekDay && ''} {displayCalories} {t("ккал", "kcal")}
+                                </div>
                               </div>
+                              <button
+                                onClick={() => removeMealFromHistory(entry.id)}
+                                className="text-red-500 hover:text-red-700 ml-3"
+                              >
+                                <FaTimes />
+                              </button>
                             </div>
-                            <button
-                              onClick={() => removeMealFromHistory(entry.id)}
-                              className="text-red-500 hover:text-red-700 ml-3"
-                            >
-                              <FaTimes />
-                            </button>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     </div>
                   );
