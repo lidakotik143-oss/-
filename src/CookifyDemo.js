@@ -968,6 +968,7 @@ export default function CookifyDemo() {
           currentFont={currentFont}
           currentFontSize={currentFontSize}
           showCustomization={showCustomization}
+          setShowCustomization={setShowCustomization}
           showRegisterForm={showRegisterForm}
           isEditingProfile={isEditingProfile}
           GOALS={GOALS}
@@ -1033,6 +1034,7 @@ export default function CookifyDemo() {
           removeMealFromHistory={removeMealFromHistory}
           addMealToHistory={addMealToHistory}
           addRecipeToPlanner={addRecipeToPlanner}
+          removeRecipeFromPlanner={removeRecipeFromPlanner}
 
           setSelectedRecipe={setSelectedRecipe}
           setSelectedRecipeVariantKey={setSelectedRecipeVariantKey}
