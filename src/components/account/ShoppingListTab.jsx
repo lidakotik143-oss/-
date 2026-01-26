@@ -185,12 +185,12 @@ export default function ShoppingListTab({
 
       {/* 👥 Панель количества порций */}
       {totalItems > 0 && (
-        <div className={`mb-4 p-4 ${theme.border} border rounded-xl bg-gradient-to-r from-blue-50 to-purple-50`}>
+        <div className={`mb-4 p-5 ${theme.cardBg} ${theme.border} border-2 rounded-xl shadow-sm`}>
           <div className="space-y-3">
             <div className="flex items-center gap-3 flex-wrap">
               <div className="flex items-center gap-2">
-                <FaUsers className="text-blue-600 text-xl" />
-                <span className={`${fontSize.body} font-semibold`}>
+                <FaUsers className={`${theme.accentText} text-xl`} />
+                <span className={`${fontSize.body} font-semibold ${theme.headerText}`}>
                   {t("Готовим на:", "Cooking for:")}
                 </span>
               </div>
@@ -198,13 +198,13 @@ export default function ShoppingListTab({
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setServingsCount(Math.max(1, servingsCount - 1))}
-                  className={`w-10 h-10 rounded-lg ${theme.accent} ${theme.accentHover} text-white text-2xl font-bold flex items-center justify-center`}
+                  className={`w-10 h-10 rounded-lg ${theme.accent} ${theme.accentHover} text-white text-2xl font-bold flex items-center justify-center shadow hover:shadow-lg transition`}
                 >
                   −
                 </button>
                 
-                <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg border-2 border-blue-300">
-                  <span className={`${fontSize.cardTitle} font-bold text-blue-600`}>{servingsCount}</span>
+                <div className={`flex items-center gap-2 px-4 py-2 ${theme.cardBg} rounded-lg border-2 ${theme.border} shadow-sm`}>
+                  <span className={`${fontSize.cardTitle} font-bold ${theme.accentText}`}>{servingsCount}</span>
                   <span className={`${fontSize.small} ${theme.textSecondary}`}>
                     {t("чел.", "people")}
                   </span>
@@ -212,7 +212,7 @@ export default function ShoppingListTab({
                 
                 <button
                   onClick={() => setServingsCount(servingsCount + 1)}
-                  className={`w-10 h-10 rounded-lg ${theme.accent} ${theme.accentHover} text-white text-2xl font-bold flex items-center justify-center`}
+                  className={`w-10 h-10 rounded-lg ${theme.accent} ${theme.accentHover} text-white text-2xl font-bold flex items-center justify-center shadow hover:shadow-lg transition`}
                 >
                   +
                 </button>
@@ -238,7 +238,7 @@ export default function ShoppingListTab({
               </span>
             </label>
 
-            <p className={`${fontSize.small} text-blue-700 flex items-start gap-2`}>
+            <p className={`${fontSize.small} ${theme.textSecondary} flex items-start gap-2 ${theme.cardBg} p-3 rounded-lg`}>
               <span>💡</span>
               <span>
                 {t("Количество продуктов автоматически пересчитывается при изменении количества человек.",
@@ -249,7 +249,7 @@ export default function ShoppingListTab({
         </div>
       )}
 
-      {/* 📊 Прогресс-бар */}
+      {/* 📋 Прогресс-бар */}
       {totalItems > 0 && (
         <div className={`mb-6 p-4 ${theme.border} border rounded-xl`}>
           <div className="flex items-center justify-between mb-2">
@@ -359,7 +359,7 @@ export default function ShoppingListTab({
                 {getCategoryLabel(category)} ({items.length})
               </h4>
               
-              {/* 📊 ТАБЛИЦА */}
+              {/* 📋 ТАБЛИЦА */}
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
@@ -381,7 +381,7 @@ export default function ShoppingListTab({
                     {items.map(item => (
                       <tr
                         key={item.id}
-                        className={`${theme.border} border-b transition hover:bg-gray-50 ${
+                        className={`${theme.border} border-b transition hover:bg-opacity-50 ${
                           item.checked ? 'opacity-60' : ''
                         }`}
                       >
