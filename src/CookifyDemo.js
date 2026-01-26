@@ -970,7 +970,9 @@ export default function CookifyDemo() {
           showCustomization={showCustomization}
           setShowCustomization={setShowCustomization}
           showRegisterForm={showRegisterForm}
+          setShowRegisterForm={setShowRegisterForm}
           isEditingProfile={isEditingProfile}
+          setIsEditingProfile={setIsEditingProfile}
           GOALS={GOALS}
           LIFESTYLE={LIFESTYLE}
 
