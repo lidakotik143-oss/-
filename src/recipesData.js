@@ -116,7 +116,7 @@ export const RECIPES_DATABASE = [
     diet: "",
     cuisine: "французская",
     difficulty: "сложный",
-    tags: ["су-вид", "бриошь", "печень", "каркаде"],
+    tags: [],
     ingredients: [
       { name: "тосты бриошь", quantity: "30", unit: "г" },
       { name: "масло сливочное", quantity: "10", unit: "г" },
