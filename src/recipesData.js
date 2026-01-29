@@ -1,5 +1,5 @@
 // База данных рецептов Cookify
-// Всего: 8 рецептов (5 завтраков + 3 десерта)
+// Всего: 8 рецептов (5 завтраков + 1 ужин + 2 десерта)
 
 export const RECIPES_DATABASE = [
   {
@@ -471,7 +471,7 @@ export const RECIPES_DATABASE = [
     calories: 320,
     caloriesPerServing: 320,
     servings: 4,
-    type: "десерт",
+    type: "ужин",
     diet: "веган",
     cuisine: "индийская",
     difficulty: "средний",
