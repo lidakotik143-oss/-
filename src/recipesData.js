@@ -576,4 +576,4 @@ key: "fresh",
 
 labelRu: "Из свежих ягод",
 
-labelEn: "Fresh Berries",...
+labelEn: "Fresh Berries",
