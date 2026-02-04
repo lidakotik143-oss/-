@@ -3,6 +3,14 @@ import React, { useState, useEffect } from "react";
 import { FaTimes } from "react-icons/fa";
 import { RECIPES_DATABASE } from './recipesData';
 
+import {
+  SUBSTITUTIONS_STORAGE_KEY,
+  loadUserSubstitutions,
+  saveUserSubstitutions,
+  getRecipeSubKey,
+  getEffectiveIngredientName
+} from "./utils/substitutions";
+
 // Вынесенные компоненты
 import Header from "./components/Header";
 import HomeScreen from "./components/HomeScreen";
@@ -263,6 +271,12 @@ export default function CookifyDemo() {
   const [selectedRecipe, setSelectedRecipe] = useState(null);
   const [selectedRecipeVariantKey, setSelectedRecipeVariantKey] = useState(null);
 
+  // ✅ НОВОЕ: сохранённые замены ингредиентов для пользователя
+  const [userSubstitutions, setUserSubstitutions] = useState({});
+
+  // ✅ НОВОЕ: какое раскрыто меню замен внутри модалки рецепта
+  const [openSubPicker, setOpenSubPicker] = useState(null); // string subId | null
+
   const [searchMode, setSearchMode] = useState("name");
   const [searchQuery, setSearchQuery] = useState("");
   const [excludeIngredients, setExcludeIngredients] = useState("");
@@ -327,6 +341,9 @@ export default function CookifyDemo() {
     if (savedMealHistory) setMealHistory(JSON.parse(savedMealHistory));
     if (savedWeeklyPlan) setWeeklyPlan(JSON.parse(savedWeeklyPlan));
     if (savedShoppingList) setShoppingList(JSON.parse(savedShoppingList));
+
+    // ✅ замены ингредиентов (per-user, localStorage)
+    setUserSubstitutions(loadUserSubstitutions());
   }, []);
 
   // ✅ АВТОСОХРАНЕНИЕ ПРИ ИЗМЕНЕНИИ
@@ -345,6 +362,11 @@ export default function CookifyDemo() {
     if (language === "en") setUnitSystem("imperial");
     else setUnitSystem("metric");
   }, [language]);
+
+  // Сбрасываем раскрытый список замен при закрытии/переключении рецепта
+  useEffect(() => {
+    setOpenSubPicker(null);
+  }, [selectedRecipe, selectedRecipeVariantKey]);
 
   const GOALS = language === "ru" ? GOAL_OPTIONS_RU : GOAL_OPTIONS_EN;
   const LIFESTYLE = language === "ru" ? LIFESTYLE_RU : LIFESTYLE_EN;
@@ -428,11 +450,14 @@ export default function CookifyDemo() {
     setMealHistory([]);
     setWeeklyPlan({});
     setShoppingList([]);
+    setUserSubstitutions({});
+
     localStorage.removeItem("cookify_user");
     localStorage.removeItem("cookify_mealPlan");
     localStorage.removeItem("cookify_mealHistory");
     localStorage.removeItem("cookify_weeklyPlan");
     localStorage.removeItem("cookify_shoppingList");
+    localStorage.removeItem(SUBSTITUTIONS_STORAGE_KEY);
   };
 
   const toggleUnitSystem = () => { setUnitSystem(prev => prev === "metric" ? "imperial" : "metric"); };
@@ -597,11 +622,15 @@ export default function CookifyDemo() {
               ingredients = variant.ingredients;
             }
           }
+
+          const subsKey = getRecipeSubKey(recipeWithVariant.id, recipeWithVariant.selectedVariantKey || null);
+          const recipeSubs = userSubstitutions?.[subsKey] || {};
           
           ingredients.forEach(ing => {
             if (typeof ing === 'object' && ing.name) {
+              const effectiveName = getEffectiveIngredientName(ing, recipeSubs);
               allIngredients.push({
-                name: ing.name,
+                name: effectiveName,
                 quantity: ing.quantity || '',
                 unit: ing.unit || 'шт'
               });
@@ -623,7 +652,7 @@ export default function CookifyDemo() {
     const seen = new Set();
     
     allIngredients.forEach(ing => {
-      const key = ing.name.toLowerCase();
+      const key = (ing.name || '').toLowerCase();
       if (!seen.has(key)) {
         seen.add(key);
         uniqueIngredients.push(ing);
@@ -779,6 +808,7 @@ export default function CookifyDemo() {
           DIFFICULTY_OPTIONS={DIFFICULTY_OPTIONS} TAG_OPTIONS={TAG_OPTIONS} CUISINE_OPTIONS={CUISINE_OPTIONS} DISH_TYPE_LABELS={DISH_TYPE_LABELS}
           DIET_LABELS={DIET_LABELS} DIFFICULTY_LABELS={DIFFICULTY_LABELS} language={language} normalize={normalize} filteredResults={filteredResults}
           getDishTypeInfo={getDishTypeInfo} allergyList={allergyList} setSelectedRecipe={setSelectedRecipe} setSelectedRecipeVariantKey={setSelectedRecipeVariantKey}
+          userSubstitutions={userSubstitutions}
         />
       )}
 
@@ -817,6 +847,9 @@ export default function CookifyDemo() {
         const variants = Array.isArray(selectedRecipe.variants) ? selectedRecipe.variants : [];
         const activeVariant = variants.length ? (variants.find(v => v.key === selectedRecipeVariantKey) || variants[0]) : null;
         const activeRecipe = activeVariant || selectedRecipe;
+
+        const subsKey = getRecipeSubKey(selectedRecipe.id, activeVariant?.key || null);
+        const recipeSubs = userSubstitutions?.[subsKey] || {};
         
         // 🔥 ИСПРАВЛЕНО: Берем время и калории из варианта, если есть, иначе из базового рецепта
         const recipeTime = activeVariant?.time ?? selectedRecipe.time;
@@ -828,6 +861,32 @@ export default function CookifyDemo() {
         const kcalPerServing = recipeCalories;
         const servings = selectedRecipe.servings ?? 2;
         const closeModal = () => { setSelectedRecipe(null); setSelectedRecipeVariantKey(null); };
+
+        const updateSubstitution = (subId, value) => {
+          setUserSubstitutions(prev => {
+            const all = { ...(prev || {}) };
+            const curRecipeSubs = { ...(all[subsKey] || {}) };
+
+            if (!value) {
+              delete curRecipeSubs[subId];
+            } else {
+              curRecipeSubs[subId] = value;
+            }
+
+            if (Object.keys(curRecipeSubs).length === 0) {
+              delete all[subsKey];
+            } else {
+              all[subsKey] = curRecipeSubs;
+            }
+
+            saveUserSubstitutions(all);
+            return all;
+          });
+        };
+
+        const toggleSubPicker = (subId) => {
+          setOpenSubPicker(prev => (prev === subId ? null : subId));
+        };
 
         return (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" onClick={closeModal}>
@@ -881,18 +940,81 @@ export default function CookifyDemo() {
 
               <div className="mb-6">
                 <h3 className={`${fontSize.cardTitle} font-semibold mb-2 ${theme.headerText}`}>{t("Ингредиенты:", "Ingredients:")}</h3>
-                <ul className={`list-disc list-inside space-y-1 ${fontSize.body}`}>
+                <ul className={`list-disc list-inside space-y-3 ${fontSize.body}`}>
                   {(activeRecipe.ingredients || []).map((ing, i) => {
-                    const ingName = typeof ing === 'object' ? ing.name : ing;
-                    const low = ingName.toLowerCase();
+                    const effectiveName = getEffectiveIngredientName(ing, recipeSubs);
+                    const low = (effectiveName || "").toLowerCase();
                     const isAllergy = allergyList.some(a => a && low.includes(a));
-                    const cls = isAllergy ? "text-red-600 font-semibold" : "";
-                    
-                    const displayText = typeof ing === 'object' 
-                      ? `${ing.name} ${ing.quantity ? `— ${ing.quantity}` : ''} ${ing.unit || ''}`.trim()
-                      : ing;
-                    
-                    return <li key={i} className={cls}>{displayText}</li>;
+
+                    const isObj = typeof ing === 'object';
+                    const hasSubs = isObj && ing.subId && Array.isArray(ing.substitutes) && ing.substitutes.length > 0;
+                    const currentChoice = isObj && ing.subId ? (recipeSubs?.[ing.subId] || "") : "";
+
+                    const displayText = isObj
+                      ? `${effectiveName} ${ing.quantity ? `— ${ing.quantity}` : ''} ${ing.unit || ''}`.trim()
+                      : (ing || "");
+
+                    const clickable = hasSubs && !isAllergy;
+
+                    return (
+                      <li key={i} className={isAllergy ? "text-red-600 font-semibold" : ""}>
+                        <div className="flex items-start justify-between gap-3">
+                          <button
+                            type="button"
+                            onClick={() => clickable && toggleSubPicker(ing.subId)}
+                            className={
+                              clickable
+                                ? `text-left underline decoration-dotted ${theme.accentText} hover:opacity-80 transition`
+                                : "text-left"
+                            }
+                            title={clickable ? t("Нажмите, чтобы выбрать замену", "Click to choose substitution") : undefined}
+                          >
+                            {displayText}
+                          </button>
+
+                          {hasSubs && (
+                            <span className={`${fontSize.tiny} ${theme.textSecondary} mt-1 whitespace-nowrap`}>
+                              {currentChoice ? t("Заменено", "Replaced") : t("Можно заменить", "Replaceable")}
+                            </span>
+                          )}
+                        </div>
+
+                        {hasSubs && openSubPicker === ing.subId && (
+                          <div className={`mt-2 ml-5 p-3 rounded-xl border ${theme.border} ${theme.cardBg}`}>
+                            <div className={`mb-2 ${fontSize.small} ${theme.textSecondary}`}>
+                              {t("Выберите замену:", "Choose a substitution:")}
+                            </div>
+
+                            <div className="flex flex-wrap gap-2">
+                              <button
+                                type="button"
+                                onClick={() => { updateSubstitution(ing.subId, ""); setOpenSubPicker(null); }}
+                                className={`px-3 py-1 rounded-full border ${theme.border} ${fontSize.small} hover:opacity-80 transition`}
+                              >
+                                {t("Не заменять", "No substitution")}
+                              </button>
+
+                              {ing.substitutes.map((opt) => (
+                                <button
+                                  key={opt}
+                                  type="button"
+                                  onClick={() => { updateSubstitution(ing.subId, opt); setOpenSubPicker(null); }}
+                                  className={`px-3 py-1 rounded-full ${theme.accent} ${theme.accentHover} text-white ${fontSize.small} transition`}
+                                >
+                                  {opt}
+                                </button>
+                              ))}
+                            </div>
+
+                            {currentChoice && (
+                              <div className={`mt-2 ${fontSize.tiny} ${theme.textSecondary}`}>
+                                {t("Текущая замена:", "Current:")} {currentChoice}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </li>
+                    );
                   })}
                 </ul>
               </div>
