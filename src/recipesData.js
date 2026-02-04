@@ -16,11 +16,29 @@ export const RECIPES_DATABASE = [
     tags: ["популярное"],
     ingredients: [
       { name: "овсяные хлопья", quantity: "200", unit: "г" },
-      { name: "молоко", quantity: "600", unit: "мл" },
-      { name: "сахар (по вкусу)", quantity: "2", unit: "ст. л." },
+      {
+        name: "молоко",
+        quantity: "600",
+        unit: "мл",
+        subId: "milk",
+        substitutes: ["растительное молоко", "вода"]
+      },
+      {
+        name: "сахар (по вкусу)",
+        quantity: "2",
+        unit: "ст. л.",
+        subId: "sweetener",
+        substitutes: ["мёд", "кленовый сироп", "стевия"]
+      },
       { name: "бананы", quantity: "2", unit: "шт" },
       { name: "соль", quantity: "0.25", unit: "ч. л." },
-      { name: "сливочное масло (по желанию)", quantity: "20", unit: "г" }
+      {
+        name: "сливочное масло (по желанию)",
+        quantity: "20",
+        unit: "г",
+        subId: "butter",
+        substitutes: ["кокосовое масло", "оливковое масло"]
+      }
     ],
     instructions: [
       "Всыпьте овсяные хлопья в кастрюлю с толстым дном.",
@@ -39,11 +57,29 @@ export const RECIPES_DATABASE = [
         time: "25",
         ingredients: [
           { name: "овсяные хлопья", quantity: "200", unit: "г" },
-          { name: "молоко", quantity: "600", unit: "мл" },
-          { name: "сахар (по вкусу)", quantity: "2", unit: "ст. л." },
+          {
+            name: "молоко",
+            quantity: "600",
+            unit: "мл",
+            subId: "milk",
+            substitutes: ["растительное молоко", "вода"]
+          },
+          {
+            name: "сахар (по вкусу)",
+            quantity: "2",
+            unit: "ст. л.",
+            subId: "sweetener",
+            substitutes: ["мёд", "кленовый сироп", "стевия"]
+          },
           { name: "бананы", quantity: "2", unit: "шт" },
           { name: "соль", quantity: "0.25", unit: "ч. л." },
-          { name: "сливочное масло (по желанию)", quantity: "20", unit: "г" }
+          {
+            name: "сливочное масло (по желанию)",
+            quantity: "20",
+            unit: "г",
+            subId: "butter",
+            substitutes: ["кокосовое масло", "оливковое масло"]
+          }
         ],
         instructions: [
           "Всыпьте овсяные хлопья в кастрюлю с толстым дном.",
@@ -63,10 +99,28 @@ export const RECIPES_DATABASE = [
         ingredients: [
           { name: "овсяные хлопья (геркулес)", quantity: "200", unit: "г" },
           { name: "вода", quantity: "300", unit: "мл" },
-          { name: "молоко", quantity: "200", unit: "мл" },
+          {
+            name: "молоко",
+            quantity: "200",
+            unit: "мл",
+            subId: "milk",
+            substitutes: ["растительное молоко", "вода"]
+          },
           { name: "бананы", quantity: "2", unit: "шт" },
-          { name: "сахар (по вкусу)", quantity: "", unit: "" },
-          { name: "сливочное масло (по желанию)", quantity: "50", unit: "г" }
+          {
+            name: "сахар (по вкусу)",
+            quantity: "",
+            unit: "",
+            subId: "sweetener",
+            substitutes: ["мёд", "кленовый сироп", "стевия"]
+          },
+          {
+            name: "сливочное масло (по желанию)",
+            quantity: "50",
+            unit: "г",
+            subId: "butter",
+            substitutes: ["кокосовое масло", "оливковое масло"]
+          }
         ],
         instructions: [
           "Засыпьте геркулес в чашу мультиварки.",
@@ -86,7 +140,13 @@ export const RECIPES_DATABASE = [
           { name: "овсяные хлопья", quantity: "60", unit: "г" },
           { name: "бананы", quantity: "2", unit: "шт" },
           { name: "яйцо", quantity: "1", unit: "шт" },
-          { name: "молоко", quantity: "80", unit: "мл" },
+          {
+            name: "молоко",
+            quantity: "80",
+            unit: "мл",
+            subId: "milk",
+            substitutes: ["растительное молоко", "вода"]
+          },
           { name: "кокосовая стружка (по вкусу)", quantity: "", unit: "" }
         ],
         instructions: [
@@ -119,7 +179,13 @@ export const RECIPES_DATABASE = [
       { name: "помидор (небольшой)", quantity: "1", unit: "шт" },
       { name: "лук (или зелёный лук)", quantity: "0.25", unit: "шт" },
       { name: "соль и перец (по вкусу)", quantity: "", unit: "" },
-      { name: "молоко (по желанию)", quantity: "1-2", unit: "ст. л." },
+      {
+        name: "молоко (по желанию)",
+        quantity: "1-2",
+        unit: "ст. л.",
+        subId: "milk",
+        substitutes: ["растительное молоко", "вода"]
+      },
       { name: "растительное масло (для жарки)", quantity: "", unit: "" },
       { name: "свежая зелень (для подачи)", quantity: "", unit: "" }
     ],
@@ -143,7 +209,13 @@ export const RECIPES_DATABASE = [
           { name: "помидор (небольшой)", quantity: "1", unit: "шт" },
           { name: "лук (или зелёный лук)", quantity: "0.25", unit: "шт" },
           { name: "соль и перец (по вкусу)", quantity: "", unit: "" },
-          { name: "молоко (по желанию)", quantity: "1-2", unit: "ст. л." },
+          {
+            name: "молоко (по желанию)",
+            quantity: "1-2",
+            unit: "ст. л.",
+            subId: "milk",
+            substitutes: ["растительное молоко", "вода"]
+          },
           { name: "растительное масло (для жарки)", quantity: "", unit: "" },
           { name: "свежая зелень (для подачи)", quantity: "", unit: "" }
         ],
@@ -166,8 +238,20 @@ export const RECIPES_DATABASE = [
           { name: "лук репчатый", quantity: "1", unit: "шт" },
           { name: "помидор", quantity: "0.5", unit: "шт" },
           { name: "яйца", quantity: "5", unit: "шт" },
-          { name: "молоко", quantity: "100", unit: "мл" },
-          { name: "сыр", quantity: "100", unit: "г" },
+          {
+            name: "молоко",
+            quantity: "100",
+            unit: "мл",
+            subId: "milk",
+            substitutes: ["растительное молоко", "вода"]
+          },
+          {
+            name: "сыр",
+            quantity: "100",
+            unit: "г",
+            subId: "cheese",
+            substitutes: ["тофу", "веганский сыр"]
+          },
           { name: "зелень (укроп/петрушка/перья лука, по вкусу)", quantity: "", unit: "" },
           { name: "соль и перец (по вкусу)", quantity: "", unit: "" },
           { name: "масло (для обжарки овощей)", quantity: "", unit: "" }
@@ -197,11 +281,35 @@ export const RECIPES_DATABASE = [
     difficulty: "легкий",
     tags: ["быстро", "вегетарианское"],
     ingredients: [
-      { name: "греческий йогурт", quantity: "400", unit: "г" },
-      { name: "натуральный мёд", quantity: "3-4", unit: "ст. л." },
-      { name: "грецкие орехи", quantity: "50", unit: "г" },
+      {
+        name: "греческий йогурт",
+        quantity: "400",
+        unit: "г",
+        subId: "yogurt",
+        substitutes: ["йогурт безлактозный", "растительный йогурт"]
+      },
+      {
+        name: "натуральный мёд",
+        quantity: "3-4",
+        unit: "ст. л.",
+        subId: "sweetener",
+        substitutes: ["кленовый сироп", "сироп агавы"]
+      },
+      {
+        name: "грецкие орехи",
+        quantity: "50",
+        unit: "г",
+        subId: "nuts",
+        substitutes: ["миндаль", "фундук", "семечки"]
+      },
       { name: "корица (по вкусу, по желанию)", quantity: "", unit: "" },
-      { name: "свежие ягоды или инжир (для подачи, по желанию)", quantity: "", unit: "" }
+      {
+        name: "свежие ягоды или инжир (для подачи, по желанию)",
+        quantity: "",
+        unit: "",
+        subId: "berries",
+        substitutes: ["изюм", "банан", "яблоко"]
+      }
     ],
     instructions: [
       "Обжарьте грецкие орехи на сухой сковороде 3–5 минут до золотистости, остудите и крупно нарубите ножом.",
@@ -218,11 +326,35 @@ export const RECIPES_DATABASE = [
         labelEn: "Classic",
         time: "5",
         ingredients: [
-          { name: "греческий йогурт", quantity: "400", unit: "г" },
-          { name: "натуральный мёд", quantity: "3-4", unit: "ст. л." },
-          { name: "грецкие орехи", quantity: "50", unit: "г" },
+          {
+            name: "греческий йогурт",
+            quantity: "400",
+            unit: "г",
+            subId: "yogurt",
+            substitutes: ["йогурт безлактозный", "растительный йогурт"]
+          },
+          {
+            name: "натуральный мёд",
+            quantity: "3-4",
+            unit: "ст. л.",
+            subId: "sweetener",
+            substitutes: ["кленовый сироп", "сироп агавы"]
+          },
+          {
+            name: "грецкие орехи",
+            quantity: "50",
+            unit: "г",
+            subId: "nuts",
+            substitutes: ["миндаль", "фундук", "семечки"]
+          },
           { name: "корица (по вкусу, по желанию)", quantity: "", unit: "" },
-          { name: "свежие ягоды или инжир (для подачи, по желанию)", quantity: "", unit: "" }
+          {
+            name: "свежие ягоды или инжир (для подачи, по желанию)",
+            quantity: "",
+            unit: "",
+            subId: "berries",
+            substitutes: ["изюм", "банан", "яблоко"]
+          }
         ],
         instructions: [
           "Обжарьте грецкие орехи на сухой сковороде 3–5 минут до золотистости, остудите и крупно нарубите ножом.",
@@ -241,9 +373,27 @@ export const RECIPES_DATABASE = [
         ingredients: [
           { name: "желатин", quantity: "3", unit: "г" },
           { name: "вода", quantity: "25", unit: "мл" },
-          { name: "йогурт греческий", quantity: "200", unit: "г" },
-          { name: "мёд", quantity: "2", unit: "ч. л." },
-          { name: "грецкий орех", quantity: "20", unit: "г" },
+          {
+            name: "йогурт греческий",
+            quantity: "200",
+            unit: "г",
+            subId: "yogurt",
+            substitutes: ["йогурт безлактозный", "растительный йогурт"]
+          },
+          {
+            name: "мёд",
+            quantity: "2",
+            unit: "ч. л.",
+            subId: "sweetener",
+            substitutes: ["кленовый сироп", "сироп агавы"]
+          },
+          {
+            name: "грецкий орех",
+            quantity: "20",
+            unit: "г",
+            subId: "nuts",
+            substitutes: ["миндаль", "фундук", "семечки"]
+          },
           { name: "чернослив", quantity: "20", unit: "г" },
           { name: "финик", quantity: "20", unit: "г" }
         ],
@@ -275,10 +425,28 @@ export const RECIPES_DATABASE = [
     difficulty: "легкий",
     tags: ["веган", "быстро"],
     ingredients: [
-      { name: "черника, малина, клубника, смородина", quantity: "200", unit: "г" },
+      {
+        name: "черника, малина, клубника, смородина",
+        quantity: "200",
+        unit: "г",
+        subId: "berries",
+        substitutes: ["замороженные ягоды", "банан", "манго"]
+      },
       { name: "бананы", quantity: "1", unit: "шт" },
-      { name: "натуральный йогурт или кефир", quantity: "200", unit: "мл" },
-      { name: "вода или растительное молоко (по желанию)", quantity: "100", unit: "мл" },
+      {
+        name: "натуральный йогурт или кефир",
+        quantity: "200",
+        unit: "мл",
+        subId: "yogurt",
+        substitutes: ["йогурт безлактозный", "растительный йогурт"]
+      },
+      {
+        name: "вода или растительное молоко (по желанию)",
+        quantity: "100",
+        unit: "мл",
+        subId: "milk",
+        substitutes: ["растительное молоко", "вода"]
+      },
       { name: "лёд", quantity: "1", unit: "горсть" }
     ],
     instructions: [
@@ -298,10 +466,28 @@ export const RECIPES_DATABASE = [
         labelEn: "Fresh Berries",
         time: "10",
         ingredients: [
-          { name: "черника, малина, клубника, смородина", quantity: "200", unit: "г" },
+          {
+            name: "черника, малина, клубника, смородина",
+            quantity: "200",
+            unit: "г",
+            subId: "berries",
+            substitutes: ["замороженные ягоды", "банан", "манго"]
+          },
           { name: "бананы", quantity: "1", unit: "шт" },
-          { name: "натуральный йогурт или кефир", quantity: "200", unit: "мл" },
-          { name: "вода или растительное молоко (по желанию)", quantity: "100", unit: "мл" },
+          {
+            name: "натуральный йогурт или кефир",
+            quantity: "200",
+            unit: "мл",
+            subId: "yogurt",
+            substitutes: ["йогурт безлактозный", "растительный йогурт"]
+          },
+          {
+            name: "вода или растительное молоко (по желанию)",
+            quantity: "100",
+            unit: "мл",
+            subId: "milk",
+            substitutes: ["растительное молоко", "вода"]
+          },
           { name: "лёд", quantity: "1", unit: "горсть" }
         ],
         instructions: [
@@ -321,11 +507,35 @@ export const RECIPES_DATABASE = [
         labelEn: "Frozen Berries",
         time: "10",
         ingredients: [
-          { name: "замороженные ягоды (клубника, малина, черника, смородина)", quantity: "2", unit: "стакан" },
+          {
+            name: "замороженные ягоды (клубника, малина, черника, смородина)",
+            quantity: "2",
+            unit: "стакан",
+            subId: "berries",
+            substitutes: ["свежие ягоды", "банан", "манго"]
+          },
           { name: "банан", quantity: "1", unit: "шт" },
-          { name: "натуральный йогурт или кефир", quantity: "1", unit: "стакан" },
-          { name: "апельсиновый сок или молоко (можно растительное)", quantity: "0.5", unit: "стакан" },
-          { name: "мёд или кленовый сироп (по желанию)", quantity: "1-2", unit: "ст. л." },
+          {
+            name: "натуральный йогурт или кефир",
+            quantity: "1",
+            unit: "стакан",
+            subId: "yogurt",
+            substitutes: ["йогурт безлактозный", "растительный йогурт"]
+          },
+          {
+            name: "апельсиновый сок или молоко (можно растительное)",
+            quantity: "0.5",
+            unit: "стакан",
+            subId: "milk",
+            substitutes: ["растительное молоко", "вода", "апельсиновый сок"]
+          },
+          {
+            name: "мёд или кленовый сироп (по желанию)",
+            quantity: "1-2",
+            unit: "ст. л.",
+            subId: "sweetener",
+            substitutes: ["мёд", "кленовый сироп", "стевия"]
+          },
           { name: "свежая мята (несколько листиков для украшения, по желанию)", quantity: "", unit: "" }
         ],
         instructions: [
@@ -480,9 +690,21 @@ export const RECIPES_DATABASE = [
       { name: "творог 5%", quantity: "400", unit: "г" },
       { name: "яйцо", quantity: "1", unit: "шт" },
       { name: "мука пшеничная", quantity: "4", unit: "ст. л." },
-      { name: "сахар", quantity: "2", unit: "ст. л." },
+      {
+        name: "сахар",
+        quantity: "2",
+        unit: "ст. л.",
+        subId: "sweetener",
+        substitutes: ["мёд", "кленовый сироп", "стевия"]
+      },
       { name: "соль", quantity: "0.5", unit: "ч. л." },
-      { name: "сливочное масло для жарки", quantity: "", unit: "" },
+      {
+        name: "сливочное масло для жарки",
+        quantity: "",
+        unit: "",
+        subId: "butter",
+        substitutes: ["кокосовое масло", "оливковое масло"]
+      },
       { name: "растительное масло для жарки", quantity: "", unit: "" }
     ],
     instructions: [
@@ -502,9 +724,21 @@ export const RECIPES_DATABASE = [
           { name: "творог 5%", quantity: "400", unit: "г" },
           { name: "яйцо", quantity: "1", unit: "шт" },
           { name: "мука пшеничная", quantity: "4", unit: "ст. л." },
-          { name: "сахар", quantity: "2", unit: "ст. л." },
+          {
+            name: "сахар",
+            quantity: "2",
+            unit: "ст. л.",
+            subId: "sweetener",
+            substitutes: ["мёд", "кленовый сироп", "стевия"]
+          },
           { name: "соль", quantity: "0.5", unit: "ч. л." },
-          { name: "сливочное масло для жарки", quantity: "", unit: "" },
+          {
+            name: "сливочное масло для жарки",
+            quantity: "",
+            unit: "",
+            subId: "butter",
+            substitutes: ["кокосовое масло", "оливковое масло"]
+          },
           { name: "растительное масло для жарки", quantity: "", unit: "" }
         ],
         instructions: [
@@ -524,7 +758,13 @@ export const RECIPES_DATABASE = [
           { name: "творог жирностью 5%", quantity: "350", unit: "г" },
           { name: "яйцо куриное", quantity: "1", unit: "шт" },
           { name: "мука пшеничная", quantity: "60", unit: "г" },
-          { name: "сахар", quantity: "", unit: "по вкусу" },
+          {
+            name: "сахар",
+            quantity: "",
+            unit: "по вкусу",
+            subId: "sweetener",
+            substitutes: ["мёд", "кленовый сироп", "стевия"]
+          },
           { name: "ванильный сахар", quantity: "", unit: "по вкусу" }
         ],
         instructions: [
@@ -552,7 +792,13 @@ export const RECIPES_DATABASE = [
     tags: ["веган", "острое", "популярное"],
     ingredients: [
       { name: "рис басмати", quantity: "1.5", unit: "стакан" },
-      { name: "кокосовое молоко", quantity: "4", unit: "стакан" },
+      {
+        name: "кокосовое молоко",
+        quantity: "4",
+        unit: "стакан",
+        subId: "coconut_milk",
+        substitutes: ["сливки", "овсяные сливки"]
+      },
       { name: "паста карри", quantity: "2", unit: "ст. л." },
       { name: "растительное масло", quantity: "", unit: "" },
       { name: "лук", quantity: "1", unit: "шт" },
@@ -564,7 +810,13 @@ export const RECIPES_DATABASE = [
       { name: "баклажан", quantity: "0.5", unit: "шт" },
       { name: "брокколи", quantity: "2", unit: "соцветия" },
       { name: "шпинат", quantity: "0.5", unit: "пучок" },
-      { name: "нут консервированный", quantity: "1", unit: "банка" },
+      {
+        name: "нут консервированный",
+        quantity: "1",
+        unit: "банка",
+        subId: "chickpeas",
+        substitutes: ["фасоль", "чечевица"]
+      },
       { name: "лайм", quantity: "1", unit: "шт" },
       { name: "кинза или зелень", quantity: "1", unit: "пучок" },
       { name: "соль, перец", quantity: "", unit: "" }
@@ -589,7 +841,13 @@ export const RECIPES_DATABASE = [
         time: "35",
         ingredients: [
           { name: "рис басмати", quantity: "1.5", unit: "стакан" },
-          { name: "кокосовое молоко", quantity: "4", unit: "стакан" },
+          {
+            name: "кокосовое молоко",
+            quantity: "4",
+            unit: "стакан",
+            subId: "coconut_milk",
+            substitutes: ["сливки", "овсяные сливки"]
+          },
           { name: "паста карри", quantity: "2", unit: "ст. л." },
           { name: "растительное масло", quantity: "", unit: "" },
           { name: "лук", quantity: "1", unit: "шт" },
@@ -601,7 +859,13 @@ export const RECIPES_DATABASE = [
           { name: "баклажан", quantity: "0.5", unit: "шт" },
           { name: "брокколи", quantity: "2", unit: "соцветия" },
           { name: "шпинат", quantity: "0.5", unit: "пучок" },
-          { name: "нут консервированный", quantity: "1", unit: "банка" },
+          {
+            name: "нут консервированный",
+            quantity: "1",
+            unit: "банка",
+            subId: "chickpeas",
+            substitutes: ["фасоль", "чечевица"]
+          },
           { name: "лайм", quantity: "1", unit: "шт" },
           { name: "кинза или зелень", quantity: "1", unit: "пучок" },
           { name: "соль, перец", quantity: "", unit: "" }
@@ -626,7 +890,13 @@ export const RECIPES_DATABASE = [
         time: "40",
         ingredients: [
           { name: "рис", quantity: "250", unit: "г" },
-          { name: "кокосовое молоко", quantity: "600", unit: "мл" },
+          {
+            name: "кокосовое молоко",
+            quantity: "600",
+            unit: "мл",
+            subId: "coconut_milk",
+            substitutes: ["сливки", "овсяные сливки"]
+          },
           { name: "томатная паста", quantity: "100", unit: "мл" },
           { name: "куриное филе", quantity: "2", unit: "шт" },
           { name: "лук репчатый", quantity: "1", unit: "шт" },
@@ -635,7 +905,13 @@ export const RECIPES_DATABASE = [
           { name: "карри", quantity: "2", unit: "ч. л." },
           { name: "имбирь", quantity: "1", unit: "ч. л." },
           { name: "помидоры", quantity: "1", unit: "шт" },
-          { name: "сахар", quantity: "3-4", unit: "щепотки" },
+          {
+            name: "сахар",
+            quantity: "3-4",
+            unit: "щепотки",
+            subId: "sweetener",
+            substitutes: ["мёд", "кленовый сироп", "стевия"]
+          },
           { name: "соль", quantity: "0.5", unit: "ч. л." },
           { name: "кориандр", quantity: "1", unit: "ч. л." },
           { name: "перец красный молотый", quantity: "1", unit: "ч. л." },
@@ -663,7 +939,13 @@ export const RECIPES_DATABASE = [
           { name: "креветки", quantity: "0.75", unit: "кг" },
           { name: "рис", quantity: "50", unit: "г" },
           { name: "яйца", quantity: "3", unit: "шт" },
-          { name: "масло сливочное", quantity: "30", unit: "г" },
+          {
+            name: "масло сливочное",
+            quantity: "30",
+            unit: "г",
+            subId: "butter",
+            substitutes: ["оливковое масло", "кокосовое масло"]
+          },
           { name: "томатный сок", quantity: "500", unit: "мл" },
           { name: "карри", quantity: "", unit: "" },
           { name: "соль", quantity: "", unit: "" },
@@ -697,10 +979,28 @@ export const RECIPES_DATABASE = [
     ingredients: [
       { name: "спагетти или паста", quantity: "400", unit: "г" },
       { name: "соль", quantity: "", unit: "" },
-      { name: "бекон (или гуанчале 20% жирности)", quantity: "100", unit: "г" },
-      { name: "сливки (жирные)", quantity: "300", unit: "мл" },
+      {
+        name: "бекон (или гуанчале 20% жирности)",
+        quantity: "100",
+        unit: "г",
+        subId: "bacon",
+        substitutes: ["индейка", "грибы"]
+      },
+      {
+        name: "сливки (жирные)",
+        quantity: "300",
+        unit: "мл",
+        subId: "cream",
+        substitutes: ["овсяные сливки", "кокосовое молоко"]
+      },
       { name: "яичный желток", quantity: "1-2", unit: "шт" },
-      { name: "пармезан (или другой твёрдый сыр)", quantity: "100", unit: "г" },
+      {
+        name: "пармезан (или другой твёрдый сыр)",
+        quantity: "100",
+        unit: "г",
+        subId: "cheese",
+        substitutes: ["пекорино", "веганский сыр"]
+      },
       { name: "чеснок", quantity: "2", unit: "зубчика" },
       { name: "перец чёрный молотый", quantity: "", unit: "" },
       { name: "оливковое масло", quantity: "3", unit: "ст. л." },
@@ -727,8 +1027,20 @@ export const RECIPES_DATABASE = [
         time: "25",
         ingredients: [
           { name: "спагетти", quantity: "320", unit: "г" },
-          { name: "бекон", quantity: "150-200", unit: "г" },
-          { name: "пармезан (тёртый 20–30 г для подачи)", quantity: "150", unit: "г" },
+          {
+            name: "бекон",
+            quantity: "150-200",
+            unit: "г",
+            subId: "bacon",
+            substitutes: ["индейка", "грибы"]
+          },
+          {
+            name: "пармезан (тёртый 20–30 г для подачи)",
+            quantity: "150",
+            unit: "г",
+            subId: "cheese",
+            substitutes: ["пекорино", "веганский сыр"]
+          },
           { name: "яичные желтки", quantity: "2", unit: "шт" },
           { name: "чеснок", quantity: "50-60", unit: "г" },
           { name: "оливковое масло", quantity: "1-2", unit: "ст. л." },
@@ -756,10 +1068,28 @@ export const RECIPES_DATABASE = [
         ingredients: [
           { name: "спагетти", quantity: "200", unit: "г" },
           { name: "куриное филе", quantity: "250", unit: "г" },
-          { name: "бекон", quantity: "100", unit: "г" },
-          { name: "сливки (жирностью 22%)", quantity: "150", unit: "мл" },
+          {
+            name: "бекон",
+            quantity: "100",
+            unit: "г",
+            subId: "bacon",
+            substitutes: ["индейка", "грибы"]
+          },
+          {
+            name: "сливки (жирностью 22%)",
+            quantity: "150",
+            unit: "мл",
+            subId: "cream",
+            substitutes: ["овсяные сливки", "кокосовое молоко"]
+          },
           { name: "яйцо", quantity: "2", unit: "шт" },
-          { name: "сыр твёрдый", quantity: "50", unit: "г" },
+          {
+            name: "сыр твёрдый",
+            quantity: "50",
+            unit: "г",
+            subId: "cheese",
+            substitutes: ["пекорино", "веганский сыр"]
+          },
           { name: "чеснок", quantity: "2", unit: "зубчика" },
           { name: "лук репчатый", quantity: "1", unit: "шт" },
           { name: "масло растительное или сливочное", quantity: "", unit: "" }
@@ -785,13 +1115,31 @@ export const RECIPES_DATABASE = [
         ingredients: [
           { name: "спагетти или паста", quantity: "400", unit: "г" },
           { name: "соль", quantity: "", unit: "" },
-          { name: "бекон (или гуанчале 20% жирности)", quantity: "100", unit: "г" },
-          { name: "сливки (жирные)", quantity: "300", unit: "мл" },
+          {
+            name: "бекон (или гуанчале 20% жирности)",
+            quantity: "100",
+            unit: "г",
+            subId: "bacon",
+            substitutes: ["индейка", "грибы"]
+          },
+          {
+            name: "сливки (жирные)",
+            quantity: "300",
+            unit: "мл",
+            subId: "cream",
+            substitutes: ["овсяные сливки", "кокосовое молоко"]
+          },
           { name: "яичный желток", quantity: "1-2", unit: "шт" },
-          { name: "пармезан (или другой твёрдый сыр)", quantity: "100", unit: "г" },
+          {
+            name: "пармезан (или другой твёрдый сыр)",
+            quantity: "100",
+            unit: "г",
+            subId: "cheese",
+            substitutes: ["пекорино", "веганский сыр"]
+          },
           { name: "чеснок", quantity: "2", unit: "зубчика" },
           { name: "перец чёрный молотый", quantity: "", unit: "" },
-          { name: "оливковое масло", quantity: "3", unit: "ст. л." },
+          { name: "оливковое масло", quantity: "3", unit: "ст. l." },
           { name: "петрушка (или другая зелень)", quantity: "100", unit: "г" }
         ],
         instructions: [
@@ -830,7 +1178,13 @@ export const RECIPES_DATABASE = [
       { name: "помидоры", quantity: "2", unit: "шт" },
       { name: "чеснок", quantity: "2", unit: "зубчика" },
       { name: "масло растительное", quantity: "3", unit: "ст. л." },
-      { name: "сыр (твёрдый)", quantity: "50", unit: "г" },
+      {
+        name: "сыр (твёрдый)",
+        quantity: "50",
+        unit: "г",
+        subId: "cheese",
+        substitutes: ["тофу", "веганский сыр"]
+      },
       { name: "соль, перец", quantity: "", unit: "" },
       { name: "зелень (петрушка, укроп)", quantity: "1", unit: "пучок" }
     ],
@@ -862,7 +1216,13 @@ export const RECIPES_DATABASE = [
           { name: "помидоры", quantity: "2", unit: "шт" },
           { name: "чеснок", quantity: "2", unit: "зубчика" },
           { name: "масло растительное", quantity: "3", unit: "ст. л." },
-          { name: "сыр (твёрдый)", quantity: "50", unit: "г" },
+          {
+            name: "сыр (твёрдый)",
+            quantity: "50",
+            unit: "г",
+            subId: "cheese",
+            substitutes: ["тофу", "веганский сыр"]
+          },
           { name: "соль, перец", quantity: "", unit: "" },
           { name: "зелень (петрушка, укроп)", quantity: "1", unit: "пучок" }
         ],
@@ -929,7 +1289,13 @@ export const RECIPES_DATABASE = [
           { name: "масло растительное", quantity: "2", unit: "ст. л." },
           { name: "зелень (по вкусу)", quantity: "3", unit: "веточки" },
           { name: "вода", quantity: "", unit: "" },
-          { name: "сыр (по желанию)", quantity: "", unit: "" }
+          {
+            name: "сыр (по желанию)",
+            quantity: "",
+            unit: "",
+            subId: "cheese",
+            substitutes: ["тофу", "веганский сыр"]
+          }
         ],
         instructions: [
           "Нарежьте куриную грудку небольшими кусочками, посолите и поперчите.",
