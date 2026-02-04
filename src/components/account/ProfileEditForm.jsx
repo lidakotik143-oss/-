@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { FaTimes } from "react-icons/fa";
 import { RECIPES_DATABASE } from "../../recipesData";
+import { ALLERGEN_CATEGORIES_EN, ALLERGEN_CATEGORIES_RU } from "../../utils/allergenCategories";
 
 const DEFAULT_ALLERGY_SUGGESTIONS_RU = [
   "Молоко",
@@ -37,8 +38,7 @@ const splitAllergyTokens = (value) =>
 const buildAllergyValue = (tokens) => tokens.join(", ");
 
 // Нормализация названия ингредиента для подсказок аллергенов
-// Цель: убрать скобки, "по вкусу", "по желанию", "для ..." и т.п.,
-// а также обрезать составные строки по запятым (берём первый элемент).
+// Цель: убрать скобки, "по вкусу", "по желанию", "для ..." и т.п.
 const normalizeIngredientName = (name) => {
   if (!name) return "";
   let s = name.toString();
@@ -47,26 +47,29 @@ const normalizeIngredientName = (name) => {
   s = s.replace(/\([^)]*\)/g, " ");
   s = s.replace(/\[[^\]]*\]/g, " ");
 
-  // 2) Берём только до первой запятой ("черника, малина..." -> "черника")
-  // Это делает подсказки более "атомарными" для аллергии.
-  if (s.includes(",")) s = s.split(",")[0];
-
-  // 3) Убираем частые служебные фразы
+  // 2) Убираем частые служебные фразы
   s = s
     .replace(/\bпо\s+вкусу\b/gi, " ")
     .replace(/\bпо\s+желанию\b/gi, " ")
     .replace(/\bдля\s+[а-яё\s-]+\b/gi, " ")
     .replace(/\bили\b/gi, " ");
 
-  // 4) Чистим лишние символы
+  // 3) Чистим лишние символы
   s = s.replace(/[—–-]/g, " ");
   s = s.replace(/[.]/g, " ");
   s = s.replace(/\s+/g, " ").trim();
 
-  // 5) Простая капитализация для RU (чтобы выглядело аккуратно)
-  // (Если будет EN — оно обычно уже окей; для RU тоже норм.)
+  // 4) Простая капитализация (чтобы выглядело аккуратно)
   if (!s) return "";
   return s.charAt(0).toUpperCase() + s.slice(1);
+};
+
+const splitByCommaList = (text) => {
+  if (!text) return [];
+  return text
+    .split(",")
+    .map(x => x.trim())
+    .filter(Boolean);
 };
 
 const collectIngredientNames = (recipes) => {
@@ -75,9 +78,15 @@ const collectIngredientNames = (recipes) => {
   (recipes || []).forEach(r => {
     const pushFrom = (ings) => {
       (ings || []).forEach(ing => {
-        const n = (typeof ing === "object" ? ing.name : ing) || "";
-        const normalized = normalizeIngredientName(n);
-        if (normalized) names.add(normalized);
+        const raw = (typeof ing === "object" ? ing.name : ing) || "";
+
+        // Если строка вида "черника, малина, клубника" — добавляем все элементы
+        const parts = raw.includes(",") ? splitByCommaList(raw) : [raw];
+
+        parts.forEach(p => {
+          const normalized = normalizeIngredientName(p);
+          if (normalized) names.add(normalized);
+        });
       });
     };
 
@@ -107,6 +116,13 @@ export default function ProfileEditForm({
   const [allergyInput, setAllergyInput] = useState(userData?.allergies || "");
   const [showAllergySuggestions, setShowAllergySuggestions] = useState(false);
 
+  const allergenCategoryMap = language === "ru" ? ALLERGEN_CATEGORIES_RU : ALLERGEN_CATEGORIES_EN;
+
+  const allergenCategoryNames = useMemo(() => {
+    const names = Object.keys(allergenCategoryMap || {});
+    return names.sort((a, b) => a.localeCompare(b, language === "ru" ? "ru" : "en"));
+  }, [allergenCategoryMap, language]);
+
   const recipeIngredientSuggestions = useMemo(
     () => collectIngredientNames(RECIPES_DATABASE || []),
     []
@@ -114,10 +130,15 @@ export default function ProfileEditForm({
 
   const suggestions = useMemo(() => {
     const defaults = language === "ru" ? DEFAULT_ALLERGY_SUGGESTIONS_RU : DEFAULT_ALLERGY_SUGGESTIONS_EN;
-    // Объединяем дефолты + ингредиенты из рецептов, убираем дубли
-    const merged = new Set([...(defaults || []), ...(recipeIngredientSuggestions || [])]);
+
+    // Объединяем:
+    // - категории аллергенов (например "Ягоды")
+    // - дефолты (например "Молоко")
+    // - ингредиенты из рецептов (например "Лимон")
+    // Убираем дубли.
+    const merged = new Set([...(allergenCategoryNames || []), ...(defaults || []), ...(recipeIngredientSuggestions || [])]);
     return Array.from(merged);
-  }, [language, recipeIngredientSuggestions]);
+  }, [language, recipeIngredientSuggestions, allergenCategoryNames]);
 
   const allergyTokens = useMemo(() => splitAllergyTokens(allergyInput), [allergyInput]);
 
@@ -133,14 +154,17 @@ export default function ProfileEditForm({
   const filteredSuggestions = useMemo(() => {
     const q = currentQuery.toLowerCase();
 
-    // Если пользователь ничего не вводит — показываем топ-список (дефолты), иначе — поиск по объединённой базе
+    // Если пользователь ничего не вводит — показываем категории + топ-дефолты,
+    // чтобы не вываливать сотни ингредиентов.
     const defaults = language === "ru" ? DEFAULT_ALLERGY_SUGGESTIONS_RU : DEFAULT_ALLERGY_SUGGESTIONS_EN;
-    const base = q ? suggestions.filter(s => s.toLowerCase().includes(q)) : defaults;
+    const top = [...(allergenCategoryNames || []), ...(defaults || [])];
+
+    const base = q ? suggestions.filter(s => s.toLowerCase().includes(q)) : top;
 
     // Не показываем то, что уже добавлено
     const existing = new Set(allergyTokens.map(x => x.toLowerCase()));
-    return base.filter(s => !existing.has(s.toLowerCase())).slice(0, 12);
-  }, [currentQuery, suggestions, allergyTokens, language]);
+    return base.filter(s => !existing.has(s.toLowerCase())).slice(0, 14);
+  }, [currentQuery, suggestions, allergyTokens, language, allergenCategoryNames]);
 
   const addAllergyToken = (token) => {
     const tokens = splitAllergyTokens(allergyInput);
@@ -285,24 +309,35 @@ export default function ProfileEditForm({
                 // Даём кликнуть по подсказке
                 setTimeout(() => setShowAllergySuggestions(false), 120);
               }}
-              placeholder={t("Начните вводить (можно через запятую)", "Start typing (comma separated)")}
+              placeholder={t(
+                "Начните вводить (категории и продукты, можно через запятую)",
+                "Start typing (categories & ingredients, comma separated)"
+              )}
               className={`w-full p-3 ${theme.input} ${fontSize.body} rounded-xl`}
               autoComplete="off"
             />
 
             {showAllergySuggestions && filteredSuggestions.length > 0 && (
               <div className={`absolute left-0 right-0 mt-2 rounded-xl border ${theme.border} ${theme.cardBg} shadow-lg overflow-hidden z-10 max-h-64 overflow-y-auto`}>
-                {filteredSuggestions.map((s) => (
-                  <button
-                    key={s}
-                    type="button"
-                    onMouseDown={(e) => e.preventDefault()}
-                    onClick={() => addAllergyToken(s)}
-                    className={`w-full text-left px-4 py-3 ${fontSize.body} ${theme.text} hover:${theme.accent} hover:text-white transition`}
-                  >
-                    {s}
-                  </button>
-                ))}
+                {filteredSuggestions.map((s) => {
+                  const isCategory = Object.prototype.hasOwnProperty.call(allergenCategoryMap || {}, s);
+                  return (
+                    <button
+                      key={s}
+                      type="button"
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => addAllergyToken(s)}
+                      className={`w-full text-left px-4 py-3 ${fontSize.body} ${theme.text} hover:${theme.accent} hover:text-white transition flex items-center justify-between`}
+                    >
+                      <span>{s}</span>
+                      {isCategory && (
+                        <span className={`${fontSize.tiny} opacity-80`}>
+                          {t("Категория", "Category")}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
             )}
 
@@ -321,8 +356,8 @@ export default function ProfileEditForm({
 
             <div className={`${fontSize.tiny} ${theme.textSecondary} mt-2`}>
               {t(
-                "Подсказки формируются из ингредиентов в рецептах (нормализованные названия) + популярных аллергенов.",
-                "Suggestions come from recipe ingredients (normalized) + common allergens."
+                "Подсказки: категории аллергенов + ингредиенты из рецептов (нормализованные названия).",
+                "Suggestions: allergen categories + recipe ingredients (normalized)."
               )}
             </div>
           </div>
