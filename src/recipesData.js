@@ -1,5 +1,5 @@
 // База данных рецептов Cookify
-// Всего: 9 рецептов (6 завтраков + 1 ужин + 2 десерта)
+// Всего: 9 рецептов (6 завтраков + 1 обед + 2 ужина)
 
 export const RECIPES_DATABASE = [
   {
@@ -689,7 +689,7 @@ export const RECIPES_DATABASE = [
     calories: 620,
     caloriesPerServing: 620,
     servings: 2,
-    type: "десерт",
+    type: "обед",
     diet: "мясное",
     cuisine: "итальянская",
     difficulty: "средний",
@@ -818,7 +818,7 @@ export const RECIPES_DATABASE = [
     calories: 150,
     caloriesPerServing: 150,
     servings: 4,
-    type: "десерт",
+    type: "ужин",
     diet: "низкокалорийное",
     cuisine: "средиземноморская",
     difficulty: "легкий",
