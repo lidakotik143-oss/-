@@ -212,6 +212,40 @@ const categorizeIngredient = (ingredientName) => {
   return "Продукты";
 };
 
+// ✨ Кастомная модалка уведомлений (вместо alert)
+const NotificationModal = ({ isOpen, onClose, title, message, theme, fontSize, language }) => {
+  if (!isOpen) return null;
+
+  const btnText = language === "ru" ? "Закрыть" : "Close";
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" onClick={onClose}>
+      <div
+        className={`${theme.cardBg} ${theme.text} ${fontSize.body} rounded-2xl max-w-lg w-full p-6 shadow-2xl border-2 ${theme.border}`}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-start justify-between mb-4">
+          <h3 className={`${fontSize.subheading} font-bold ${theme.headerText}`}>{title}</h3>
+          <button onClick={onClose} className={`${theme.textSecondary} hover:${theme.text} transition`}>
+            <FaTimes size={20} />
+          </button>
+        </div>
+
+        <p className={`${fontSize.body} ${theme.text} mb-6`}>{message}</p>
+
+        <div className="flex justify-end">
+          <button
+            onClick={onClose}
+            className={`px-6 py-3 rounded-xl ${theme.accent} ${theme.accentHover} text-white font-semibold transition ${fontSize.body}`}
+          >
+            {btnText}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // =================== БЛОК 2: Компонент приложения ===================
 export default function CookifyDemo() {
   const [activeScreen, setActiveScreen] = useState("home");
@@ -260,6 +294,11 @@ export default function CookifyDemo() {
   const [showVariantSelectionModal, setShowVariantSelectionModal] = useState(false);
   const [variantSelectionRecipe, setVariantSelectionRecipe] = useState(null);
   const [variantSelectionCallback, setVariantSelectionCallback] = useState(null);
+
+  // ✨ НОВОЕ: Состояние для кастомного модального уведомления
+  const [showNotificationModal, setShowNotificationModal] = useState(false);
+  const [notificationTitle, setNotificationTitle] = useState("");
+  const [notificationMessage, setNotificationMessage] = useState("");
 
   // ✅ ЗАГРУЗКА ИЗ localStorage ПРИ СТАРТЕ
   useEffect(() => {
@@ -608,9 +647,14 @@ export default function CookifyDemo() {
       return [...prev, ...filtered];
     });
 
-    alert(language === "ru" 
-      ? `Добавлено ${newItems.length} продуктов из плана меню на неделю!` 
-      : `Added ${newItems.length} items from your weekly meal plan!`);
+    // Показываем кастомное модальное уведомление вместо alert
+    setNotificationTitle(language === "ru" ? "Готово" : "Done");
+    setNotificationMessage(
+      language === "ru"
+        ? `Добавлено ${newItems.length} продуктов из плана меню на неделю!`
+        : `Added ${newItems.length} items from your weekly meal plan!`
+    );
+    setShowNotificationModal(true);
   };
 
   const getSortedRecipesForPlanner = (category) => {
@@ -667,7 +711,7 @@ export default function CookifyDemo() {
     if (selectedFilters.diet) matchesFilters = matchesFilters && normalize(r.diet).includes(normalize(selectedFilters.diet));
     if (selectedFilters.cuisine) matchesFilters = matchesFilters && normalize(r.cuisine) === normalize(selectedFilters.cuisine);
     if (selectedFilters.difficulty) matchesFilters = matchesFilters && normalize(r.difficulty) === normalize(selectedFilters.difficulty);
-    if (selectedFilters.tag) matchesFilters = matchesFilters && (r.tags || []).map(t => t.toLowerCase()).includes(selectedFilters.tag.toLowerCase());
+    if (selectedFilters.tag) matchesFilters = matchesFilters && (r.tags || []).map(t => t.toLowerCase().includes(selectedFilters.tag.toLowerCase()));
     if (selectedFilters.timeRange) {
       const tVal = parseInt(r.time || "0", 10);
       if (selectedFilters.timeRange === "short") matchesFilters = matchesFilters && tVal <= 15;
@@ -713,6 +757,17 @@ export default function CookifyDemo() {
   return (
     <div className={`min-h-screen ${theme.bg} ${theme.text} ${font.class} ${fontSize.body} p-6 transition-all duration-500`}>
       <Header activeScreen={activeScreen} setActiveScreen={setActiveScreen} language={language} setLanguage={setLanguage} theme={theme} fontSize={fontSize} />
+
+      {/* ✨ Кастомное модальное уведомление */}
+      <NotificationModal
+        isOpen={showNotificationModal}
+        onClose={() => setShowNotificationModal(false)}
+        title={notificationTitle}
+        message={notificationMessage}
+        theme={theme}
+        fontSize={fontSize}
+        language={language}
+      />
 
       {activeScreen === "home" && <HomeScreen userData={userData} language={language} setLanguage={setLanguage} setActiveScreen={setActiveScreen} theme={theme} fontSize={fontSize} />}
 
