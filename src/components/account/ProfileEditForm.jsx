@@ -36,6 +36,39 @@ const splitAllergyTokens = (value) =>
 
 const buildAllergyValue = (tokens) => tokens.join(", ");
 
+// Нормализация названия ингредиента для подсказок аллергенов
+// Цель: убрать скобки, "по вкусу", "по желанию", "для ..." и т.п.,
+// а также обрезать составные строки по запятым (берём первый элемент).
+const normalizeIngredientName = (name) => {
+  if (!name) return "";
+  let s = name.toString();
+
+  // 1) Удаляем всё в круглых/квадратных скобках
+  s = s.replace(/\([^)]*\)/g, " ");
+  s = s.replace(/\[[^\]]*\]/g, " ");
+
+  // 2) Берём только до первой запятой ("черника, малина..." -> "черника")
+  // Это делает подсказки более "атомарными" для аллергии.
+  if (s.includes(",")) s = s.split(",")[0];
+
+  // 3) Убираем частые служебные фразы
+  s = s
+    .replace(/\bпо\s+вкусу\b/gi, " ")
+    .replace(/\bпо\s+желанию\b/gi, " ")
+    .replace(/\bдля\s+[а-яё\s-]+\b/gi, " ")
+    .replace(/\bили\b/gi, " ");
+
+  // 4) Чистим лишние символы
+  s = s.replace(/[—–-]/g, " ");
+  s = s.replace(/[.]/g, " ");
+  s = s.replace(/\s+/g, " ").trim();
+
+  // 5) Простая капитализация для RU (чтобы выглядело аккуратно)
+  // (Если будет EN — оно обычно уже окей; для RU тоже норм.)
+  if (!s) return "";
+  return s.charAt(0).toUpperCase() + s.slice(1);
+};
+
 const collectIngredientNames = (recipes) => {
   const names = new Set();
 
@@ -43,8 +76,8 @@ const collectIngredientNames = (recipes) => {
     const pushFrom = (ings) => {
       (ings || []).forEach(ing => {
         const n = (typeof ing === "object" ? ing.name : ing) || "";
-        const trimmed = n.toString().trim();
-        if (trimmed) names.add(trimmed);
+        const normalized = normalizeIngredientName(n);
+        if (normalized) names.add(normalized);
       });
     };
 
@@ -288,8 +321,8 @@ export default function ProfileEditForm({
 
             <div className={`${fontSize.tiny} ${theme.textSecondary} mt-2`}>
               {t(
-                "Подсказки формируются из ингредиентов в рецептах + популярных аллергенов.",
-                "Suggestions come from recipe ingredients + common allergens."
+                "Подсказки формируются из ингредиентов в рецептах (нормализованные названия) + популярных аллергенов.",
+                "Suggestions come from recipe ingredients (normalized) + common allergens."
               )}
             </div>
           </div>
