@@ -274,6 +274,9 @@ export default function CookifyDemo() {
   // ✅ НОВОЕ: сохранённые замены ингредиентов для пользователя
   const [userSubstitutions, setUserSubstitutions] = useState({});
 
+  // ✅ НОВОЕ: какое раскрыто меню замен внутри модалки рецепта
+  const [openSubPicker, setOpenSubPicker] = useState(null); // string subId | null
+
   const [searchMode, setSearchMode] = useState("name");
   const [searchQuery, setSearchQuery] = useState("");
   const [excludeIngredients, setExcludeIngredients] = useState("");
@@ -359,6 +362,11 @@ export default function CookifyDemo() {
     if (language === "en") setUnitSystem("imperial");
     else setUnitSystem("metric");
   }, [language]);
+
+  // Сбрасываем раскрытый список замен при закрытии/переключении рецепта
+  useEffect(() => {
+    setOpenSubPicker(null);
+  }, [selectedRecipe, selectedRecipeVariantKey]);
 
   const GOALS = language === "ru" ? GOAL_OPTIONS_RU : GOAL_OPTIONS_EN;
   const LIFESTYLE = language === "ru" ? LIFESTYLE_RU : LIFESTYLE_EN;
@@ -876,6 +884,10 @@ export default function CookifyDemo() {
           });
         };
 
+        const toggleSubPicker = (subId) => {
+          setOpenSubPicker(prev => (prev === subId ? null : subId));
+        };
+
         return (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" onClick={closeModal}>
             <div className={`${theme.cardBg} ${fontSize.body} rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6`} onClick={(e) => e.stopPropagation()}>
@@ -928,12 +940,11 @@ export default function CookifyDemo() {
 
               <div className="mb-6">
                 <h3 className={`${fontSize.cardTitle} font-semibold mb-2 ${theme.headerText}`}>{t("Ингредиенты:", "Ingredients:")}</h3>
-                <ul className={`list-disc list-inside space-y-2 ${fontSize.body}`}>
+                <ul className={`list-disc list-inside space-y-3 ${fontSize.body}`}>
                   {(activeRecipe.ingredients || []).map((ing, i) => {
                     const effectiveName = getEffectiveIngredientName(ing, recipeSubs);
                     const low = (effectiveName || "").toLowerCase();
                     const isAllergy = allergyList.some(a => a && low.includes(a));
-                    const cls = isAllergy ? "text-red-600 font-semibold" : "";
 
                     const isObj = typeof ing === 'object';
                     const hasSubs = isObj && ing.subId && Array.isArray(ing.substitutes) && ing.substitutes.length > 0;
@@ -943,24 +954,65 @@ export default function CookifyDemo() {
                       ? `${effectiveName} ${ing.quantity ? `— ${ing.quantity}` : ''} ${ing.unit || ''}`.trim()
                       : (ing || "");
 
+                    const clickable = hasSubs && !isAllergy;
+
                     return (
-                      <li key={i} className={cls}>
-                        <div className="flex items-center justify-between gap-3">
-                          <span>{displayText}</span>
+                      <li key={i} className={isAllergy ? "text-red-600 font-semibold" : ""}>
+                        <div className="flex items-start justify-between gap-3">
+                          <button
+                            type="button"
+                            onClick={() => clickable && toggleSubPicker(ing.subId)}
+                            className={
+                              clickable
+                                ? `text-left underline decoration-dotted ${theme.accentText} hover:opacity-80 transition`
+                                : "text-left"
+                            }
+                            title={clickable ? t("Нажмите, чтобы выбрать замену", "Click to choose substitution") : undefined}
+                          >
+                            {displayText}
+                          </button>
+
                           {hasSubs && (
-                            <select
-                              value={currentChoice}
-                              onChange={(e) => updateSubstitution(ing.subId, e.target.value)}
-                              className={`p-2 ${theme.input} ${fontSize.small} rounded-lg min-w-[180px]`}
-                              title={t("Заменить ингредиент", "Replace ingredient")}
-                            >
-                              <option value="">{t("Не заменять", "No substitution")}</option>
-                              {ing.substitutes.map((opt) => (
-                                <option key={opt} value={opt}>{opt}</option>
-                              ))}
-                            </select>
+                            <span className={`${fontSize.tiny} ${theme.textSecondary} mt-1 whitespace-nowrap`}>
+                              {currentChoice ? t("Заменено", "Replaced") : t("Можно заменить", "Replaceable")}
+                            </span>
                           )}
                         </div>
+
+                        {hasSubs && openSubPicker === ing.subId && (
+                          <div className={`mt-2 ml-5 p-3 rounded-xl border ${theme.border} ${theme.cardBg}`}>
+                            <div className={`mb-2 ${fontSize.small} ${theme.textSecondary}`}>
+                              {t("Выберите замену:", "Choose a substitution:")}
+                            </div>
+
+                            <div className="flex flex-wrap gap-2">
+                              <button
+                                type="button"
+                                onClick={() => { updateSubstitution(ing.subId, ""); setOpenSubPicker(null); }}
+                                className={`px-3 py-1 rounded-full border ${theme.border} ${fontSize.small} hover:opacity-80 transition`}
+                              >
+                                {t("Не заменять", "No substitution")}
+                              </button>
+
+                              {ing.substitutes.map((opt) => (
+                                <button
+                                  key={opt}
+                                  type="button"
+                                  onClick={() => { updateSubstitution(ing.subId, opt); setOpenSubPicker(null); }}
+                                  className={`px-3 py-1 rounded-full ${theme.accent} ${theme.accentHover} text-white ${fontSize.small} transition`}
+                                >
+                                  {opt}
+                                </button>
+                              ))}
+                            </div>
+
+                            {currentChoice && (
+                              <div className={`mt-2 ${fontSize.tiny} ${theme.textSecondary}`}>
+                                {t("Текущая замена:", "Current:")} {currentChoice}
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </li>
                     );
                   })}
