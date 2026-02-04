@@ -1,5 +1,39 @@
-import React from "react";
+import React, { useMemo, useState } from "react";
 import { FaTimes } from "react-icons/fa";
+
+const DEFAULT_ALLERGY_SUGGESTIONS_RU = [
+  "Молоко",
+  "Яйца",
+  "Орехи",
+  "Арахис",
+  "Пшеница",
+  "Глютен",
+  "Соя",
+  "Рыба",
+  "Морепродукты",
+  "Кунжут"
+];
+
+const DEFAULT_ALLERGY_SUGGESTIONS_EN = [
+  "Milk",
+  "Eggs",
+  "Tree nuts",
+  "Peanuts",
+  "Wheat",
+  "Gluten",
+  "Soy",
+  "Fish",
+  "Shellfish",
+  "Sesame"
+];
+
+const splitAllergyTokens = (value) =>
+  (value || "")
+    .split(/[;,]+/)
+    .map(s => s.trim())
+    .filter(Boolean);
+
+const buildAllergyValue = (tokens) => tokens.join(", ");
 
 export default function ProfileEditForm({
   t,
@@ -17,6 +51,39 @@ export default function ProfileEditForm({
   convertHeight,
   onClose
 }) {
+  const [allergyInput, setAllergyInput] = useState(userData?.allergies || "");
+  const [showAllergySuggestions, setShowAllergySuggestions] = useState(false);
+
+  const suggestions = language === "ru" ? DEFAULT_ALLERGY_SUGGESTIONS_RU : DEFAULT_ALLERGY_SUGGESTIONS_EN;
+
+  const allergyTokens = useMemo(() => splitAllergyTokens(allergyInput), [allergyInput]);
+
+  const currentQuery = useMemo(() => {
+    const raw = (allergyInput || "").trim();
+    // Ищем после последней запятой/точки с запятой
+    const idxComma = raw.lastIndexOf(",");
+    const idxSemi = raw.lastIndexOf(";");
+    const idx = Math.max(idxComma, idxSemi);
+    return (idx >= 0 ? raw.slice(idx + 1) : raw).trim();
+  }, [allergyInput]);
+
+  const filteredSuggestions = useMemo(() => {
+    const q = currentQuery.toLowerCase();
+    // Если пользователь ничего не вводит — показываем топ-список
+    const base = q ? suggestions.filter(s => s.toLowerCase().includes(q)) : suggestions;
+
+    // Не показываем то, что уже добавлено
+    const existing = new Set(allergyTokens.map(x => x.toLowerCase()));
+    return base.filter(s => !existing.has(s.toLowerCase())).slice(0, 8);
+  }, [currentQuery, suggestions, allergyTokens]);
+
+  const addAllergyToken = (token) => {
+    const tokens = splitAllergyTokens(allergyInput);
+    const next = buildAllergyValue([...tokens, token]);
+    setAllergyInput(next);
+    setShowAllergySuggestions(false);
+  };
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div className={`${theme.cardBg} rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6`}>
@@ -138,15 +205,54 @@ export default function ProfileEditForm({
             </select>
           </div>
 
-          <div>
+          <div className="relative">
             <label className={`block ${fontSize.body} font-semibold mb-2`}>{t("Аллергии", "Allergies")}</label>
             <input
               type="text"
               name="allergies"
-              defaultValue={userData?.allergies || ""}
-              placeholder={t("Через запятую или точку с запятой", "Comma or semicolon separated")}
+              value={allergyInput}
+              onChange={(e) => {
+                setAllergyInput(e.target.value);
+                setShowAllergySuggestions(true);
+              }}
+              onFocus={() => setShowAllergySuggestions(true)}
+              onBlur={() => {
+                // Даём кликнуть по подсказке
+                setTimeout(() => setShowAllergySuggestions(false), 120);
+              }}
+              placeholder={t("Начните вводить (можно через запятую)", "Start typing (comma separated)")}
               className={`w-full p-3 ${theme.input} ${fontSize.body} rounded-xl`}
+              autoComplete="off"
             />
+
+            {showAllergySuggestions && filteredSuggestions.length > 0 && (
+              <div className={`absolute left-0 right-0 mt-2 rounded-xl border ${theme.border} ${theme.cardBg} shadow-lg overflow-hidden z-10`}>
+                {filteredSuggestions.map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => addAllergyToken(s)}
+                    className={`w-full text-left px-4 py-3 ${fontSize.body} ${theme.text} hover:${theme.accent} hover:text-white transition`}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {allergyTokens.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-2">
+                {allergyTokens.map((tok) => (
+                  <span
+                    key={tok}
+                    className={`px-3 py-1 rounded-full ${fontSize.small} border ${theme.border} ${theme.textSecondary}`}
+                  >
+                    {tok}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
 
           <button
