@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { FaTimes } from "react-icons/fa";
+import { RECIPES_DATABASE } from "../../recipesData";
 
 const DEFAULT_ALLERGY_SUGGESTIONS_RU = [
   "Молоко",
@@ -35,6 +36,25 @@ const splitAllergyTokens = (value) =>
 
 const buildAllergyValue = (tokens) => tokens.join(", ");
 
+const collectIngredientNames = (recipes) => {
+  const names = new Set();
+
+  (recipes || []).forEach(r => {
+    const pushFrom = (ings) => {
+      (ings || []).forEach(ing => {
+        const n = (typeof ing === "object" ? ing.name : ing) || "";
+        const trimmed = n.toString().trim();
+        if (trimmed) names.add(trimmed);
+      });
+    };
+
+    pushFrom(r.ingredients);
+    (r.variants || []).forEach(v => pushFrom(v.ingredients));
+  });
+
+  return Array.from(names).sort((a, b) => a.localeCompare(b, "ru"));
+};
+
 export default function ProfileEditForm({
   t,
   theme,
@@ -54,7 +74,17 @@ export default function ProfileEditForm({
   const [allergyInput, setAllergyInput] = useState(userData?.allergies || "");
   const [showAllergySuggestions, setShowAllergySuggestions] = useState(false);
 
-  const suggestions = language === "ru" ? DEFAULT_ALLERGY_SUGGESTIONS_RU : DEFAULT_ALLERGY_SUGGESTIONS_EN;
+  const recipeIngredientSuggestions = useMemo(
+    () => collectIngredientNames(RECIPES_DATABASE || []),
+    []
+  );
+
+  const suggestions = useMemo(() => {
+    const defaults = language === "ru" ? DEFAULT_ALLERGY_SUGGESTIONS_RU : DEFAULT_ALLERGY_SUGGESTIONS_EN;
+    // Объединяем дефолты + ингредиенты из рецептов, убираем дубли
+    const merged = new Set([...(defaults || []), ...(recipeIngredientSuggestions || [])]);
+    return Array.from(merged);
+  }, [language, recipeIngredientSuggestions]);
 
   const allergyTokens = useMemo(() => splitAllergyTokens(allergyInput), [allergyInput]);
 
@@ -69,13 +99,15 @@ export default function ProfileEditForm({
 
   const filteredSuggestions = useMemo(() => {
     const q = currentQuery.toLowerCase();
-    // Если пользователь ничего не вводит — показываем топ-список
-    const base = q ? suggestions.filter(s => s.toLowerCase().includes(q)) : suggestions;
+
+    // Если пользователь ничего не вводит — показываем топ-список (дефолты), иначе — поиск по объединённой базе
+    const defaults = language === "ru" ? DEFAULT_ALLERGY_SUGGESTIONS_RU : DEFAULT_ALLERGY_SUGGESTIONS_EN;
+    const base = q ? suggestions.filter(s => s.toLowerCase().includes(q)) : defaults;
 
     // Не показываем то, что уже добавлено
     const existing = new Set(allergyTokens.map(x => x.toLowerCase()));
-    return base.filter(s => !existing.has(s.toLowerCase())).slice(0, 8);
-  }, [currentQuery, suggestions, allergyTokens]);
+    return base.filter(s => !existing.has(s.toLowerCase())).slice(0, 12);
+  }, [currentQuery, suggestions, allergyTokens, language]);
 
   const addAllergyToken = (token) => {
     const tokens = splitAllergyTokens(allergyInput);
@@ -226,7 +258,7 @@ export default function ProfileEditForm({
             />
 
             {showAllergySuggestions && filteredSuggestions.length > 0 && (
-              <div className={`absolute left-0 right-0 mt-2 rounded-xl border ${theme.border} ${theme.cardBg} shadow-lg overflow-hidden z-10`}>
+              <div className={`absolute left-0 right-0 mt-2 rounded-xl border ${theme.border} ${theme.cardBg} shadow-lg overflow-hidden z-10 max-h-64 overflow-y-auto`}>
                 {filteredSuggestions.map((s) => (
                   <button
                     key={s}
@@ -253,6 +285,13 @@ export default function ProfileEditForm({
                 ))}
               </div>
             )}
+
+            <div className={`${fontSize.tiny} ${theme.textSecondary} mt-2`}>
+              {t(
+                "Подсказки формируются из ингредиентов в рецептах + популярных аллергенов.",
+                "Suggestions come from recipe ingredients + common allergens."
+              )}
+            </div>
           </div>
 
           <button
