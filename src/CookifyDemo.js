@@ -9,12 +9,23 @@ import HomeScreen from "./components/HomeScreen";
 import SearchScreen from "./components/SearchScreen";
 import AccountScreen from "./components/AccountScreen";
 
+// 🔧 Временные точечные исправления некорректных типов блюд из базы рецептов
+// (в идеале это нужно поправить в самом recipesData)
+const RECIPE_TYPE_FIXES = {
+  "паста карбонара": "обед",
+  "куриные грудки с овощами": "ужин"
+};
+
 // Используем импортированную базу данных вместо примеров
-const SAMPLE_RECIPES = (RECIPES_DATABASE || []).map(r => ({
-  ...r,
-  servings: r.servings ?? 2,
-  caloriesPerServing: r.caloriesPerServing ?? r.calories
-}));
+const SAMPLE_RECIPES = (RECIPES_DATABASE || []).map(r => {
+  const key = (r.title || "").toString().toLowerCase().trim();
+  return {
+    ...r,
+    type: RECIPE_TYPE_FIXES[key] ?? r.type,
+    servings: r.servings ?? 2,
+    caloriesPerServing: r.caloriesPerServing ?? r.calories
+  };
+});
 
 // Константы
 const GOAL_OPTIONS_RU = ["Снижение веса", "Набор массы", "Поддержание здоровья"];
