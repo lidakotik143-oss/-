@@ -1,5 +1,6 @@
 import React from "react";
 import { FaSearch } from "react-icons/fa";
+import { getRecipeSubKey, getEffectiveIngredientName } from "../utils/substitutions";
 
 export default function SearchScreen({
   // i18n
@@ -38,10 +39,15 @@ export default function SearchScreen({
   getDishTypeInfo,
   allergyList,
 
+  // substitutions
+  userSubstitutions,
+
   // modal open
   setSelectedRecipe,
   setSelectedRecipeVariantKey
 }) {
+  const subs = userSubstitutions || {};
+
   return (
     <div className="max-w-6xl mx-auto space-y-4">
       {/* Верхняя поисковая панель */}
@@ -202,6 +208,12 @@ export default function SearchScreen({
             {filteredResults.map((r) => {
               const dishTypeInfo = getDishTypeInfo(r.type);
               const kcalPerServing = r.caloriesPerServing ?? r.calories;
+
+              // В списке результатов показываем базовые ингредиенты с заменами
+              // (по договорённости substitutions привязаны к recipeId + variantKey,
+              // а в списке вариантов нет, поэтому берём ключ для base-версии)
+              const recipeSubs = subs[getRecipeSubKey(r.id, null)] || {};
+
               return (
                 <div
                   key={r.id}
@@ -229,10 +241,9 @@ export default function SearchScreen({
                   <div className={`mt-3 ${fontSize.small}`}>
                     <strong>{t("Ингредиенты:", "Ingredients:")}</strong>{" "}
                     {(r.ingredients || []).map((ing, i) => {
-                      // ИСПРАВЛЕНО: обработка объектов и строк
-                      const ingName = typeof ing === 'object' ? ing.name : ing;
-                      const low = ingName.toLowerCase();
-                      
+                      const effectiveName = getEffectiveIngredientName(ing, recipeSubs);
+                      const low = (effectiveName || "").toLowerCase();
+
                       const isAllergy = allergyList.some((a) => a && low.includes(a));
                       const isExcluded =
                         excludeIngredients
@@ -242,12 +253,11 @@ export default function SearchScreen({
                           .filter(Boolean)
                           .some((e) => e && low.includes(e));
                       const cls = isAllergy || isExcluded ? "text-red-600 font-semibold" : "";
-                      
-                      // Форматируем отображение
+
                       const displayText = typeof ing === 'object'
-                        ? `${ing.name} ${ing.quantity ? `— ${ing.quantity}` : ''} ${ing.unit || ''}`.trim()
-                        : ing;
-                      
+                        ? `${effectiveName} ${ing.quantity ? `— ${ing.quantity}` : ''} ${ing.unit || ''}`.trim()
+                        : (effectiveName || "");
+
                       return (
                         <span key={i} className={`${cls} mr-2`}>
                           {displayText}
