@@ -940,7 +940,7 @@ export default function CookifyDemo() {
 
               <div className="mb-6">
                 <h3 className={`${fontSize.cardTitle} font-semibold mb-2 ${theme.headerText}`}>{t("Ингредиенты:", "Ingredients:")}</h3>
-                <ul className={`list-disc list-inside space-y-3 ${fontSize.body}`}>
+                <ul className={`space-y-2 ${fontSize.body}`}>
                   {(activeRecipe.ingredients || []).map((ing, i) => {
                     const effectiveName = getEffectiveIngredientName(ing, recipeSubs);
                     const low = (effectiveName || "").toLowerCase();
@@ -954,33 +954,43 @@ export default function CookifyDemo() {
                       ? `${effectiveName} ${ing.quantity ? `— ${ing.quantity}` : ''} ${ing.unit || ''}`.trim()
                       : (ing || "");
 
-                    const clickable = hasSubs && !isAllergy;
+                    const canToggle = hasSubs && !isAllergy;
+                    const isOpen = hasSubs && openSubPicker === ing.subId;
 
                     return (
                       <li key={i} className={isAllergy ? "text-red-600 font-semibold" : ""}>
-                        <div className="flex items-start justify-between gap-3">
-                          <button
-                            type="button"
-                            onClick={() => clickable && toggleSubPicker(ing.subId)}
-                            className={
-                              clickable
-                                ? `text-left underline decoration-dotted ${theme.accentText} hover:opacity-80 transition`
-                                : "text-left"
-                            }
-                            title={clickable ? t("Нажмите, чтобы выбрать замену", "Click to choose substitution") : undefined}
-                          >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1 text-left">
                             {displayText}
-                          </button>
+                          </div>
 
                           {hasSubs && (
-                            <span className={`${fontSize.tiny} ${theme.textSecondary} mt-1 whitespace-nowrap`}>
-                              {currentChoice ? t("Заменено", "Replaced") : t("Можно заменить", "Replaceable")}
-                            </span>
+                            <div className="flex items-center gap-2">
+                              {/* маленькая стрелка-тоггл */}
+                              <button
+                                type="button"
+                                onClick={() => canToggle && toggleSubPicker(ing.subId)}
+                                disabled={!canToggle}
+                                className={
+                                  canToggle
+                                    ? `w-7 h-7 flex items-center justify-center rounded-full border ${theme.border} ${theme.cardBg} hover:opacity-80 transition`
+                                    : `w-7 h-7 flex items-center justify-center rounded-full border ${theme.border} opacity-40 cursor-not-allowed`
+                                }
+                                title={canToggle ? t("Показать варианты", "Show options") : t("Недоступно для аллергенов", "Unavailable for allergens")}
+                                aria-label={t("Показать варианты", "Show options")}
+                              >
+                                <span className={`${fontSize.small} leading-none`}>{isOpen ? "▴" : "▾"}</span>
+                              </button>
+
+                              <span className={`${fontSize.tiny} ${theme.textSecondary} mt-1 whitespace-nowrap`}>
+                                {currentChoice ? t("Заменено", "Replaced") : t("Можно заменить", "Replaceable")}
+                              </span>
+                            </div>
                           )}
                         </div>
 
-                        {hasSubs && openSubPicker === ing.subId && (
-                          <div className={`mt-2 ml-5 p-3 rounded-xl border ${theme.border} ${theme.cardBg}`}>
+                        {hasSubs && isOpen && (
+                          <div className={`mt-2 ml-1 p-3 rounded-xl border ${theme.border} ${theme.cardBg}`}>
                             <div className={`mb-2 ${fontSize.small} ${theme.textSecondary}`}>
                               {t("Выберите замену:", "Choose a substitution:")}
                             </div>
