@@ -118,7 +118,8 @@ export const RECIPES_DATABASE = [
       { name: "болгарский перец", quantity: "0.5", unit: "шт" },
       { name: "помидор", meta: "небольшой", quantity: "1", unit: "шт" },
       { name: "лук", subId: "onion_type", substitutes: ["зелёный лук"], quantity: "0.25", unit: "шт" },
-      { name: "соль и перец", quantity: "", unit: "" },
+      { name: "соль", quantity: "", unit: "" },
+      { name: "чёрный перец", quantity: "", unit: "" },
       { name: "молоко", quantity: "1-2", unit: "ст. л." },
       { name: "растительное масло", quantity: "", unit: "" },
       { name: "свежая зелень", quantity: "", unit: "" }
@@ -142,7 +143,8 @@ export const RECIPES_DATABASE = [
           { name: "болгарский перец", quantity: "0.5", unit: "шт" },
           { name: "помидор", meta: "небольшой", quantity: "1", unit: "шт" },
           { name: "лук", subId: "onion_type", substitutes: ["зелёный лук"], quantity: "0.25", unit: "шт" },
-          { name: "соль и перец", quantity: "", unit: "" },
+          { name: "соль", quantity: "", unit: "" },
+          { name: "чёрный перец", quantity: "", unit: "" },
           { name: "молоко", quantity: "1-2", unit: "ст. л." },
           { name: "растительное масло", quantity: "", unit: "" },
           { name: "свежая зелень", quantity: "", unit: "" }
@@ -169,7 +171,8 @@ export const RECIPES_DATABASE = [
           { name: "молоко", quantity: "100", unit: "мл" },
           { name: "сыр", quantity: "100", unit: "г" },
           { name: "зелень", meta: "укроп/петрушка/перья лука", quantity: "", unit: "" },
-          { name: "соль и перец", quantity: "", unit: "" },
+          { name: "соль", quantity: "", unit: "" },
+          { name: "чёрный перец", quantity: "", unit: "" },
           { name: "масло", quantity: "", unit: "" }
         ],
         instructions: [
@@ -359,9 +362,13 @@ export const RECIPES_DATABASE = [
       { name: "авокадо", meta: "спелый", quantity: "0.5", unit: "шт" },
       { name: "яйцо", quantity: "1", unit: "шт" },
       { name: "лимонный сок", quantity: "1", unit: "ч. л." },
-      { name: "соль, перец", quantity: "", unit: "" },
+      { name: "соль", quantity: "", unit: "" },
+      { name: "чёрный перец", quantity: "", unit: "" },
       { name: "оливковое масло", quantity: "", unit: "" },
-      { name: "зелень, кунжут, чили, помидоры черри", quantity: "", unit: "" }
+      { name: "зелень", quantity: "", unit: "" },
+      { name: "кунжут", quantity: "", unit: "" },
+      { name: "чили", quantity: "", unit: "" },
+      { name: "помидоры черри", quantity: "", unit: "" }
     ],
     instructions: [
       "Обжарьте ломтик хлеба на сухой сковороде или в тостере до золотистой корочки.",
@@ -381,9 +388,13 @@ export const RECIPES_DATABASE = [
           { name: "авокадо", meta: "спелый", quantity: "0.5", unit: "шт" },
           { name: "яйцо", quantity: "1", unit: "шт" },
           { name: "лимонный сок", quantity: "1", unit: "ч. л." },
-          { name: "соль, перец", quantity: "", unit: "" },
+          { name: "соль", quantity: "", unit: "" },
+          { name: "чёрный перец", quantity: "", unit: "" },
           { name: "оливковое масло", quantity: "", unit: "" },
-          { name: "зелень, кунжут, чили, помидоры черри", quantity: "", unit: "" }
+          { name: "зелень", quantity: "", unit: "" },
+          { name: "кунжут", quantity: "", unit: "" },
+          { name: "чили", quantity: "", unit: "" },
+          { name: "помидоры черри", quantity: "", unit: "" }
         ],
         instructions: [
           "Обжарьте ломтик хлеба на сухой сковороде или в тостере до золотистой корочки.",
@@ -404,7 +415,8 @@ export const RECIPES_DATABASE = [
           { name: "авокадо", quantity: "1", unit: "шт" },
           { name: "помидор", quantity: "1", unit: "шт" },
           { name: "бальзамический уксус", quantity: "60", unit: "мл" },
-          { name: "соль, перец молотый", quantity: "", unit: "" }
+          { name: "соль", quantity: "", unit: "" },
+          { name: "перец молотый", quantity: "", unit: "" }
         ],
         instructions: [
           "Авокадо почистите и разделите пополам, удалите косточку. Измельчите мякоть вилкой. Сок лимона защитит мякоть от пожелтения.",
@@ -425,7 +437,8 @@ export const RECIPES_DATABASE = [
           { name: "яйцо", quantity: "1", unit: "шт" },
           { name: "ветчина", quantity: "2-3", unit: "ломтик" },
           { name: "сливочное масло", subId: "butter_type", substitutes: ["оливковое масло"], quantity: "", unit: "" },
-          { name: "соль, перец", quantity: "", unit: "" },
+          { name: "соль", quantity: "", unit: "" },
+          { name: "перец", quantity: "", unit: "" },
           { name: "лимонный сок", quantity: "", unit: "" },
           { name: "зелень", meta: "петрушка, укроп, рукола", quantity: "", unit: "" }
         ],
@@ -567,7 +580,8 @@ export const RECIPES_DATABASE = [
       { name: "нут консервированный", quantity: "1", unit: "банка" },
       { name: "лайм", quantity: "1", unit: "шт" },
       { name: "кинза", subId: "herbs", substitutes: ["зелень"], quantity: "1", unit: "пучок" },
-      { name: "соль, перец", quantity: "", unit: "" }
+      { name: "соль", quantity: "", unit: "" },
+      { name: "перец", quantity: "", unit: "" }
     ],
     instructions: [
       "Промойте рис и отварите до готовности (или используйте вчерашний).",
@@ -604,7 +618,8 @@ export const RECIPES_DATABASE = [
           { name: "нут консервированный", quantity: "1", unit: "банка" },
           { name: "лайм", quantity: "1", unit: "шт" },
           { name: "кинза", subId: "herbs", substitutes: ["зелень"], quantity: "1", unit: "пучок" },
-          { name: "соль, перец", quantity: "", unit: "" }
+          { name: "соль", quantity: "", unit: "" },
+          { name: "перец", quantity: "", unit: "" }
         ],
         instructions: [
           "Промойте рис и отварите до готовности (или используйте вчерашний).",
@@ -762,7 +777,7 @@ export const RECIPES_DATABASE = [
           { name: "сыр твёрдый", quantity: "50", unit: "г" },
           { name: "чеснок", quantity: "2", unit: "зубчика" },
           { name: "лук репчатый", quantity: "1", unit: "шт" },
-          { name: "масло растительное", subId: "oil_type", substitutes: ["сливочное"], quantity: "", unit: "" }
+          { name: "масло растительное", quantity: "", unit: "" }
         ],
         instructions: [
           "Нарежьте куриное филе небольшими кусочками, бекон — полосками.",
@@ -831,7 +846,8 @@ export const RECIPES_DATABASE = [
       { name: "чеснок", quantity: "2", unit: "зубчика" },
       { name: "масло растительное", quantity: "3", unit: "ст. л." },
       { name: "сыр", meta: "твёрдый", quantity: "50", unit: "г" },
-      { name: "соль, перец", quantity: "", unit: "" },
+      { name: "соль", quantity: "", unit: "" },
+      { name: "перец", quantity: "", unit: "" },
       { name: "зелень", meta: "петрушка, укроп", quantity: "1", unit: "пучок" }
     ],
     instructions: [
@@ -863,7 +879,8 @@ export const RECIPES_DATABASE = [
           { name: "чеснок", quantity: "2", unit: "зубчика" },
           { name: "масло растительное", quantity: "3", unit: "ст. л." },
           { name: "сыр", meta: "твёрдый", quantity: "50", unit: "г" },
-          { name: "соль, перец", quantity: "", unit: "" },
+          { name: "соль", quantity: "", unit: "" },
+          { name: "перец", quantity: "", unit: "" },
           { name: "зелень", meta: "петрушка, укроп", quantity: "1", unit: "пучок" }
         ],
         instructions: [
@@ -924,7 +941,8 @@ export const RECIPES_DATABASE = [
           { name: "лук репчатый", quantity: "1", unit: "шт" },
           { name: "помидоры", quantity: "4", unit: "шт" },
           { name: "сметана", quantity: "150", unit: "г" },
-          { name: "соль, перец", quantity: "2", unit: "щепотки" },
+          { name: "соль", quantity: "", unit: "" },
+          { name: "перец", quantity: "", unit: "" },
           { name: "чеснок", quantity: "1", unit: "зубчик" },
           { name: "масло растительное", quantity: "2", unit: "ст. л." },
           { name: "зелень", quantity: "3", unit: "веточки" },
@@ -933,12 +951,12 @@ export const RECIPES_DATABASE = [
         ],
         instructions: [
           "Нарежьте куриную грудку небольшими кусочками, посолите и поперчите.",
-          "Включите режим «Жарка» (или «Выпечка») на 8 минут.",
+          "Включите режим «Жарка» (или «Выпечка") на 8 минут.",
           "Влейте масло в чашу мультиварки, обжарьте курицу до румяности.",
           "Добавьте нарезанный лук, морковь (кубиками или соломкой), чеснок, перемешайте и готовьте ещё 1,5 минуты.",
           "Нарежьте помидоры кубиками, добавьте в чашу.",
           "Положите сметану, соль, перец, перемешайте.",
-          "Включите режим «Тушение» на 4 минуты (или до готовности курицы).",
+          "Включите режим «Тушение" на 4 минуты (или до готовности курицы).",
           "За минуту до окончания добавьте зелень, при желании посыпьте тёртым сыром.",
           "Подавайте с любимым гарниром.",
           "Совет: калорийность на 100 г — около 160 ккал."
