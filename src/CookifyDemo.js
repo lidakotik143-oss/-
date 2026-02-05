@@ -949,10 +949,7 @@ export default function CookifyDemo() {
                     const isObj = typeof ing === 'object';
                     const hasSubs = isObj && ing.subId && Array.isArray(ing.substitutes) && ing.substitutes.length > 0;
                     const currentChoice = isObj && ing.subId ? (recipeSubs?.[ing.subId] || "") : "";
-
-                    const displayText = isObj
-                      ? `${effectiveName} ${ing.quantity ? `— ${ing.quantity}` : ''} ${ing.unit || ''}`.trim()
-                      : (ing || "");
+                    const meta = isObj ? (ing.meta || "") : "";
 
                     const canToggle = hasSubs && !isAllergy;
                     const isOpen = hasSubs && openSubPicker === ing.subId;
@@ -961,7 +958,20 @@ export default function CookifyDemo() {
                       <li key={i} className={isAllergy ? "text-red-600 font-semibold" : ""}>
                         <div className="flex items-start justify-between gap-2">
                           <div className="flex-1 text-left">
-                            {displayText}
+                            {/* Название + серый бейдж meta (без скобок) */}
+                            <div className="flex flex-wrap items-baseline gap-2">
+                              <span>{effectiveName}</span>
+                              {meta && (
+                                <span className={`inline-flex items-center px-2 py-0.5 rounded-full bg-gray-200 text-gray-700 ${fontSize.tiny} font-medium`}>
+                                  {meta}
+                                </span>
+                              )}
+                              {(isObj && (ing.quantity || ing.unit)) && (
+                                <span className={`${theme.textSecondary}`}>
+                                  {ing.quantity ? `— ${ing.quantity}` : ''} {ing.unit || ''}
+                                </span>
+                              )}
+                            </div>
                           </div>
 
                           {hasSubs && (
