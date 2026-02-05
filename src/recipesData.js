@@ -416,7 +416,7 @@ export const RECIPES_DATABASE = [
           { name: "помидор", quantity: "1", unit: "шт" },
           { name: "бальзамический уксус", quantity: "60", unit: "мл" },
           { name: "соль", quantity: "", unit: "" },
-          { name: "перец молотый", quantity: "", unit: "" }
+          { name: "чёрный перец", quantity: "", unit: "" }
         ],
         instructions: [
           "Авокадо почистите и разделите пополам, удалите косточку. Измельчите мякоть вилкой. Сок лимона защитит мякоть от пожелтения.",
@@ -438,7 +438,7 @@ export const RECIPES_DATABASE = [
           { name: "ветчина", quantity: "2-3", unit: "ломтик" },
           { name: "сливочное масло", subId: "butter_type", substitutes: ["оливковое масло"], quantity: "", unit: "" },
           { name: "соль", quantity: "", unit: "" },
-          { name: "перец", quantity: "", unit: "" },
+          { name: "чёрный перец", quantity: "", unit: "" },
           { name: "лимонный сок", quantity: "", unit: "" },
           { name: "зелень", meta: "петрушка, укроп, рукола", quantity: "", unit: "" }
         ],
@@ -581,7 +581,7 @@ export const RECIPES_DATABASE = [
       { name: "лайм", quantity: "1", unit: "шт" },
       { name: "кинза", subId: "herbs", substitutes: ["зелень"], quantity: "1", unit: "пучок" },
       { name: "соль", quantity: "", unit: "" },
-      { name: "перец", quantity: "", unit: "" }
+      { name: "чёрный перец", quantity: "", unit: "" }
     ],
     instructions: [
       "Промойте рис и отварите до готовности (или используйте вчерашний).",
@@ -619,7 +619,7 @@ export const RECIPES_DATABASE = [
           { name: "лайм", quantity: "1", unit: "шт" },
           { name: "кинза", subId: "herbs", substitutes: ["зелень"], quantity: "1", unit: "пучок" },
           { name: "соль", quantity: "", unit: "" },
-          { name: "перец", quantity: "", unit: "" }
+          { name: "чёрный перец", quantity: "", unit: "" }
         ],
         instructions: [
           "Промойте рис и отварите до готовности (или используйте вчерашний).",
@@ -682,7 +682,7 @@ export const RECIPES_DATABASE = [
           { name: "томатный сок", quantity: "500", unit: "мл" },
           { name: "карри", quantity: "", unit: "" },
           { name: "соль", quantity: "", unit: "" },
-          { name: "перец", quantity: "", unit: "" }
+          { name: "чёрный перец", quantity: "", unit: "" }
         ],
         instructions: [
           "Отварите креветки в подсоленной воде до готовности.",
@@ -847,7 +847,7 @@ export const RECIPES_DATABASE = [
       { name: "масло растительное", quantity: "3", unit: "ст. л." },
       { name: "сыр", meta: "твёрдый", quantity: "50", unit: "г" },
       { name: "соль", quantity: "", unit: "" },
-      { name: "перец", quantity: "", unit: "" },
+      { name: "чёрный перец", quantity: "", unit: "" },
       { name: "зелень", meta: "петрушка, укроп", quantity: "1", unit: "пучок" }
     ],
     instructions: [
@@ -880,7 +880,7 @@ export const RECIPES_DATABASE = [
           { name: "масло растительное", quantity: "3", unit: "ст. л." },
           { name: "сыр", meta: "твёрдый", quantity: "50", unit: "г" },
           { name: "соль", quantity: "", unit: "" },
-          { name: "перец", quantity: "", unit: "" },
+          { name: "чёрный перец", quantity: "", unit: "" },
           { name: "зелень", meta: "петрушка, укроп", quantity: "1", unit: "пучок" }
         ],
         instructions: [
@@ -942,7 +942,7 @@ export const RECIPES_DATABASE = [
           { name: "помидоры", quantity: "4", unit: "шт" },
           { name: "сметана", quantity: "150", unit: "г" },
           { name: "соль", quantity: "", unit: "" },
-          { name: "перец", quantity: "", unit: "" },
+          { name: "чёрный перец", quantity: "", unit: "" },
           { name: "чеснок", quantity: "1", unit: "зубчик" },
           { name: "масло растительное", quantity: "2", unit: "ст. л." },
           { name: "зелень", quantity: "3", unit: "веточки" },
