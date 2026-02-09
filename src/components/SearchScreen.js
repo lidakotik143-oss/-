@@ -135,13 +135,13 @@ export default function SearchScreen({
               ))}
             </select>
 
-            {/* Время */}
+            {/* Время приготовления */}
             <select
               value={selectedFilters.timeRange}
               onChange={(e) => setSelectedFilters((prev) => ({ ...prev, timeRange: e.target.value }))}
               className={`w-full p-2 ${theme.input} ${fontSize.body} rounded-xl`}
             >
-              <option value="">{t("Время (любое)", "Time (any)")}</option>
+              <option value="">{t("Время приготовления (любое)", "Cooking time (any)")}</option>
               <option value="short">{t("До 15 минут", "Up to 15 min")}</option>
               <option value="medium">{t("16–40 минут", "16–40 min")}</option>
               <option value="long">{t("Больше 40 минут", "Over 40 min")}</option>
