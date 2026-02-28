@@ -1,19 +1,198 @@
 // База данных продуктов с пищевой ценностью на 100 грамм
 // КБЖУ: Калории (ккал), Белки (г), Жиры (г), Углеводы (г)
+// Все данные взяты из официальной таблицы калорийности продуктов
 
 export const PRODUCTS_NUTRITION = {
-  // Зерновые и крупы
+  // ===== ХЛЕБОБУЛОЧНЫЕ ИЗДЕЛИЯ И МУКА =====
+  "хлеб": {
+    calories: 248,
+    protein: 7.5,
+    fat: 1.9,
+    carbs: 50.3
+  },
+  "хлеб пшеничный из муки высшего сорта": {
+    calories: 248,
+    protein: 7.5,
+    fat: 1.9,
+    carbs: 50.3
+  },
+  "хлеб пшеничный из муки 1 сорта": {
+    calories: 226,
+    protein: 7.6,
+    fat: 0.9,
+    carbs: 49.7
+  },
+  "хлеб из ржано-пшеничной муки": {
+    calories: 215,
+    protein: 6.8,
+    fat: 1.2,
+    carbs: 46.4
+  },
+  "хлеб ржаной": {
+    calories: 214,
+    protein: 4.7,
+    fat: 0.7,
+    carbs: 49.8
+  },
+  "хлеб бородинский": {
+    calories: 208,
+    protein: 6.9,
+    fat: 1.3,
+    carbs: 40.9
+  },
+  "хлеб зерновой": {
+    calories: 228,
+    protein: 8.6,
+    fat: 1.4,
+    carbs: 45.1
+  },
+  "хлеб цельнозерновой из смеси злаков": {
+    calories: 265,
+    protein: 13.3,
+    fat: 4.2,
+    carbs: 43.3
+  },
+  "сдоба": {
+    calories: 360,
+    protein: 7.7,
+    fat: 9.5,
+    carbs: 63.7
+  },
+  "сухари из пшеничной муки": {
+    calories: 331,
+    protein: 11.2,
+    fat: 1.4,
+    carbs: 72.4
+  },
+  "мука пшеничная": {
+    calories: 312,
+    protein: 11.5,
+    fat: 2.2,
+    carbs: 61.5
+  },
+  "мука пшеничная обойная": {
+    calories: 312,
+    protein: 11.5,
+    fat: 2.2,
+    carbs: 61.5
+  },
+  "мука пшеничная в/с": {
+    calories: 334,
+    protein: 10.3,
+    fat: 1.1,
+    carbs: 70.6
+  },
+  "мука пшеничная 1 сорта": {
+    calories: 330,
+    protein: 10.6,
+    fat: 1.3,
+    carbs: 69.0
+  },
+  "мука пшеничная 2 сорта": {
+    calories: 322,
+    protein: 11.6,
+    fat: 1.8,
+    carbs: 64.8
+  },
+  "мука пшеничная из твердых сортов в/с": {
+    calories: 334,
+    protein: 10.8,
+    fat: 1.3,
+    carbs: 69.9
+  },
+  "мука ржаная сеяная": {
+    calories: 305,
+    protein: 6.9,
+    fat: 1.4,
+    carbs: 66.3
+  },
+  "мука ржаная обдирная": {
+    calories: 298,
+    protein: 8.9,
+    fat: 1.7,
+    carbs: 61.8
+  },
+  "мука ржаная обойная": {
+    calories: 294,
+    protein: 10.7,
+    fat: 1.9,
+    carbs: 58.5
+  },
+
+  // ===== МАКАРОННЫЕ ИЗДЕЛИЯ =====
+  "паста": {
+    calories: 337,
+    protein: 10.4,
+    fat: 1.1,
+    carbs: 69.7
+  },
+  "спагетти": {
+    calories: 337,
+    protein: 10.4,
+    fat: 1.1,
+    carbs: 69.7
+  },
+  "макаронные изделия в/с": {
+    calories: 337,
+    protein: 10.4,
+    fat: 1.1,
+    carbs: 69.7
+  },
+  "макаронные изделия в/с вареные": {
+    calories: 112,
+    protein: 3.5,
+    fat: 0.4,
+    carbs: 23.2
+  },
+  "макаронные изделия из муки твердых сортов в/с": {
+    calories: 338,
+    protein: 11.0,
+    fat: 1.3,
+    carbs: 70.5
+  },
+  "макаронные изделия из муки твердых сортов в/с вареные": {
+    calories: 98,
+    protein: 3.6,
+    fat: 0.4,
+    carbs: 20.0
+  },
+
+  // ===== КРУПЫ =====
   "овсяные хлопья": {
-    calories: 366,
-    protein: 11.9,
-    fat: 7.2,
-    carbs: 69.3
+    calories: 352,
+    protein: 12.3,
+    fat: 6.2,
+    carbs: 61.8
+  },
+  "крупа овсяная": {
+    calories: 342,
+    protein: 12.3,
+    fat: 6.1,
+    carbs: 59.5
+  },
+  "каша из овсяных хлопьев на воде": {
+    calories: 88,
+    protein: 3.0,
+    fat: 1.7,
+    carbs: 15.0
+  },
+  "каша из овсяных хлопьев на молоке": {
+    calories: 102,
+    protein: 3.2,
+    fat: 4.1,
+    carbs: 14.2
+  },
+  "толокно овсяное": {
+    calories: 363,
+    protein: 12.5,
+    fat: 6.0,
+    carbs: 64.9
   },
   "рис": {
-    calories: 344,
-    protein: 6.7,
-    fat: 0.7,
-    carbs: 78.9
+    calories: 333,
+    protein: 7.0,
+    fat: 1.0,
+    carbs: 74.0
   },
   "рис басмати": {
     calories: 347,
@@ -21,32 +200,116 @@ export const PRODUCTS_NUTRITION = {
     fat: 0.6,
     carbs: 77.2
   },
-  "мука пшеничная": {
-    calories: 364,
-    protein: 10.3,
-    fat: 1.1,
-    carbs: 74.9
+  "рис белый шлифованный": {
+    calories: 333,
+    protein: 7.0,
+    fat: 1.0,
+    carbs: 74.0
   },
-  "спагетти": {
-    calories: 344,
-    protein: 11.0,
-    fat: 1.3,
-    carbs: 71.5
+  "рис белый шлифованный вареный": {
+    calories: 130,
+    protein: 2.3,
+    fat: 0.2,
+    carbs: 28.7
   },
-  "паста": {
-    calories: 344,
-    protein: 11.0,
-    fat: 1.3,
-    carbs: 71.5
-  },
-  "хлеб": {
-    calories: 265,
+  "рис длиннозерный нешлифованный": {
+    calories: 340,
     protein: 7.5,
-    fat: 2.9,
-    carbs: 50.1
+    fat: 2.0,
+    carbs: 73.0
+  },
+  "рис нешлифованный вареный": {
+    calories: 112,
+    protein: 2.5,
+    fat: 0.9,
+    carbs: 23.0
+  },
+  "рис красный нешлифованный": {
+    calories: 330,
+    protein: 7.5,
+    fat: 3.0,
+    carbs: 68.0
+  },
+  "рис дикий черный": {
+    calories: 357,
+    protein: 14.7,
+    fat: 1.1,
+    carbs: 68.7
+  },
+  "рис дикий черный вареный": {
+    calories: 101,
+    protein: 4.0,
+    fat: 0.3,
+    carbs: 19.5
+  },
+  "крупа гречневая ядрица": {
+    calories: 308,
+    protein: 12.6,
+    fat: 3.3,
+    carbs: 57.1
+  },
+  "гречка вареная": {
+    calories: 100,
+    protein: 4.1,
+    fat: 1.0,
+    carbs: 18.5
+  },
+  "гречневый продел": {
+    calories: 300,
+    protein: 9.5,
+    fat: 2.3,
+    carbs: 60.4
+  },
+  "гречка зеленая мистраль": {
+    calories: 328,
+    protein: 13.4,
+    fat: 3.0,
+    carbs: 68.0
+  },
+  "пшено": {
+    calories: 342,
+    protein: 11.5,
+    fat: 3.3,
+    carbs: 66.5
+  },
+  "пшено вареное": {
+    calories: 119,
+    protein: 3.5,
+    fat: 1.1,
+    carbs: 23.6
+  },
+  "перловая крупа": {
+    calories: 315,
+    protein: 9.3,
+    fat: 1.1,
+    carbs: 66.9
+  },
+  "перловая крупа вареная": {
+    calories: 109,
+    protein: 3.1,
+    fat: 0.4,
+    carbs: 22.2
+  },
+  "ячневая крупа": {
+    calories: 313,
+    protein: 10.0,
+    fat: 1.3,
+    carbs: 65.4
+  },
+  "ячневая крупа вареная": {
+    calories: 76,
+    protein: 2.3,
+    fat: 0.3,
+    carbs: 15.7
+  },
+  "крупа пшеничная полтавская": {
+    calories: 329,
+    protein: 11.5,
+    fat: 1.3,
+    carbs: 67.9
   },
 
-  // Молочные продукты
+  // ===== МОЛОЧНЫЕ ПРОДУКТЫ =====
   "молоко": {
     calories: 64,
     protein: 3.2,
@@ -132,7 +395,7 @@ export const PRODUCTS_NUTRITION = {
     carbs: 6.0
   },
 
-  // Яйца
+  // ===== ЯЙЦА =====
   "яйцо": {
     calories: 157,
     protein: 12.7,
@@ -164,7 +427,7 @@ export const PRODUCTS_NUTRITION = {
     carbs: 1.0
   },
 
-  // Мясо и птица
+  // ===== МЯСО И ПТИЦА =====
   "куриная грудка": {
     calories: 165,
     protein: 31.0,
@@ -202,7 +465,7 @@ export const PRODUCTS_NUTRITION = {
     carbs: 0.0
   },
 
-  // Рыба и морепродукты
+  // ===== РЫБА И МОРЕПРОДУКТЫ =====
   "креветки": {
     calories: 99,
     protein: 24.0,
@@ -216,7 +479,7 @@ export const PRODUCTS_NUTRITION = {
     carbs: 0.0
   },
 
-  // Овощи
+  // ===== ОВОЩИ =====
   "авокадо": {
     calories: 160,
     protein: 2.0,
@@ -302,7 +565,7 @@ export const PRODUCTS_NUTRITION = {
     carbs: 2.0
   },
 
-  // Фрукты и ягоды
+  // ===== ФРУКТЫ И ЯГОДЫ =====
   "бананы": {
     calories: 96,
     protein: 1.5,
@@ -364,7 +627,7 @@ export const PRODUCTS_NUTRITION = {
     carbs: 3.8
   },
 
-  // Орехи и семена
+  // ===== ОРЕХИ И СЕМЕНА =====
   "грецкие орехи": {
     calories: 654,
     protein: 15.2,
@@ -390,7 +653,7 @@ export const PRODUCTS_NUTRITION = {
     carbs: 42.1
   },
 
-  // Бобовые
+  // ===== БОБОВЫЕ =====
   "нут консервированный": {
     calories: 127,
     protein: 7.2,
@@ -398,7 +661,7 @@ export const PRODUCTS_NUTRITION = {
     carbs: 17.7
   },
 
-  // Сухофрукты
+  // ===== СУХОФРУКТЫ =====
   "чернослив": {
     calories: 231,
     protein: 2.3,
@@ -418,7 +681,7 @@ export const PRODUCTS_NUTRITION = {
     carbs: 19.2
   },
 
-  // Подсластители
+  // ===== ПОДСЛАСТИТЕЛИ =====
   "сахар": {
     calories: 387,
     protein: 0.0,
@@ -450,7 +713,7 @@ export const PRODUCTS_NUTRITION = {
     carbs: 67.0
   },
 
-  // Масла
+  // ===== МАСЛА =====
   "сливочное масло": {
     calories: 717,
     protein: 0.8,
@@ -482,7 +745,7 @@ export const PRODUCTS_NUTRITION = {
     carbs: 0.0
   },
 
-  // Приправы и соусы
+  // ===== ПРИПРАВЫ И СОУСЫ =====
   "томатная паста": {
     calories: 102,
     protein: 4.8,
@@ -532,7 +795,7 @@ export const PRODUCTS_NUTRITION = {
     carbs: 79.8
   },
 
-  // Зелень (минимальная калорийность, можно не учитывать в расчётах)
+  // ===== ЗЕЛЕНЬ =====
   "зелень": {
     calories: 20,
     protein: 2.0,
@@ -576,7 +839,7 @@ export const PRODUCTS_NUTRITION = {
     carbs: 2.0
   },
 
-  // Прочее
+  // ===== ПРОЧЕЕ =====
   "вода": {
     calories: 0,
     protein: 0.0,
