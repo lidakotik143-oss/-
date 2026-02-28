@@ -389,9 +389,9 @@ export const PRODUCTS_NUTRITION = {
   "бычки в томатном соусе": { calories: 88, protein: 17.5, fat: 2.0, carbs: 0.0 },
   "горбуша натуральная": { calories: 136, protein: 20.9, fat: 5.8, carbs: 0.0 },
   "горбуша в томатном соусе": { calories: 130, protein: 15.0, fat: 6.0, carbs: 4.1 },
-  "кальмары": { calories: 84, protein: 15.2, fat: 1.2, carbs: 2.4 },
+  "кальмары (консервы)": { calories: 84, protein: 15.2, fat: 1.2, carbs: 2.4 },
   "килька в томатном соусе": { calories: 182, protein: 14.0, fat: 12.0, carbs: 4.5 },
-  "крабы": { calories: 85, protein: 18.7, fat: 1.1, carbs: 0.1 },
+  "крабы (консервы)": { calories: 85, protein: 18.7, fat: 1.1, carbs: 0.1 },
   "лосось (консервы)": { calories: 144, protein: 20.6, fat: 6.3, carbs: 0.0 },
   "мидии (консервы)": { calories: 88, protein: 17.5, fat: 2.0, carbs: 0.0 },
   "морская капуста": { calories: 49, protein: 0.8, fat: 5.1, carbs: 0.0 },
@@ -411,6 +411,36 @@ export const PRODUCTS_NUTRITION = {
   "тунец в масле": { calories: 232, protein: 22.0, fat: 15.9, carbs: 0.0 },
   "шпроты в масле": { calories: 363, protein: 17.4, fat: 32.4, carbs: 0.4 },
   "шпротный паштет": { calories: 195, protein: 12.0, fat: 14.0, carbs: 5.3 },
+
+  // ===== ЯЙЦЕПРОДУКТЫ =====
+  "яйцо куриное": { calories: 157, protein: 12.7, fat: 10.9, carbs: 0.7 },
+  "белок": { calories: 44, protein: 11.1, fat: 0.0, carbs: 0.0 },
+  "желток": { calories: 354, protein: 16.2, fat: 31.2, carbs: 1.0 },
+  "яйцо куриное отварное": { calories: 157, protein: 12.7, fat: 11.5, carbs: 0.7 },
+  "яйцо куриное жареное без масла": { calories: 174, protein: 14.6, fat: 12.6, carbs: 0.8 },
+  "яйцо перепелиное": { calories: 168, protein: 11.9, fat: 13.1, carbs: 0.6 },
+  "яйцо гусиное": { calories: 185, protein: 13.9, fat: 13.3, carbs: 1.4 },
+  "яйцо утиное": { calories: 185, protein: 13.3, fat: 14.5, carbs: 0.1 },
+  "яйцо страусиное": { calories: 118, protein: 12.2, fat: 11.7, carbs: 0.7 },
+  "меланж": { calories: 157, protein: 12.7, fat: 11.5, carbs: 0.7 },
+  "яичный порошок": { calories: 542, protein: 46.0, fat: 37.3, carbs: 4.5 },
+
+  // ===== МАСЛА, ЖИРЫ И ЖИРОВЫЕ ПРОДУКТЫ =====
+  "масло сливочное": { calories: 728, protein: 0.8, fat: 80.2, carbs: 0.8 },
+  "масло сливочное валио": { calories: 740, protein: 0.7, fat: 82.0, carbs: 0.7 },
+  "масло топленое": { calories: 892, protein: 0.2, fat: 99.0, carbs: 0.0 },
+  "масло шоколадное": { calories: 642, protein: 1.5, fat: 62.0, carbs: 18.6 },
+  "масло оливковое": { calories: 898, protein: 0.0, fat: 99.8, carbs: 0.0 },
+  "масло подсолнечное": { calories: 899, protein: 0.0, fat: 99.9, carbs: 0.0 },
+  "маргарин": { calories: 745, protein: 0.4, fat: 82.2, carbs: 0.8 },
+  "спред": { calories: 360, protein: 0.0, fat: 40.0, carbs: 0.0 },
+  "майонез": { calories: 558, protein: 2.2, fat: 59.5, carbs: 3.2 },
+  "майонез легкий": { calories: 205, protein: 0.9, fat: 19.0, carbs: 4.2 },
+  "жир говяжий, свиной, бараний топленые": { calories: 897, protein: 0.0, fat: 99.7, carbs: 0.0 },
+  "жир кулинарный, кондитерский": { calories: 897, protein: 0.0, fat: 99.7, carbs: 0.0 },
+  "жир рыбий": { calories: 902, protein: 0.0, fat: 100.0, carbs: 0.0 },
+  "сало": { calories: 797, protein: 2.4, fat: 89.0, carbs: 0.0 },
+  "шпик": { calories: 841, protein: 1.4, fat: 92.8, carbs: 0.0 },
 
   "красная рыба слабосолёная": { calories: 202, protein: 22.5, fat: 12.5, carbs: 0.0 }
 };
