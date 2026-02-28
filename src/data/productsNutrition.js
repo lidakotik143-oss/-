@@ -505,10 +505,166 @@ export const PRODUCTS_NUTRITION = {
 
   // ===== МОЛОЧНЫЕ ПРОДУКТЫ =====
   "молоко": {
-    calories: 64,
-    protein: 3.2,
-    fat: 3.6,
+    calories: 60,
+    protein: 2.9,
+    fat: 3.2,
+    carbs: 4.7
+  },
+  "молоко коровье нежирное": {
+    calories: 32,
+    protein: 3.0,
+    fat: 0.05,
+    carbs: 4.9
+  },
+  "молоко 1,5% жирности": {
+    calories: 45,
+    protein: 3.0,
+    fat: 1.5,
     carbs: 4.8
+  },
+  "молоко 1.5%": {
+    calories: 45,
+    protein: 3.0,
+    fat: 1.5,
+    carbs: 4.8
+  },
+  "молоко 2,5%": {
+    calories: 54,
+    protein: 2.9,
+    fat: 2.5,
+    carbs: 4.8
+  },
+  "молоко 2.5%": {
+    calories: 54,
+    protein: 2.9,
+    fat: 2.5,
+    carbs: 4.8
+  },
+  "молоко 3,2%": {
+    calories: 60,
+    protein: 2.9,
+    fat: 3.2,
+    carbs: 4.7
+  },
+  "молоко 3.2%": {
+    calories: 60,
+    protein: 2.9,
+    fat: 3.2,
+    carbs: 4.7
+  },
+  "сливки": {
+    calories: 119,
+    protein: 2.7,
+    fat: 10.0,
+    carbs: 4.4
+  },
+  "сливки 10%": {
+    calories: 119,
+    protein: 2.7,
+    fat: 10.0,
+    carbs: 4.4
+  },
+  "сливки 20%": {
+    calories: 205,
+    protein: 2.5,
+    fat: 20.0,
+    carbs: 4.0
+  },
+  "творог": {
+    calories: 169,
+    protein: 18.0,
+    fat: 9.0,
+    carbs: 3.0
+  },
+  "творог нежирный": {
+    calories: 110,
+    protein: 22.0,
+    fat: 0.6,
+    carbs: 3.3
+  },
+  "творог 5%": {
+    calories: 145,
+    protein: 21.0,
+    fat: 5.0,
+    carbs: 3.0
+  },
+  "творог 9%": {
+    calories: 169,
+    protein: 18.0,
+    fat: 9.0,
+    carbs: 3.0
+  },
+  "творог 18%": {
+    calories: 236,
+    protein: 15.0,
+    fat: 18.0,
+    carbs: 2.8
+  },
+  "сметана": {
+    calories: 206,
+    protein: 2.5,
+    fat: 20.0,
+    carbs: 3.4
+  },
+  "сметана 10%": {
+    calories: 119,
+    protein: 2.7,
+    fat: 10.0,
+    carbs: 3.9
+  },
+  "сметана 20%": {
+    calories: 206,
+    protein: 2.5,
+    fat: 20.0,
+    carbs: 3.4
+  },
+  "сметана 30%": {
+    calories: 293,
+    protein: 2.3,
+    fat: 30.0,
+    carbs: 3.1
+  },
+  "кефир": {
+    calories: 59,
+    protein: 2.9,
+    fat: 3.2,
+    carbs: 4.0
+  },
+  "кефир нежирный": {
+    calories: 31,
+    protein: 3.0,
+    fat: 0.05,
+    carbs: 4.0
+  },
+  "кефир 1%": {
+    calories: 40,
+    protein: 3.0,
+    fat: 1.0,
+    carbs: 4.0
+  },
+  "кефир 2,5%": {
+    calories: 53,
+    protein: 2.9,
+    fat: 2.5,
+    carbs: 4.0
+  },
+  "кефир 2.5%": {
+    calories: 53,
+    protein: 2.9,
+    fat: 2.5,
+    carbs: 4.0
+  },
+  "кефир 3,2%": {
+    calories: 59,
+    protein: 2.9,
+    fat: 3.2,
+    carbs: 4.0
+  },
+  "кефир 3.2%": {
+    calories: 59,
+    protein: 2.9,
+    fat: 3.2,
+    carbs: 4.0
   },
   "греческий йогурт": {
     calories: 97,
@@ -528,41 +684,119 @@ export const PRODUCTS_NUTRITION = {
     fat: 3.2,
     carbs: 3.5
   },
-  "кефир": {
-    calories: 56,
-    protein: 2.9,
-    fat: 3.2,
-    carbs: 4.0
-  },
-  "творог": {
-    calories: 159,
-    protein: 18.0,
-    fat: 9.0,
-    carbs: 2.0
-  },
-  "сметана": {
-    calories: 206,
-    protein: 2.8,
-    fat: 20.0,
-    carbs: 3.2
-  },
-  "сливки": {
-    calories: 337,
-    protein: 2.2,
-    fat: 35.0,
-    carbs: 4.3
-  },
   "сыр": {
     calories: 356,
-    protein: 26.0,
+    protein: 25.0,
     fat: 27.0,
+    carbs: 2.0
+  },
+  "брынза": {
+    calories: 262,
+    protein: 22.1,
+    fat: 19.2,
+    carbs: 0.4
+  },
+  "брынза из коровьего молока": {
+    calories: 262,
+    protein: 22.1,
+    fat: 19.2,
+    carbs: 0.4
+  },
+  "сыр адыгейский": {
+    calories: 264,
+    protein: 19.8,
+    fat: 19.8,
+    carbs: 1.5
+  },
+  "сыр гауда": {
+    calories: 356,
+    protein: 25.0,
+    fat: 27.0,
+    carbs: 2.0
+  },
+  "сыр голландский брусковый": {
+    calories: 352,
+    protein: 26.0,
+    fat: 26.8,
     carbs: 0.0
   },
+  "сыр голландский круглый": {
+    calories: 375,
+    protein: 23.7,
+    fat: 30.4,
+    carbs: 0.0
+  },
+  "сыр ламбер": {
+    calories: 377,
+    protein: 23.7,
+    fat: 30.5,
+    carbs: 0.0
+  },
+  "сыр ламбер сливочный": {
+    calories: 395,
+    protein: 23.7,
+    fat: 32.5,
+    carbs: 0.0
+  },
+  "сыр маасдам": {
+    calories: 350,
+    protein: 23.5,
+    fat: 26.0,
+    carbs: 0.0
+  },
+  "моцарелла": {
+    calories: 300,
+    protein: 22.2,
+    fat: 22.3,
+    carbs: 2.2
+  },
+  "сыр моцарелла из цельного молока": {
+    calories: 300,
+    protein: 22.2,
+    fat: 22.3,
+    carbs: 2.2
+  },
   "пармезан": {
-    calories: 392,
-    protein: 35.8,
-    fat: 25.8,
-    carbs: 3.2
+    calories: 415,
+    protein: 37.8,
+    fat: 27.3,
+    carbs: 3.4
+  },
+  "сыр пармезан": {
+    calories: 415,
+    protein: 37.8,
+    fat: 27.3,
+    carbs: 3.4
+  },
+  "сыр российский": {
+    calories: 364,
+    protein: 23.2,
+    fat: 29.5,
+    carbs: 0.0
+  },
+  "рикотта": {
+    calories: 174,
+    protein: 11.3,
+    fat: 13.0,
+    carbs: 3.0
+  },
+  "сыр рикотта из цельного молока": {
+    calories: 174,
+    protein: 11.3,
+    fat: 13.0,
+    carbs: 3.0
+  },
+  "сулугуни": {
+    calories: 286,
+    protein: 20.5,
+    fat: 22.0,
+    carbs: 0.4
+  },
+  "сыр тильзитер": {
+    calories: 340,
+    protein: 24.4,
+    fat: 26.0,
+    carbs: 1.9
   },
   "сыр твёрдый": {
     calories: 356,
