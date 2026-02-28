@@ -523,7 +523,31 @@ export const PRODUCTS_NUTRITION = {
   "водоросли вакаме ундария перистая сырые": { id: 490, calories: 45, protein: 3.0, fat: 0.64, carbs: 9.3 },
   "ламинария морская капуста сырая": { id: 491, calories: 43, protein: 1.7, fat: 0.56, carbs: 8.9 },
   "ламинария морская капуста сушеная": { id: 492, calories: 476, protein: 31.5, fat: 21.8, carbs: 38.1 },
-  "спирулина сушеная": { id: 493, calories: 290, protein: 57.5, fat: 7.72, carbs: 23.4 }
+  "спирулина сушеная": { id: 493, calories: 290, protein: 57.5, fat: 7.72, carbs: 23.4 },
+
+  // ===== ГРИБЫ =====
+  "грибы белые свежие": { id: 494, calories: 34, protein: 3.7, fat: 1.7, carbs: 1.1 },
+  "грибы белые сушеные": { id: 495, calories: 286, protein: 30.3, fat: 14.3, carbs: 9.0 },
+  "вешенки свежие": { id: 496, calories: 38, protein: 2.5, fat: 0.3, carbs: 6.5 },
+  "грузди свежие": { id: 497, calories: 16, protein: 1.8, fat: 0.5, carbs: 0.8 },
+  "лисички": { id: 498, calories: 19, protein: 1.5, fat: 1.0, carbs: 1.0 },
+  "опята": { id: 499, calories: 22, protein: 2.2, fat: 1.2, carbs: 0.5 },
+  "подберезовики": { id: 500, calories: 20, protein: 2.1, fat: 0.8, carbs: 1.2 },
+  "подберезовики сушеные": { id: 501, calories: 231, protein: 23.5, fat: 9.2, carbs: 14.3 },
+  "подосиновики": { id: 502, calories: 22, protein: 3.3, fat: 0.5, carbs: 1.2 },
+  "подосиновики сушеные": { id: 503, calories: 315, protein: 35.4, fat: 5.4, carbs: 33.2 },
+  "сморчки": { id: 504, calories: 27, protein: 1.7, fat: 0.3, carbs: 4.2 },
+  "сыроежки": { id: 505, calories: 19, protein: 1.7, fat: 0.7, carbs: 1.5 },
+  "шампиньоны": { id: 506, calories: 27, protein: 4.3, fat: 1.0, carbs: 0.1 },
+
+  // ===== ОВОЩНЫЕ КОНСЕРВЫ =====
+  "икра баклажанная": { id: 507, calories: 148, protein: 1.7, fat: 13.3, carbs: 5.1 },
+  "икра кабачковая": { id: 508, calories: 110, protein: 1.6, fat: 8.0, carbs: 8.0 },
+  "горошек зеленый консервированный": { id: 509, calories: 40, protein: 3.1, fat: 0.2, carbs: 6.5 },
+  "кукуруза сладкая консервированная": { id: 510, calories: 92, protein: 2.9, fat: 0.7, carbs: 17.0 },
+  "огурцы маринованные": { id: 511, calories: 16, protein: 0.8, fat: 0.0, carbs: 1.3 },
+  "помидоры маринованные": { id: 512, calories: 10, protein: 0.5, fat: 0.1, carbs: 2.1 },
+  "свекла консервированная": { id: 513, calories: 32, protein: 1.0, fat: 0.05, carbs: 6.3 }
 };
 
 export function calculateRecipeNutrition(ingredients) {
