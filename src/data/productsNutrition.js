@@ -165,7 +165,7 @@ export const PRODUCTS_NUTRITION = {
   "яичный желток": { calories: 352, protein: 16.2, fat: 31.2, carbs: 1.0 },
   "яичные желтки": { calories: 352, protein: 16.2, fat: 31.2, carbs: 1.0 },
 
-  // ===== МЯСО И ПТИЦА =====
+  // ===== МЯСО, ПТИЦА, КОЛБАСЭ =====
   "говядина": { calories: 168, protein: 20.0, fat: 9.8, carbs: 0.0 },
   "говядина 1 категории": { calories: 218, protein: 18.6, fat: 16.0, carbs: 0.0 },
   "говядина 2 категории": { calories: 168, protein: 20.0, fat: 9.8, carbs: 0.0 },
@@ -226,6 +226,42 @@ export const PRODUCTS_NUTRITION = {
   "бекон": { calories: 541, protein: 23.0, fat: 45.0, carbs: 0.0 },
   "гуанчале": { calories: 655, protein: 9.4, fat: 69.0, carbs: 0.0 },
   "ветчина": { calories: 145, protein: 22.6, fat: 6.2, carbs: 0.0 },
+  "ветчина рубленая": { calories: 263, protein: 16.3, fat: 20.7, carbs: 1.8 },
+  "колбаса вареная диетическая": { calories: 170, protein: 12.1, fat: 13.5, carbs: 0.0 },
+  "колбаса вареная докторская": { calories: 257, protein: 12.8, fat: 22.2, carbs: 1.5 },
+  "докторская": { calories: 257, protein: 12.8, fat: 22.2, carbs: 1.5 },
+  "колбаса вареная любительская": { calories: 301, protein: 12.2, fat: 28.0, carbs: 0.1 },
+  "любительская": { calories: 301, protein: 12.2, fat: 28.0, carbs: 0.1 },
+  "колбаса вареная молочная": { calories: 252, protein: 11.7, fat: 22.8, carbs: 0.2 },
+  "молочная": { calories: 252, protein: 11.7, fat: 22.8, carbs: 0.2 },
+  "колбаса вареная московская": { calories: 250, protein: 11.5, fat: 21.8, carbs: 2.0 },
+  "колбаса вареная русская": { calories: 302, protein: 11.5, fat: 27.9, carbs: 1.7 },
+  "колбаса варено-копченая московская": { calories: 406, protein: 19.1, fat: 36.6, carbs: 0.2 },
+  "колбаса варено-копченая сервелат": { calories: 425, protein: 16.1, fat: 40.1, carbs: 0.0 },
+  "сервелат": { calories: 425, protein: 16.1, fat: 40.1, carbs: 0.0 },
+  "колбаса полукопченая краковская": { calories: 466, protein: 16.2, fat: 44.6, carbs: 0.0 },
+  "краковская": { calories: 466, protein: 16.2, fat: 44.6, carbs: 0.0 },
+  "колбаса полукопченая одесская": { calories: 402, protein: 14.8, fat: 38.1, carbs: 0.3 },
+  "колбаса сырокопченая брауншвейгская": { calories: 491, protein: 27.7, fat: 42.2, carbs: 0.2 },
+  "колбаса сырокопченая московская": { calories: 473, protein: 24.8, fat: 41.5, carbs: 0.0 },
+  "колбаса сырокопченая свиная": { calories: 566, protein: 13.0, fat: 57.0, carbs: 0.2 },
+  "колбаса сырокопченая зернистая": { calories: 606, protein: 9.9, fat: 62.8, carbs: 0.3 },
+  "колбаса ливерная": { calories: 326, protein: 14.4, fat: 28.5, carbs: 2.2 },
+  "грудинка сырокопченая": { calories: 605, protein: 8.9, fat: 63.3, carbs: 0.0 },
+  "корейка сырокопченая": { calories: 469, protein: 10.5, fat: 47.4, carbs: 0.0 },
+  "сосиски": { calories: 261, protein: 11.0, fat: 23.9, carbs: 0.4 },
+  "сосиски молочные": { calories: 261, protein: 11.0, fat: 23.9, carbs: 0.4 },
+  "сосиски говяжьи": { calories: 226, protein: 10.4, fat: 20.1, carbs: 0.8 },
+  "сосиски свиные": { calories: 342, protein: 9.5, fat: 34.3, carbs: 0.0 },
+  "сосиски куриные": { calories: 259, protein: 10.8, fat: 22.4, carbs: 4.2 },
+  "сардельки": { calories: 215, protein: 11.4, fat: 18.2, carbs: 1.3 },
+  "сардельки говяжьи": { calories: 215, protein: 11.4, fat: 18.2, carbs: 1.3 },
+  "сардельки свиные": { calories: 322, protein: 10.1, fat: 31.6, carbs: 1.8 },
+  "шпикачки": { calories: 337, protein: 10.0, fat: 33.0, carbs: 0.0 },
+  "говядина тушеная": { calories: 220, protein: 16.8, fat: 17.0, carbs: 0.2 },
+  "говядина тушеная консервированная": { calories: 220, protein: 16.8, fat: 17.0, carbs: 0.2 },
+  "свинина тушеная": { calories: 349, protein: 14.9, fat: 32.2, carbs: 0.2 },
+  "свинина тушеная консервированная": { calories: 349, protein: 14.9, fat: 32.2, carbs: 0.2 },
 
   // ===== РЫБА И МОРЕПРОДУКТЫ =====
   "креветки": { calories: 99, protein: 24.0, fat: 1.0, carbs: 0.0 },
@@ -317,23 +353,19 @@ export const PRODUCTS_NUTRITION = {
 };
 
 export function calculateRecipeNutrition(ingredients) {
-  let totalCalories = 0;
-  let totalProtein = 0;
-  let totalFat = 0;
-  let totalCarbs = 0;
-
+  let totalCalories = 0, totalProtein = 0, totalFat = 0, totalCarbs = 0;
   ingredients.forEach(ingredient => {
     const productName = ingredient.name.toLowerCase().trim();
     const quantity = parseFloat(ingredient.quantity) || 0;
-    if (!quantity || quantity === 0) return;
+    if (!quantity) return;
     const product = PRODUCTS_NUTRITION[productName];
     if (product) {
       let gramsAmount = quantity;
       const unit = ingredient.unit?.toLowerCase() || "";
-      if (unit.includes("мл")) { gramsAmount = quantity; }
-      else if (unit.includes("стакан")) { gramsAmount = quantity * 250; }
-      else if (unit.includes("ст. л")) { gramsAmount = quantity * 15; }
-      else if (unit.includes("ч. л")) { gramsAmount = quantity * 5; }
+      if (unit.includes("мл")) gramsAmount = quantity;
+      else if (unit.includes("стакан")) gramsAmount = quantity * 250;
+      else if (unit.includes("ст. л")) gramsAmount = quantity * 15;
+      else if (unit.includes("ч. л")) gramsAmount = quantity * 5;
       else if (unit.includes("шт")) {
         const avgWeights = { "яйцо": 50, "яйца": 50, "банан": 120, "бананы": 120, "помидор": 100, "помидоры": 100, "лук": 75, "авокадо": 200, "болгарский перец": 150, "морковь": 75, "кабачок": 300, "баклажан": 250 };
         gramsAmount = (avgWeights[productName] || 100) * quantity;
