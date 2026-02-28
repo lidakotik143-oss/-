@@ -385,6 +385,33 @@ export const PRODUCTS_NUTRITION = {
   "форель слабосоленая жирная": { calories: 227, protein: 23.0, fat: 15.0, carbs: 0.0 },
   "хамса соленая": { calories: 166, protein: 21.2, fat: 9.0, carbs: 0.0 },
 
+  // ===== КОНСЕРВЫ РЫБНЫЕ =====
+  "бычки в томатном соусе": { calories: 88, protein: 17.5, fat: 2.0, carbs: 0.0 },
+  "горбуша натуральная": { calories: 136, protein: 20.9, fat: 5.8, carbs: 0.0 },
+  "горбуша в томатном соусе": { calories: 130, protein: 15.0, fat: 6.0, carbs: 4.1 },
+  "кальмары": { calories: 84, protein: 15.2, fat: 1.2, carbs: 2.4 },
+  "килька в томатном соусе": { calories: 182, protein: 14.0, fat: 12.0, carbs: 4.5 },
+  "крабы": { calories: 85, protein: 18.7, fat: 1.1, carbs: 0.1 },
+  "лосось (консервы)": { calories: 144, protein: 20.6, fat: 6.3, carbs: 0.0 },
+  "мидии (консервы)": { calories: 88, protein: 17.5, fat: 2.0, carbs: 0.0 },
+  "морская капуста": { calories: 49, protein: 0.8, fat: 5.1, carbs: 0.0 },
+  "печень минтая": { calories: 474, protein: 6.0, fat: 50.0, carbs: 0.0 },
+  "печень трески": { calories: 613, protein: 4.2, fat: 65.7, carbs: 1.2 },
+  "сайра бланшированная в масле": { calories: 283, protein: 18.3, fat: 23.3, carbs: 0.0 },
+  "сардины с добавлением масла": { calories: 238, protein: 19.0, fat: 18.0, carbs: 0.0 },
+  "сардины в масле": { calories: 221, protein: 24.1, fat: 13.9, carbs: 0.0 },
+  "сардины в томатном соусе": { calories: 162, protein: 17.0, fat: 9.9, carbs: 1.4 },
+  "сельдь (консервы)": { calories: 88, protein: 17.5, fat: 2.0, carbs: 0.0 },
+  "сельдь в растительном масле": { calories: 301, protein: 16.4, fat: 26.5, carbs: 0.0 },
+  "скумбрия натуральная": { calories: 200, protein: 17.7, fat: 14.4, carbs: 0.0 },
+  "скумбрия в масле": { calories: 318, protein: 14.4, fat: 28.9, carbs: 0.0 },
+  "ставрида в масле": { calories: 309, protein: 15.6, fat: 27.4, carbs: 0.0 },
+  "ставрида в томатном соусе": { calories: 110, protein: 14.8, fat: 2.3, carbs: 73.0 },
+  "тунец натуральный": { calories: 96, protein: 22.5, fat: 0.7, carbs: 0.0 },
+  "тунец в масле": { calories: 232, protein: 22.0, fat: 15.9, carbs: 0.0 },
+  "шпроты в масле": { calories: 363, protein: 17.4, fat: 32.4, carbs: 0.4 },
+  "шпротный паштет": { calories: 195, protein: 12.0, fat: 14.0, carbs: 5.3 },
+
   "красная рыба слабосолёная": { calories: 202, protein: 22.5, fat: 12.5, carbs: 0.0 }
 };
 
