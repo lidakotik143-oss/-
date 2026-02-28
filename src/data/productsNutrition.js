@@ -196,6 +196,33 @@ export const PRODUCTS_NUTRITION = {
   "куриная грудка": { calories: 113, protein: 23.6, fat: 1.9, carbs: 0.0 },
   "куриное филе": { calories: 113, protein: 23.6, fat: 1.9, carbs: 0.0 },
   "филе куриной грудки": { calories: 113, protein: 23.6, fat: 1.9, carbs: 0.0 },
+  "куриные окорочка": { calories: 158, protein: 16.8, fat: 10.2, carbs: 0.0 },
+  "окорочка": { calories: 158, protein: 16.8, fat: 10.2, carbs: 0.0 },
+  "куриная печень": { calories: 136, protein: 19.1, fat: 6.3, carbs: 0.6 },
+  "куриное сердце": { calories: 159, protein: 15.8, fat: 10.3, carbs: 0.8 },
+  "индейка": { calories: 276, protein: 19.5, fat: 22.0, carbs: 0.0 },
+  "индейка грудка": { calories: 114, protein: 23.6, fat: 1.5, carbs: 0.0 },
+  "грудка индейки": { calories: 114, protein: 23.6, fat: 1.5, carbs: 0.0 },
+  "индейка фарш": { calories: 161, protein: 20.0, fat: 8.0, carbs: 0.5 },
+  "фарш индейки": { calories: 161, protein: 20.0, fat: 8.0, carbs: 0.5 },
+  "гусь": { calories: 392, protein: 15.5, fat: 36.3, carbs: 0.0 },
+  "гусь домашний мясо и кожа": { calories: 392, protein: 15.5, fat: 36.3, carbs: 0.0 },
+  "гусь домашний мясо": { calories: 161, protein: 22.7, fat: 7.1, carbs: 0.0 },
+  "перепел": { calories: 192, protein: 19.6, fat: 12.0, carbs: 0.0 },
+  "перепел мясо и кожа": { calories: 192, protein: 19.6, fat: 12.0, carbs: 0.0 },
+  "утка": { calories: 405, protein: 15.8, fat: 38.0, carbs: 0.0 },
+  "утка домашняя мясо и кожа": { calories: 405, protein: 15.8, fat: 38.0, carbs: 0.0 },
+  "утка дикая мясо и кожа": { calories: 211, protein: 17.4, fat: 15.2, carbs: 0.0 },
+  "утка дикая мясо": { calories: 123, protein: 19.8, fat: 4.3, carbs: 0.0 },
+  "фазан": { calories: 181, protein: 22.7, fat: 9.3, carbs: 0.0 },
+  "фазан мясо и кожа": { calories: 181, protein: 22.7, fat: 9.3, carbs: 0.0 },
+  "фазан грудка": { calories: 133, protein: 24.3, fat: 3.2, carbs: 0.0 },
+  "страус": { calories: 114, protein: 21.8, fat: 2.3, carbs: 0.0 },
+  "страусиное мясо": { calories: 114, protein: 21.8, fat: 2.3, carbs: 0.0 },
+  "кролик": { calories: 183, protein: 21.2, fat: 11.0, carbs: 0.0 },
+  "кабан": { calories: 122, protein: 21.5, fat: 3.3, carbs: 0.0 },
+  "лось": { calories: 111, protein: 23.0, fat: 1.5, carbs: 0.0 },
+  "оленина": { calories: 155, protein: 19.5, fat: 8.5, carbs: 0.0 },
   "бекон": { calories: 541, protein: 23.0, fat: 45.0, carbs: 0.0 },
   "гуанчале": { calories: 655, protein: 9.4, fat: 69.0, carbs: 0.0 },
   "ветчина": { calories: 145, protein: 22.6, fat: 6.2, carbs: 0.0 },
@@ -289,11 +316,6 @@ export const PRODUCTS_NUTRITION = {
   "кокосовая стружка": { calories: 592, protein: 6.2, fat: 62.0, carbs: 24.2 }
 };
 
-/**
- * Функция для автоматического расчёта КБЖУ рецепта
- * @param {Array} ingredients - массив ингредиентов рецепта
- * @returns {Object} объект с общими калориями, белками, жирами и углеводами
- */
 export function calculateRecipeNutrition(ingredients) {
   let totalCalories = 0;
   let totalProtein = 0;
@@ -303,36 +325,19 @@ export function calculateRecipeNutrition(ingredients) {
   ingredients.forEach(ingredient => {
     const productName = ingredient.name.toLowerCase().trim();
     const quantity = parseFloat(ingredient.quantity) || 0;
-    
     if (!quantity || quantity === 0) return;
-    
     const product = PRODUCTS_NUTRITION[productName];
-    
     if (product) {
       let gramsAmount = quantity;
       const unit = ingredient.unit?.toLowerCase() || "";
-      
-      if (unit.includes("мл")) {
-        gramsAmount = quantity;
-      } else if (unit.includes("стакан")) {
-        gramsAmount = quantity * 250;
-      } else if (unit.includes("ст. л")) {
-        gramsAmount = quantity * 15;
-      } else if (unit.includes("ч. л")) {
-        gramsAmount = quantity * 5;
-      } else if (unit.includes("шт")) {
-        const averageWeights = {
-          "яйцо": 50, "яйца": 50,
-          "банан": 120, "бананы": 120,
-          "помидор": 100, "помидоры": 100,
-          "лук": 75, "авокадо": 200,
-          "болгарский перец": 150,
-          "морковь": 75, "кабачок": 300,
-          "баклажан": 250
-        };
-        gramsAmount = (averageWeights[productName] || 100) * quantity;
+      if (unit.includes("мл")) { gramsAmount = quantity; }
+      else if (unit.includes("стакан")) { gramsAmount = quantity * 250; }
+      else if (unit.includes("ст. л")) { gramsAmount = quantity * 15; }
+      else if (unit.includes("ч. л")) { gramsAmount = quantity * 5; }
+      else if (unit.includes("шт")) {
+        const avgWeights = { "яйцо": 50, "яйца": 50, "банан": 120, "бананы": 120, "помидор": 100, "помидоры": 100, "лук": 75, "авокадо": 200, "болгарский перец": 150, "морковь": 75, "кабачок": 300, "баклажан": 250 };
+        gramsAmount = (avgWeights[productName] || 100) * quantity;
       }
-      
       const factor = gramsAmount / 100;
       totalCalories += product.calories * factor;
       totalProtein += product.protein * factor;
@@ -340,21 +345,10 @@ export function calculateRecipeNutrition(ingredients) {
       totalCarbs += product.carbs * factor;
     }
   });
-
-  return {
-    calories: Math.round(totalCalories),
-    protein: Math.round(totalProtein * 10) / 10,
-    fat: Math.round(totalFat * 10) / 10,
-    carbs: Math.round(totalCarbs * 10) / 10
-  };
+  return { calories: Math.round(totalCalories), protein: Math.round(totalProtein * 10) / 10, fat: Math.round(totalFat * 10) / 10, carbs: Math.round(totalCarbs * 10) / 10 };
 }
 
 export function calculateNutritionPerServing(ingredients, servings = 1) {
   const total = calculateRecipeNutrition(ingredients);
-  return {
-    calories: Math.round(total.calories / servings),
-    protein: Math.round((total.protein / servings) * 10) / 10,
-    fat: Math.round((total.fat / servings) * 10) / 10,
-    carbs: Math.round((total.carbs / servings) * 10) / 10
-  };
+  return { calories: Math.round(total.calories / servings), protein: Math.round((total.protein / servings) * 10) / 10, fat: Math.round((total.fat / servings) * 10) / 10, carbs: Math.round((total.carbs / servings) * 10) / 10 };
 }
