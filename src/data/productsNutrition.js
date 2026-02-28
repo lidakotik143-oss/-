@@ -308,6 +308,200 @@ export const PRODUCTS_NUTRITION = {
     fat: 1.3,
     carbs: 67.9
   },
+  "крупа пшеничная полтавская вареная": {
+    calories: 75,
+    protein: 2.7,
+    fat: 0.3,
+    carbs: 15.0
+  },
+  "кукуруза зерно продовольственное": {
+    calories: 325,
+    protein: 10.3,
+    fat: 4.9,
+    carbs: 60.0
+  },
+  "кукурузная крупа": {
+    calories: 328,
+    protein: 8.3,
+    fat: 1.2,
+    carbs: 71.0
+  },
+  "манная крупа": {
+    calories: 333,
+    protein: 10.3,
+    fat: 1.0,
+    carbs: 70.6
+  },
+  "манная каша на воде": {
+    calories: 80,
+    protein: 2.5,
+    fat: 0.2,
+    carbs: 16.8
+  },
+  "манная каша на молоке": {
+    calories: 98,
+    protein: 3.0,
+    fat: 3.2,
+    carbs: 15.3
+  },
+  "амарант крупа": {
+    calories: 371,
+    protein: 13.6,
+    fat: 7.0,
+    carbs: 58.6
+  },
+  "амарант вареный": {
+    calories: 102,
+    protein: 3.8,
+    fat: 1.6,
+    carbs: 16.6
+  },
+  "киноа крупа": {
+    calories: 368,
+    protein: 14.1,
+    fat: 6.1,
+    carbs: 57.2
+  },
+  "киноа вареная": {
+    calories: 120,
+    protein: 4.4,
+    fat: 1.9,
+    carbs: 18.5
+  },
+
+  // ===== БОБОВЫЕ =====
+  "горох": {
+    calories: 298,
+    protein: 20.5,
+    fat: 2.0,
+    carbs: 49.5
+  },
+  "горох зерно": {
+    calories: 298,
+    protein: 20.5,
+    fat: 2.0,
+    carbs: 49.5
+  },
+  "горох целый шлифованный": {
+    calories: 330,
+    protein: 22.0,
+    fat: 2.0,
+    carbs: 57.0
+  },
+  "горох колотый": {
+    calories: 299,
+    protein: 23.0,
+    fat: 1.6,
+    carbs: 48.1
+  },
+  "горох вареный": {
+    calories: 118,
+    protein: 8.3,
+    fat: 0.4,
+    carbs: 21.0
+  },
+  "горошек зеленый свежий": {
+    calories: 55,
+    protein: 5.0,
+    fat: 0.2,
+    carbs: 8.3
+  },
+  "маш": {
+    calories: 347,
+    protein: 23.9,
+    fat: 1.2,
+    carbs: 62.6
+  },
+  "маш вареный": {
+    calories: 105,
+    protein: 7.0,
+    fat: 0.4,
+    carbs: 19.2
+  },
+  "нут": {
+    calories: 360,
+    protein: 20.5,
+    fat: 4.3,
+    carbs: 63.0
+  },
+  "нут вареный": {
+    calories: 164,
+    protein: 8.9,
+    fat: 2.6,
+    carbs: 27.4
+  },
+  "нут консервированный": {
+    calories: 127,
+    protein: 7.2,
+    fat: 2.6,
+    carbs: 17.7
+  },
+  "соя зерно": {
+    calories: 364,
+    protein: 36.7,
+    fat: 17.8,
+    carbs: 17.3
+  },
+  "соевые бобы": {
+    calories: 446,
+    protein: 36.4,
+    fat: 19.9,
+    carbs: 30.1
+  },
+  "соевые бобы вареные": {
+    calories: 173,
+    protein: 16.6,
+    fat: 8.9,
+    carbs: 9.9
+  },
+  "фасоль": {
+    calories: 333,
+    protein: 23.5,
+    fat: 0.8,
+    carbs: 60.0
+  },
+  "фасоль обыкновенная красная": {
+    calories: 333,
+    protein: 23.5,
+    fat: 0.8,
+    carbs: 60.0
+  },
+  "фасоль красная вареная": {
+    calories: 127,
+    protein: 8.7,
+    fat: 0.5,
+    carbs: 22.8
+  },
+  "фасоль стручковая": {
+    calories: 23,
+    protein: 2.5,
+    fat: 0.3,
+    carbs: 3.0
+  },
+  "чечевица": {
+    calories: 352,
+    protein: 24.6,
+    fat: 1.1,
+    carbs: 63.4
+  },
+  "чечевица вареная": {
+    calories: 116,
+    protein: 9.0,
+    fat: 0.4,
+    carbs: 20.1
+  },
+  "чечевица красная": {
+    calories: 314,
+    protein: 21.6,
+    fat: 1.1,
+    carbs: 48.0
+  },
+  "чечевица красная колотая персидская": {
+    calories: 328,
+    protein: 24.7,
+    fat: 1.2,
+    carbs: 62.5
+  },
 
   // ===== МОЛОЧНЫЕ ПРОДУКТЫ =====
   "молоко": {
@@ -651,14 +845,6 @@ export const PRODUCTS_NUTRITION = {
     protein: 16.5,
     fat: 30.7,
     carbs: 42.1
-  },
-
-  // ===== БОБОВЫЕ =====
-  "нут консервированный": {
-    calories: 127,
-    protein: 7.2,
-    fat: 2.6,
-    carbs: 17.7
   },
 
   // ===== СУХОФРУКТЫ =====
