@@ -686,7 +686,42 @@ export const PRODUCTS_NUTRITION = {
   "чак-чак": { id: 1943, calories: 363, protein: 8.6, fat: 1.9, carbs: 77.9 },
   "шоколадный батончик сникерс": { id: 1944, calories: 507, protein: 9.3, fat: 27.9, carbs: 54.6 },
   "шоколад горький": { id: 1945, calories: 540, protein: 8.0, fat: 36.0, carbs: 46.8 },
-  "шоколад молочный": { id: 1946, calories: 550, protein: 6.9, fat: 35.7, carbs: 54.4 }
+  "шоколад молочный": { id: 1946, calories: 550, protein: 6.9, fat: 35.7, carbs: 54.4 },
+
+  // ===== СОКИ И НАПИТКИ БЕЗАЛКОГОЛЬНЫЕ =====
+  "абрикосовый сок": { id: 2001, calories: 47, protein: 0.7, fat: 0.05, carbs: 10.9 },
+  "ананасовый сок": { id: 2002, calories: 48, protein: 0.3, fat: 0.1, carbs: 11.4 },
+  "апельсиновый сок": { id: 2003, calories: 48, protein: 0.8, fat: 0.15, carbs: 10.7 },
+  "березовый сок": { id: 2004, calories: 24, protein: 0.1, fat: 0.0, carbs: 5.8 },
+  "виноградный сок": { id: 2005, calories: 62, protein: 0.3, fat: 0.1, carbs: 15.2 },
+  "гранатовый сок": { id: 2006, calories: 56, protein: 0.3, fat: 0.1, carbs: 14.2 },
+  "грейпфрутовый сок": { id: 2007, calories: 34, protein: 0.3, fat: 0.1, carbs: 7.2 },
+  "грушевый сок": { id: 2008, calories: 45, protein: 0.4, fat: 0.0, carbs: 11.0 },
+  "лаймовый сок свежевыжатый": { id: 2009, calories: 25, protein: 0.4, fat: 0.1, carbs: 8.0 },
+  "лимонный сок свежевыжатый": { id: 2010, calories: 22, protein: 0.35, fat: 0.24, carbs: 6.6 },
+  "манго сок": { id: 2011, calories: 54, protein: 0.0, fat: 0.0, carbs: 13.5 },
+  "мандариновый сок": { id: 2012, calories: 40, protein: 0.8, fat: 0.0, carbs: 9.0 },
+  "морковный сок": { id: 2013, calories: 45, protein: 1.1, fat: 0.1, carbs: 9.5 },
+  "персиковый сок": { id: 2014, calories: 54, protein: 0.3, fat: 0.0, carbs: 13.0 },
+  "томатный сок": { id: 2015, calories: 20, protein: 1.05, fat: 0.15, carbs: 3.4 },
+  "тыквенный сок": { id: 2016, calories: 38, protein: 0.0, fat: 0.0, carbs: 9.0 },
+  "яблочный сок": { id: 2017, calories: 44, protein: 0.45, fat: 0.1, carbs: 10.0 },
+  "7up": { id: 2018, calories: 38, protein: 0.0, fat: 0.0, carbs: 8.7 },
+  "квас очаковский": { id: 2019, calories: 30, protein: 0.0, fat: 0.0, carbs: 5.5 },
+  "квас хлебный": { id: 2020, calories: 27, protein: 0.2, fat: 0.0, carbs: 5.2 },
+  "кока-кола": { id: 2021, calories: 42, protein: 0.0, fat: 0.0, carbs: 10.4 },
+  "кофе черный зерновой без сахара": { id: 2022, calories: 7, protein: 0.2, fat: 0.5, carbs: 0.3 },
+  "кофе с молоком и сахаром": { id: 2023, calories: 58, protein: 0.7, fat: 1.0, carbs: 11.2 },
+  "лимонад": { id: 2024, calories: 26, protein: 0.0, fat: 0.0, carbs: 6.4 },
+  "пепси": { id: 2025, calories: 38, protein: 0.0, fat: 0.0, carbs: 8.7 },
+  "пиво безалкогольное": { id: 2026, calories: 28, protein: 0.0, fat: 0.0, carbs: 5.1 },
+  "тоник": { id: 2027, calories: 34, protein: 0.0, fat: 0.0, carbs: 8.3 },
+  "фанта": { id: 2028, calories: 48, protein: 0.0, fat: 0.0, carbs: 11.7 },
+  "цикорий растворимый": { id: 2029, calories: 11, protein: 0.1, fat: 0.0, carbs: 2.8 },
+  "чай зеленый": { id: 2030, calories: 0, protein: 0.0, fat: 0.0, carbs: 0.0 },
+  "чай черный без сахара": { id: 2031, calories: 0, protein: 0.1, fat: 0.0, carbs: 0.0 },
+  "чай черный с сахаром": { id: 2032, calories: 28, protein: 0.1, fat: 0.0, carbs: 7.0 },
+  "чай черный с молоком и сахаром": { id: 2033, calories: 43, protein: 0.7, fat: 0.8, carbs: 8.2 }
 };
 
 export function calculateRecipeNutrition(ingredients) {
