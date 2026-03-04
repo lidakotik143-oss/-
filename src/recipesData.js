@@ -1,5 +1,6 @@
 // База данных рецептов Cookify
 // Всего: 9 рецептов (6 завтраков + 1 обед + 2 ужина)
+// Каждый ингредиент теперь имеет productId для автоматического расчёта КБЖУ
 
 export const RECIPES_DATABASE = [
   {
@@ -15,12 +16,12 @@ export const RECIPES_DATABASE = [
     difficulty: "легкий",
     tags: ["популярное"],
     ingredients: [
-      { name: "овсяные хлопья", quantity: "200", unit: "г" },
-      { name: "молоко", quantity: "600", unit: "мл" },
-      { name: "сахар", quantity: "2", unit: "ст. л." },
-      { name: "бананы", quantity: "2", unit: "шт" },
-      { name: "соль", quantity: "0.25", unit: "ч. л." },
-      { name: "сливочное масло", quantity: "20", unit: "г" }
+      { name: "овсяные хлопья", productId: 301, quantity: "200", unit: "г" },
+      { name: "молоко", productId: 501, quantity: "600", unit: "мл" },
+      { name: "сахар", productId: 1901, quantity: "2", unit: "ст. л." },
+      { name: "бананы", productId: 1708, quantity: "2", unit: "шт" },
+      { name: "соль", productId: null, quantity: "0.25", unit: "ч. л." },
+      { name: "сливочное масло", productId: 1201, quantity: "20", unit: "г" }
     ],
     instructions: [
       "Всыпьте овсяные хлопья в кастрюлю с толстым дном.",
@@ -38,12 +39,12 @@ export const RECIPES_DATABASE = [
         labelEn: "Saucepan",
         time: "25",
         ingredients: [
-          { name: "овсяные хлопья", quantity: "200", unit: "г" },
-          { name: "молоко", quantity: "600", unit: "мл" },
-          { name: "сахар", quantity: "2", unit: "ст. л." },
-          { name: "бананы", quantity: "2", unit: "шт" },
-          { name: "соль", quantity: "0.25", unit: "ч. л." },
-          { name: "сливочное масло", quantity: "20", unit: "г" }
+          { name: "овсяные хлопья", productId: 301, quantity: "200", unit: "г" },
+          { name: "молоко", productId: 501, quantity: "600", unit: "мл" },
+          { name: "сахар", productId: 1901, quantity: "2", unit: "ст. л." },
+          { name: "бананы", productId: 1708, quantity: "2", unit: "шт" },
+          { name: "соль", productId: null, quantity: "0.25", unit: "ч. л." },
+          { name: "сливочное масло", productId: 1201, quantity: "20", unit: "г" }
         ],
         instructions: [
           "Всыпьте овсяные хлопья в кастрюлю с толстым дном.",
@@ -61,12 +62,12 @@ export const RECIPES_DATABASE = [
         labelEn: "Multicooker",
         time: "25",
         ingredients: [
-          { name: "овсяные хлопья", meta: "геркулес", quantity: "200", unit: "г" },
-          { name: "вода", quantity: "300", unit: "мл" },
-          { name: "молоко", quantity: "200", unit: "мл" },
-          { name: "бананы", quantity: "2", unit: "шт" },
-          { name: "сахар", quantity: "", unit: "" },
-          { name: "сливочное масло", quantity: "50", unit: "г" }
+          { name: "овсяные хлопья", meta: "геркулес", productId: 301, quantity: "200", unit: "г" },
+          { name: "вода", productId: null, quantity: "300", unit: "мл" },
+          { name: "молоко", productId: 501, quantity: "200", unit: "мл" },
+          { name: "бананы", productId: 1708, quantity: "2", unit: "шт" },
+          { name: "сахар", productId: 1901, quantity: "", unit: "" },
+          { name: "сливочное масло", productId: 1201, quantity: "50", unit: "г" }
         ],
         instructions: [
           "Засыпьте геркулес в чашу мультиварки.",
@@ -83,11 +84,11 @@ export const RECIPES_DATABASE = [
         labelEn: "Oven",
         time: "150",
         ingredients: [
-          { name: "овсяные хлопья", quantity: "60", unit: "г" },
-          { name: "бананы", quantity: "2", unit: "шт" },
-          { name: "яйцо", quantity: "1", unit: "шт" },
-          { name: "молоко", quantity: "80", unit: "мл" },
-          { name: "кокосовая стружка", quantity: "", unit: "" }
+          { name: "овсяные хлопья", productId: 301, quantity: "60", unit: "г" },
+          { name: "бананы", productId: 1708, quantity: "2", unit: "шт" },
+          { name: "яйцо", productId: 601, quantity: "1", unit: "шт" },
+          { name: "молоко", productId: 501, quantity: "80", unit: "мл" },
+          { name: "кокосовая стружка", productId: null, quantity: "", unit: "" }
         ],
         instructions: [
           "Нарежьте бананы кусочками и разомните их вилкой в форме для запекания.",
@@ -114,14 +115,14 @@ export const RECIPES_DATABASE = [
     difficulty: "легкий",
     tags: ["быстро", "низкокалорийное"],
     ingredients: [
-      { name: "яйца", quantity: "2-3", unit: "шт" },
-      { name: "болгарский перец", quantity: "0.5", unit: "шт" },
-      { name: "помидор", meta: "небольшой", quantity: "1", unit: "шт" },
-      { name: "лук", subId: "onion_type", substitutes: ["зелёный лук"], quantity: "0.25", unit: "шт" },
-      { name: "соль и перец", quantity: "", unit: "" },
-      { name: "молоко", quantity: "1-2", unit: "ст. л." },
-      { name: "растительное масло", quantity: "", unit: "" },
-      { name: "свежая зелень", quantity: "", unit: "" }
+      { name: "яйца", productId: 601, quantity: "2-3", unit: "шт" },
+      { name: "болгарский перец", productId: 1344, quantity: "0.5", unit: "шт" },
+      { name: "помидор", meta: "небольшой", productId: 1347, quantity: "1", unit: "шт" },
+      { name: "лук", subId: "onion_type", substitutes: ["зелёный лук"], productId: 1333, quantity: "0.25", unit: "шт" },
+      { name: "соль и перец", productId: null, quantity: "", unit: "" },
+      { name: "молоко", productId: 501, quantity: "1-2", unit: "ст. л." },
+      { name: "растительное масло", productId: 1206, quantity: "", unit: "" },
+      { name: "свежая зелень", productId: null, quantity: "", unit: "" }
     ],
     instructions: [
       "Нарежьте овощи небольшими кусочками.",
@@ -138,14 +139,14 @@ export const RECIPES_DATABASE = [
         labelEn: "Skillet",
         time: "15",
         ingredients: [
-          { name: "яйца", quantity: "2-3", unit: "шт" },
-          { name: "болгарский перец", quantity: "0.5", unit: "шт" },
-          { name: "помидор", meta: "небольшой", quantity: "1", unit: "шт" },
-          { name: "лук", subId: "onion_type", substitutes: ["зелёный лук"], quantity: "0.25", unit: "шт" },
-          { name: "соль и перец", quantity: "", unit: "" },
-          { name: "молоко", quantity: "1-2", unit: "ст. л." },
-          { name: "растительное масло", quantity: "", unit: "" },
-          { name: "свежая зелень", quantity: "", unit: "" }
+          { name: "яйца", productId: 601, quantity: "2-3", unit: "шт" },
+          { name: "болгарский перец", productId: 1344, quantity: "0.5", unit: "шт" },
+          { name: "помидор", meta: "небольшой", productId: 1347, quantity: "1", unit: "шт" },
+          { name: "лук", subId: "onion_type", substitutes: ["зелёный лук"], productId: 1333, quantity: "0.25", unit: "шт" },
+          { name: "соль и перец", productId: null, quantity: "", unit: "" },
+          { name: "молоко", productId: 501, quantity: "1-2", unit: "ст. л." },
+          { name: "растительное масло", productId: 1206, quantity: "", unit: "" },
+          { name: "свежая зелень", productId: null, quantity: "", unit: "" }
         ],
         instructions: [
           "Нарежьте овощи небольшими кусочками.",
@@ -162,15 +163,15 @@ export const RECIPES_DATABASE = [
         labelEn: "Oven",
         time: "25",
         ingredients: [
-          { name: "болгарский перец", quantity: "0.25", unit: "шт" },
-          { name: "лук репчатый", quantity: "1", unit: "шт" },
-          { name: "помидор", quantity: "0.5", unit: "шт" },
-          { name: "яйца", quantity: "5", unit: "шт" },
-          { name: "молоко", quantity: "100", unit: "мл" },
-          { name: "сыр", quantity: "100", unit: "г" },
-          { name: "зелень", meta: "укроп/петрушка/перья лука", quantity: "", unit: "" },
-          { name: "соль и перец", quantity: "", unit: "" },
-          { name: "масло", quantity: "", unit: "" }
+          { name: "болгарский перец", productId: 1344, quantity: "0.25", unit: "шт" },
+          { name: "лук репчатый", productId: 1333, quantity: "1", unit: "шт" },
+          { name: "помидор", productId: 1347, quantity: "0.5", unit: "шт" },
+          { name: "яйца", productId: 601, quantity: "5", unit: "шт" },
+          { name: "молоко", productId: 501, quantity: "100", unit: "мл" },
+          { name: "сыр", productId: 534, quantity: "100", unit: "г" },
+          { name: "зелень", meta: "укроп/петрушка/перья лука", productId: null, quantity: "", unit: "" },
+          { name: "соль и перец", productId: null, quantity: "", unit: "" },
+          { name: "масло", productId: 1206, quantity: "", unit: "" }
         ],
         instructions: [
           "Разогрейте духовку до 180°C.",
@@ -197,11 +198,11 @@ export const RECIPES_DATABASE = [
     difficulty: "легкий",
     tags: ["быстро", "вегетарианское"],
     ingredients: [
-      { name: "греческий йогурт", quantity: "400", unit: "г" },
-      { name: "натуральный мёд", quantity: "3-4", unit: "ст. л." },
-      { name: "грецкие орехи", quantity: "50", unit: "г" },
-      { name: "корица", quantity: "", unit: "" },
-      { name: "свежие ягоды", subId: "berries_type", substitutes: ["инжир"], quantity: "", unit: "" }
+      { name: "греческий йогурт", productId: 528, quantity: "400", unit: "г" },
+      { name: "натуральный мёд", productId: 1924, quantity: "3-4", unit: "ст. л." },
+      { name: "грецкие орехи", productId: 1804, quantity: "50", unit: "г" },
+      { name: "корица", productId: null, quantity: "", unit: "" },
+      { name: "свежие ягоды", subId: "berries_type", substitutes: ["инжир"], productId: 1737, quantity: "", unit: "" }
     ],
     instructions: [
       "Обжарьте грецкие орехи на сухой сковороде 3–5 минут до золотистости, остудите и крупно нарубите ножом.",
@@ -218,11 +219,11 @@ export const RECIPES_DATABASE = [
         labelEn: "Classic",
         time: "5",
         ingredients: [
-          { name: "греческий йогурт", quantity: "400", unit: "г" },
-          { name: "натуральный мёд", quantity: "3-4", unit: "ст. л." },
-          { name: "грецкие орехи", quantity: "50", unit: "г" },
-          { name: "корица", quantity: "", unit: "" },
-          { name: "свежие ягоды", subId: "berries_type", substitutes: ["инжир"], quantity: "", unit: "" }
+          { name: "греческий йогурт", productId: 528, quantity: "400", unit: "г" },
+          { name: "натуральный мёд", productId: 1924, quantity: "3-4", unit: "ст. л." },
+          { name: "грецкие орехи", productId: 1804, quantity: "50", unit: "г" },
+          { name: "корица", productId: null, quantity: "", unit: "" },
+          { name: "свежие ягоды", subId: "berries_type", substitutes: ["инжир"], productId: 1737, quantity: "", unit: "" }
         ],
         instructions: [
           "Обжарьте грецкие орехи на сухой сковороде 3–5 минут до золотистости, остудите и крупно нарубите ножом.",
@@ -239,13 +240,13 @@ export const RECIPES_DATABASE = [
         labelEn: "With Gelatin",
         time: "35",
         ingredients: [
-          { name: "желатин", quantity: "3", unit: "г" },
-          { name: "вода", quantity: "25", unit: "мл" },
-          { name: "йогурт греческий", quantity: "200", unit: "г" },
-          { name: "мёд", quantity: "2", unit: "ч. л." },
-          { name: "грецкий орех", quantity: "20", unit: "г" },
-          { name: "чернослив", quantity: "20", unit: "г" },
-          { name: "финик", quantity: "20", unit: "г" }
+          { name: "желатин", productId: null, quantity: "3", unit: "г" },
+          { name: "вода", productId: null, quantity: "25", unit: "мл" },
+          { name: "йогурт греческий", productId: 528, quantity: "200", unit: "г" },
+          { name: "мёд", productId: 1924, quantity: "2", unit: "ч. л." },
+          { name: "грецкий орех", productId: 1804, quantity: "20", unit: "г" },
+          { name: "чернослив", productId: 1838, quantity: "20", unit: "г" },
+          { name: "финик", productId: 1837, quantity: "20", unit: "г" }
         ],
         instructions: [
           "Залейте желатин небольшим количеством кипячёной воды комнатной температуры, перемешайте и отставьте для набухания на 5 минут.",
@@ -275,11 +276,11 @@ export const RECIPES_DATABASE = [
     difficulty: "легкий",
     tags: ["веган", "быстро"],
     ingredients: [
-      { name: "ягоды", meta: "черника, малина, клубника, смородина", quantity: "200", unit: "г" },
-      { name: "бананы", quantity: "1", unit: "шт" },
-      { name: "натуральный йогурт", subId: "dairy_base", substitutes: ["кефир"], quantity: "200", unit: "мл" },
-      { name: "вода", subId: "liquid_base", substitutes: ["растительное молоко"], quantity: "100", unit: "мл" },
-      { name: "лёд", quantity: "1", unit: "горсть" }
+      { name: "ягоды", meta: "черника, малина, клубника, смородина", productId: 1737, quantity: "200", unit: "г" },
+      { name: "бананы", productId: 1708, quantity: "1", unit: "шт" },
+      { name: "натуральный йогурт", subId: "dairy_base", substitutes: ["кефир"], productId: 530, quantity: "200", unit: "мл" },
+      { name: "вода", subId: "liquid_base", substitutes: ["растительное молоко"], productId: null, quantity: "100", unit: "мл" },
+      { name: "лёд", productId: null, quantity: "1", unit: "горсть" }
     ],
     instructions: [
       "Очистите банан и нарежьте на кусочки.",
@@ -298,11 +299,11 @@ export const RECIPES_DATABASE = [
         labelEn: "Fresh Berries",
         time: "10",
         ingredients: [
-          { name: "ягоды", meta: "черника, малина, клубника, смородина", quantity: "200", unit: "г" },
-          { name: "бананы", quantity: "1", unit: "шт" },
-          { name: "натуральный йогурт", subId: "dairy_base", substitutes: ["кефир"], quantity: "200", unit: "мл" },
-          { name: "вода", subId: "liquid_base", substitutes: ["растительное молоко"], quantity: "100", unit: "мл" },
-          { name: "лёд", quantity: "1", unit: "горсть" }
+          { name: "ягоды", meta: "черника, малина, клубника, смородина", productId: 1737, quantity: "200", unit: "г" },
+          { name: "бананы", productId: 1708, quantity: "1", unit: "шт" },
+          { name: "натуральный йогурт", subId: "dairy_base", substitutes: ["кефир"], productId: 530, quantity: "200", unit: "мл" },
+          { name: "вода", subId: "liquid_base", substitutes: ["растительное молоко"], productId: null, quantity: "100", unit: "мл" },
+          { name: "лёд", productId: null, quantity: "1", unit: "горсть" }
         ],
         instructions: [
           "Очистите банан и нарежьте на кусочки.",
@@ -321,12 +322,12 @@ export const RECIPES_DATABASE = [
         labelEn: "Frozen Berries",
         time: "10",
         ingredients: [
-          { name: "замороженные ягоды", meta: "клубника, малина, черника, смородина", quantity: "2", unit: "стакан" },
-          { name: "банан", quantity: "1", unit: "шт" },
-          { name: "натуральный йогурт", subId: "dairy_base", substitutes: ["кефир"], quantity: "1", unit: "стакан" },
-          { name: "апельсиновый сок", subId: "liquid_base", substitutes: ["молоко", "растительное молоко"], quantity: "0.5", unit: "стакан" },
-          { name: "мёд", subId: "sweetener", substitutes: ["кленовый сироп"], quantity: "1-2", unit: "ст. л." },
-          { name: "свежая мята", quantity: "", unit: "" }
+          { name: "замороженные ягоды", meta: "клубника, малина, черника, смородина", productId: 1737, quantity: "2", unit: "стакан" },
+          { name: "банан", productId: 1708, quantity: "1", unit: "шт" },
+          { name: "натуральный йогурт", subId: "dairy_base", substitutes: ["кефир"], productId: 530, quantity: "1", unit: "стакан" },
+          { name: "апельсиновый сок", subId: "liquid_base", substitutes: ["молоко", "растительное молоко"], productId: 2003, quantity: "0.5", unit: "стакан" },
+          { name: "мёд", subId: "sweetener", substitutes: ["кленовый сироп"], productId: 1924, quantity: "1-2", unit: "ст. л." },
+          { name: "свежая мята", productId: null, quantity: "", unit: "" }
         ],
         instructions: [
           "Достаньте ягоды из морозилки и дайте им немного оттаять, чтобы блендер легче справился с ними.",
@@ -355,13 +356,13 @@ export const RECIPES_DATABASE = [
     difficulty: "легкий",
     tags: ["веган", "популярное"],
     ingredients: [
-      { name: "хлеб", meta: "цельнозерновой или ржаной", quantity: "1", unit: "ломтик" },
-      { name: "авокадо", meta: "спелый", quantity: "0.5", unit: "шт" },
-      { name: "яйцо", quantity: "1", unit: "шт" },
-      { name: "лимонный сок", quantity: "1", unit: "ч. л." },
-      { name: "соль, перец", quantity: "", unit: "" },
-      { name: "оливковое масло", quantity: "", unit: "" },
-      { name: "зелень, кунжут, чили, помидоры черри", quantity: "", unit: "" }
+      { name: "хлеб", meta: "цельнозерновой или ржаной", productId: 105, quantity: "1", unit: "ломтик" },
+      { name: "авокадо", meta: "спелый", productId: 1703, quantity: "0.5", unit: "шт" },
+      { name: "яйцо", productId: 601, quantity: "1", unit: "шт" },
+      { name: "лимонный сок", productId: 2010, quantity: "1", unit: "ч. л." },
+      { name: "соль, перец", productId: null, quantity: "", unit: "" },
+      { name: "оливковое масло", productId: 1205, quantity: "", unit: "" },
+      { name: "зелень, кунжут, чили, помидоры черри", productId: null, quantity: "", unit: "" }
     ],
     instructions: [
       "Обжарьте ломтик хлеба на сухой сковороде или в тостере до золотистой корочки.",
@@ -377,13 +378,13 @@ export const RECIPES_DATABASE = [
         labelEn: "With Egg",
         time: "10",
         ingredients: [
-          { name: "хлеб", meta: "цельнозерновой или ржаной", quantity: "1", unit: "ломтик" },
-          { name: "авокадо", meta: "спелый", quantity: "0.5", unit: "шт" },
-          { name: "яйцо", quantity: "1", unit: "шт" },
-          { name: "лимонный сок", quantity: "1", unit: "ч. л." },
-          { name: "соль, перец", quantity: "", unit: "" },
-          { name: "оливковое масло", quantity: "", unit: "" },
-          { name: "зелень, кунжут, чили, помидоры черри", quantity: "", unit: "" }
+          { name: "хлеб", meta: "цельнозерновой или ржаной", productId: 105, quantity: "1", unit: "ломтик" },
+          { name: "авокадо", meta: "спелый", productId: 1703, quantity: "0.5", unit: "шт" },
+          { name: "яйцо", productId: 601, quantity: "1", unit: "шт" },
+          { name: "лимонный сок", productId: 2010, quantity: "1", unit: "ч. л." },
+          { name: "соль, перец", productId: null, quantity: "", unit: "" },
+          { name: "оливковое масло", productId: 1205, quantity: "", unit: "" },
+          { name: "зелень, кунжут, чили, помидоры черри", productId: null, quantity: "", unit: "" }
         ],
         instructions: [
           "Обжарьте ломтик хлеба на сухой сковороде или в тостере до золотистой корочки.",
@@ -399,12 +400,12 @@ export const RECIPES_DATABASE = [
         labelEn: "With Tomatoes",
         time: "10",
         ingredients: [
-          { name: "хлеб", quantity: "2", unit: "ломтик" },
-          { name: "лимон", quantity: "1", unit: "долька" },
-          { name: "авокадо", quantity: "1", unit: "шт" },
-          { name: "помидор", quantity: "1", unit: "шт" },
-          { name: "бальзамический уксус", quantity: "60", unit: "мл" },
-          { name: "соль, перец молотый", quantity: "", unit: "" }
+          { name: "хлеб", productId: 105, quantity: "2", unit: "ломтик" },
+          { name: "лимон", productId: 1719, quantity: "1", unit: "долька" },
+          { name: "авокадо", productId: 1703, quantity: "1", unit: "шт" },
+          { name: "помидор", productId: 1347, quantity: "1", unit: "шт" },
+          { name: "бальзамический уксус", productId: null, quantity: "60", unit: "мл" },
+          { name: "соль, перец молотый", productId: null, quantity: "", unit: "" }
         ],
         instructions: [
           "Авокадо почистите и разделите пополам, удалите косточку. Измельчите мякоть вилкой. Сок лимона защитит мякоть от пожелтения.",
@@ -420,14 +421,14 @@ export const RECIPES_DATABASE = [
         labelEn: "With Ham",
         time: "15",
         ingredients: [
-          { name: "хлеб", meta: "пшеничный, ржаной или цельнозерновой", quantity: "2", unit: "ломтик" },
-          { name: "авокадо", meta: "спелый", quantity: "1", unit: "шт" },
-          { name: "яйцо", quantity: "1", unit: "шт" },
-          { name: "ветчина", quantity: "2-3", unit: "ломтик" },
-          { name: "сливочное масло", subId: "butter_type", substitutes: ["оливковое масло"], quantity: "", unit: "" },
-          { name: "соль, перец", quantity: "", unit: "" },
-          { name: "лимонный сок", quantity: "", unit: "" },
-          { name: "зелень", meta: "петрушка, укроп, рукола", quantity: "", unit: "" }
+          { name: "хлеб", meta: "пшеничный, ржаной или цельнозерновой", productId: 105, quantity: "2", unit: "ломтик" },
+          { name: "авокадо", meta: "спелый", productId: 1703, quantity: "1", unit: "шт" },
+          { name: "яйцо", productId: 601, quantity: "1", unit: "шт" },
+          { name: "ветчина", productId: 760, quantity: "2-3", unit: "ломтик" },
+          { name: "сливочное масло", subId: "butter_type", substitutes: ["оливковое масло"], productId: 1201, quantity: "", unit: "" },
+          { name: "соль, перец", productId: null, quantity: "", unit: "" },
+          { name: "лимонный сок", productId: 2010, quantity: "", unit: "" },
+          { name: "зелень", meta: "петрушка, укроп, рукола", productId: null, quantity: "", unit: "" }
         ],
         instructions: [
           "Слегка подрумяньте ломтики хлеба на сухой сковороде, в тостере или гриле. Если хочется, смажьте хлеб сливочным маслом для дополнительной мягкости и вкуса.",
@@ -443,15 +444,15 @@ export const RECIPES_DATABASE = [
         labelEn: "With Salmon",
         time: "15",
         ingredients: [
-          { name: "хлеб", meta: "багет или чиабатта", quantity: "6-8", unit: "ломтик" },
-          { name: "авокадо", meta: "спелое", quantity: "1", unit: "шт" },
-          { name: "яйца куриные", quantity: "2", unit: "шт" },
-          { name: "красная рыба слабосолёная", meta: "лосось, форель", quantity: "120-150", unit: "г" },
-          { name: "сыр сливочный", meta: "крем-сыр", quantity: "100", unit: "г" },
-          { name: "лимонный сок", quantity: "1", unit: "ч. л." },
-          { name: "соль", quantity: "", unit: "" },
-          { name: "чёрный перец", quantity: "", unit: "" },
-          { name: "зелень укропа", subId: "herbs", substitutes: ["микрозелень"], quantity: "", unit: "" }
+          { name: "хлеб", meta: "багет или чиабатта", productId: 105, quantity: "6-8", unit: "ломтик" },
+          { name: "авокадо", meta: "спелое", productId: 1703, quantity: "1", unit: "шт" },
+          { name: "яйца куриные", productId: 601, quantity: "2", unit: "шт" },
+          { name: "красная рыба слабосолёная", meta: "лосось, форель", productId: 1216, quantity: "120-150", unit: "г" },
+          { name: "сыр сливочный", meta: "крем-сыр", productId: 561, quantity: "100", unit: "г" },
+          { name: "лимонный сок", productId: 2010, quantity: "1", unit: "ч. л." },
+          { name: "соль", productId: null, quantity: "", unit: "" },
+          { name: "чёрный перец", productId: null, quantity: "", unit: "" },
+          { name: "зелень укропа", subId: "herbs", substitutes: ["микрозелень"], productId: null, quantity: "", unit: "" }
         ],
         instructions: [
           "Ломтики хлеба можно слегка подрумянить на сухой сковороде или в тостере — это сделает основу хрустящей и позволит лучше удерживать начинку. Если планируется подача на праздничном столе, лучше подсушить хлеб заранее, чтобы он не размокал.",
@@ -477,13 +478,13 @@ export const RECIPES_DATABASE = [
     difficulty: "легкий",
     tags: ["популярное", "вегетарианское"],
     ingredients: [
-      { name: "творог", meta: "5%", quantity: "400", unit: "г" },
-      { name: "яйцо", quantity: "1", unit: "шт" },
-      { name: "мука пшеничная", quantity: "4", unit: "ст. л." },
-      { name: "сахар", quantity: "2", unit: "ст. л." },
-      { name: "соль", quantity: "0.5", unit: "ч. л." },
-      { name: "сливочное масло", quantity: "", unit: "" },
-      { name: "растительное масло", quantity: "", unit: "" }
+      { name: "творог", meta: "5%", productId: 514, quantity: "400", unit: "г" },
+      { name: "яйцо", productId: 601, quantity: "1", unit: "шт" },
+      { name: "мука пшеничная", productId: 111, quantity: "4", unit: "ст. л." },
+      { name: "сахар", productId: 1901, quantity: "2", unit: "ст. л." },
+      { name: "соль", productId: null, quantity: "0.5", unit: "ч. л." },
+      { name: "сливочное масло", productId: 1201, quantity: "", unit: "" },
+      { name: "растительное масло", productId: 1206, quantity: "", unit: "" }
     ],
     instructions: [
       "Смешайте в глубокой ёмкости 400 г творога, одно яйцо, 2 ст. л. сахара, ½ ч. л. соли и 4 ст. л. муки.",
@@ -499,13 +500,13 @@ export const RECIPES_DATABASE = [
         labelEn: "Skillet",
         time: "20",
         ingredients: [
-          { name: "творог", meta: "5%", quantity: "400", unit: "г" },
-          { name: "яйцо", quantity: "1", unit: "шт" },
-          { name: "мука пшеничная", quantity: "4", unit: "ст. л." },
-          { name: "сахар", quantity: "2", unit: "ст. л." },
-          { name: "соль", quantity: "0.5", unit: "ч. л." },
-          { name: "сливочное масло", quantity: "", unit: "" },
-          { name: "растительное масло", quantity: "", unit: "" }
+          { name: "творог", meta: "5%", productId: 514, quantity: "400", unit: "г" },
+          { name: "яйцо", productId: 601, quantity: "1", unit: "шт" },
+          { name: "мука пшеничная", productId: 111, quantity: "4", unit: "ст. л." },
+          { name: "сахар", productId: 1901, quantity: "2", unit: "ст. л." },
+          { name: "соль", productId: null, quantity: "0.5", unit: "ч. л." },
+          { name: "сливочное масло", productId: 1201, quantity: "", unit: "" },
+          { name: "растительное масло", productId: 1206, quantity: "", unit: "" }
         ],
         instructions: [
           "Смешайте в глубокой ёмкости 400 г творога, одно яйцо, 2 ст. л. сахара, ½ ч. л. соли и 4 ст. л. муки.",
@@ -521,11 +522,11 @@ export const RECIPES_DATABASE = [
         labelEn: "Oven",
         time: "30",
         ingredients: [
-          { name: "творог", meta: "5%", quantity: "350", unit: "г" },
-          { name: "яйцо куриное", quantity: "1", unit: "шт" },
-          { name: "мука пшеничная", quantity: "60", unit: "г" },
-          { name: "сахар", quantity: "", unit: "" },
-          { name: "ванильный сахар", quantity: "", unit: "" }
+          { name: "творог", meta: "5%", productId: 514, quantity: "350", unit: "г" },
+          { name: "яйцо куриное", productId: 601, quantity: "1", unit: "шт" },
+          { name: "мука пшеничная", productId: 111, quantity: "60", unit: "г" },
+          { name: "сахар", productId: 1901, quantity: "", unit: "" },
+          { name: "ванильный сахар", productId: null, quantity: "", unit: "" }
         ],
         instructions: [
           "Творог протрите через сито — так сырники получатся более нежными и однородными. Выложите в миску, смешайте с яйцом, всыпьте два вида сахара по вкусу и перемешайте до однородности. Просейте в творог муку и ещё раз хорошо перемешайте.",
@@ -551,23 +552,23 @@ export const RECIPES_DATABASE = [
     difficulty: "средний",
     tags: ["веган", "острое", "популярное"],
     ingredients: [
-      { name: "рис басмати", quantity: "1.5", unit: "стакан" },
-      { name: "кокосовое молоко", quantity: "4", unit: "стакан" },
-      { name: "паста карри", quantity: "2", unit: "ст. л." },
-      { name: "растительное масло", quantity: "", unit: "" },
-      { name: "лук", quantity: "1", unit: "шт" },
-      { name: "чеснок", quantity: "1", unit: "зубчик" },
-      { name: "помидоры", quantity: "1-2", unit: "шт" },
-      { name: "болгарский перец", quantity: "1", unit: "шт" },
-      { name: "морковь", quantity: "1", unit: "шт" },
-      { name: "кабачок", subId: "squash_type", substitutes: ["цуккини"], quantity: "1", unit: "шт" },
-      { name: "баклажан", quantity: "0.5", unit: "шт" },
-      { name: "брокколи", quantity: "2", unit: "соцветия" },
-      { name: "шпинат", quantity: "0.5", unit: "пучок" },
-      { name: "нут консервированный", quantity: "1", unit: "банка" },
-      { name: "лайм", quantity: "1", unit: "шт" },
-      { name: "кинза", subId: "herbs", substitutes: ["зелень"], quantity: "1", unit: "пучок" },
-      { name: "соль, перец", quantity: "", unit: "" }
+      { name: "рис басмати", productId: 307, quantity: "1.5", unit: "стакан" },
+      { name: "кокосовое молоко", productId: 562, quantity: "4", unit: "стакан" },
+      { name: "паста карри", productId: null, quantity: "2", unit: "ст. л." },
+      { name: "растительное масло", productId: 1206, quantity: "", unit: "" },
+      { name: "лук", productId: 1333, quantity: "1", unit: "шт" },
+      { name: "чеснок", productId: 1370, quantity: "1", unit: "зубчик" },
+      { name: "помидоры", productId: 1347, quantity: "1-2", unit: "шт" },
+      { name: "болгарский перец", productId: 1344, quantity: "1", unit: "шт" },
+      { name: "морковь", productId: 1337, quantity: "1", unit: "шт" },
+      { name: "кабачок", subId: "squash_type", substitutes: ["цуккини"], productId: 1311, quantity: "1", unit: "шт" },
+      { name: "баклажан", productId: 1303, quantity: "0.5", unit: "шт" },
+      { name: "брокколи", productId: 1315, quantity: "2", unit: "соцветия" },
+      { name: "шпинат", productId: 1371, quantity: "0.5", unit: "пучок" },
+      { name: "нут консервированный", productId: 411, quantity: "1", unit: "банка" },
+      { name: "лайм", productId: null, quantity: "1", unit: "шт" },
+      { name: "кинза", subId: "herbs", substitutes: ["зелень"], productId: null, quantity: "1", unit: "пучок" },
+      { name: "соль, перец", productId: null, quantity: "", unit: "" }
     ],
     instructions: [
       "Промойте рис и отварите до готовности (или используйте вчерашний).",
@@ -588,23 +589,23 @@ export const RECIPES_DATABASE = [
         labelEn: "Classic",
         time: "35",
         ingredients: [
-          { name: "рис басмати", quantity: "1.5", unit: "стакан" },
-          { name: "кокосовое молоко", quantity: "4", unit: "стакан" },
-          { name: "паста карри", quantity: "2", unit: "ст. л." },
-          { name: "растительное масло", quantity: "", unit: "" },
-          { name: "лук", quantity: "1", unit: "шт" },
-          { name: "чеснок", quantity: "1", unit: "зубчик" },
-          { name: "помидоры", quantity: "1-2", unit: "шт" },
-          { name: "болгарский перец", quantity: "1", unit: "шт" },
-          { name: "морковь", quantity: "1", unit: "шт" },
-          { name: "кабачок", subId: "squash_type", substitutes: ["цуккини"], quantity: "1", unit: "шт" },
-          { name: "баклажан", quantity: "0.5", unit: "шт" },
-          { name: "брокколи", quantity: "2", unit: "соцветия" },
-          { name: "шпинат", quantity: "0.5", unit: "пучок" },
-          { name: "нут консервированный", quantity: "1", unit: "банка" },
-          { name: "лайм", quantity: "1", unit: "шт" },
-          { name: "кинза", subId: "herbs", substitutes: ["зелень"], quantity: "1", unit: "пучок" },
-          { name: "соль, перец", quantity: "", unit: "" }
+          { name: "рис басмати", productId: 307, quantity: "1.5", unit: "стакан" },
+          { name: "кокосовое молоко", productId: 562, quantity: "4", unit: "стакан" },
+          { name: "паста карри", productId: null, quantity: "2", unit: "ст. л." },
+          { name: "растительное масло", productId: 1206, quantity: "", unit: "" },
+          { name: "лук", productId: 1333, quantity: "1", unit: "шт" },
+          { name: "чеснок", productId: 1370, quantity: "1", unit: "зубчик" },
+          { name: "помидоры", productId: 1347, quantity: "1-2", unit: "шт" },
+          { name: "болгарский перец", productId: 1344, quantity: "1", unit: "шт" },
+          { name: "морковь", productId: 1337, quantity: "1", unit: "шт" },
+          { name: "кабачок", subId: "squash_type", substitutes: ["цуккини"], productId: 1311, quantity: "1", unit: "шт" },
+          { name: "баклажан", productId: 1303, quantity: "0.5", unit: "шт" },
+          { name: "брокколи", productId: 1315, quantity: "2", unit: "соцветия" },
+          { name: "шпинат", productId: 1371, quantity: "0.5", unit: "пучок" },
+          { name: "нут консервированный", productId: 411, quantity: "1", unit: "банка" },
+          { name: "лайм", productId: null, quantity: "1", unit: "шт" },
+          { name: "кинза", subId: "herbs", substitutes: ["зелень"], productId: null, quantity: "1", unit: "пучок" },
+          { name: "соль, перец", productId: null, quantity: "", unit: "" }
         ],
         instructions: [
           "Промойте рис и отварите до готовности (или используйте вчерашний).",
@@ -625,24 +626,24 @@ export const RECIPES_DATABASE = [
         labelEn: "With Coconut Milk",
         time: "40",
         ingredients: [
-          { name: "рис", quantity: "250", unit: "г" },
-          { name: "кокосовое молоко", quantity: "600", unit: "мл" },
-          { name: "томатная паста", quantity: "100", unit: "мл" },
-          { name: "куриное филе", quantity: "2", unit: "шт" },
-          { name: "лук репчатый", quantity: "1", unit: "шт" },
-          { name: "растительное масло", quantity: "50", unit: "мл" },
-          { name: "чеснок", quantity: "1", unit: "зубчик" },
-          { name: "карри", quantity: "2", unit: "ч. л." },
-          { name: "имбирь", quantity: "1", unit: "ч. л." },
-          { name: "помидоры", quantity: "1", unit: "шт" },
-          { name: "сахар", quantity: "3-4", unit: "щепотки" },
-          { name: "соль", quantity: "0.5", unit: "ч. л." },
-          { name: "кориандр", quantity: "1", unit: "ч. л." },
-          { name: "перец красный молотый", quantity: "1", unit: "ч. л." },
-          { name: "перец чили", quantity: "1", unit: "ч. л." },
-          { name: "куркума", quantity: "0.5", unit: "ч. л." },
-          { name: "лавровый лист", quantity: "", unit: "" },
-          { name: "зелень", quantity: "", unit: "" }
+          { name: "рис", productId: 306, quantity: "250", unit: "г" },
+          { name: "кокосовое молоко", productId: 562, quantity: "600", unit: "мл" },
+          { name: "томатная паста", productId: null, quantity: "100", unit: "мл" },
+          { name: "куриное филе", productId: 728, quantity: "2", unit: "шт" },
+          { name: "лук репчатый", productId: 1333, quantity: "1", unit: "шт" },
+          { name: "растительное масло", productId: 1206, quantity: "50", unit: "мл" },
+          { name: "чеснок", productId: 1370, quantity: "1", unit: "зубчик" },
+          { name: "карри", productId: null, quantity: "2", unit: "ч. л." },
+          { name: "имбирь", productId: 1310, quantity: "1", unit: "ч. л." },
+          { name: "помидоры", productId: 1347, quantity: "1", unit: "шт" },
+          { name: "сахар", productId: 1901, quantity: "3-4", unit: "щепотки" },
+          { name: "соль", productId: null, quantity: "0.5", unit: "ч. л." },
+          { name: "кориандр", productId: null, quantity: "1", unit: "ч. л." },
+          { name: "перец красный молотый", productId: null, quantity: "1", unit: "ч. л." },
+          { name: "перец чили", productId: null, quantity: "1", unit: "ч. л." },
+          { name: "куркума", productId: null, quantity: "0.5", unit: "ч. л." },
+          { name: "лавровый лист", productId: null, quantity: "", unit: "" },
+          { name: "зелень", productId: null, quantity: "", unit: "" }
         ],
         instructions: [
           "Отварите рис до готовности.",
@@ -660,14 +661,14 @@ export const RECIPES_DATABASE = [
         labelEn: "With Tomato Juice",
         time: "35",
         ingredients: [
-          { name: "креветки", quantity: "0.75", unit: "кг" },
-          { name: "рис", quantity: "50", unit: "г" },
-          { name: "яйца", quantity: "3", unit: "шт" },
-          { name: "масло сливочное", quantity: "30", unit: "г" },
-          { name: "томатный сок", quantity: "500", unit: "мл" },
-          { name: "карри", quantity: "", unit: "" },
-          { name: "соль", quantity: "", unit: "" },
-          { name: "перец", quantity: "", unit: "" }
+          { name: "креветки", productId: 820, quantity: "0.75", unit: "кг" },
+          { name: "рис", productId: 306, quantity: "50", unit: "г" },
+          { name: "яйца", productId: 601, quantity: "3", unit: "шт" },
+          { name: "масло сливочное", productId: 1201, quantity: "30", unit: "г" },
+          { name: "томатный сок", productId: 2015, quantity: "500", unit: "мл" },
+          { name: "карри", productId: null, quantity: "", unit: "" },
+          { name: "соль", productId: null, quantity: "", unit: "" },
+          { name: "перец", productId: null, quantity: "", unit: "" }
         ],
         instructions: [
           "Отварите креветки в подсоленной воде до готовности.",
@@ -695,16 +696,16 @@ export const RECIPES_DATABASE = [
     difficulty: "средний",
     tags: ["популярное", "сытное"],
     ingredients: [
-      { name: "спагетти", subId: "pasta_type", substitutes: ["паста"], quantity: "400", unit: "г" },
-      { name: "соль", quantity: "", unit: "" },
-      { name: "бекон", subId: "meat_type", substitutes: ["гуанчале 20%"], quantity: "100", unit: "г" },
-      { name: "сливки", meta: "жирные", quantity: "300", unit: "мл" },
-      { name: "яичный желток", quantity: "1-2", unit: "шт" },
-      { name: "пармезан", subId: "cheese_type", substitutes: ["другой твёрдый сыр"], quantity: "100", unit: "г" },
-      { name: "чеснок", quantity: "2", unit: "зубчика" },
-      { name: "перец чёрный молотый", quantity: "", unit: "" },
-      { name: "оливковое масло", quantity: "3", unit: "ст. л." },
-      { name: "петрушка", subId: "herbs", substitutes: ["другая зелень"], quantity: "100", unit: "г" }
+      { name: "спагетти", subId: "pasta_type", substitutes: ["паста"], productId: 202, quantity: "400", unit: "г" },
+      { name: "соль", productId: null, quantity: "", unit: "" },
+      { name: "бекон", subId: "meat_type", substitutes: ["гуанчале 20%"], productId: 758, quantity: "100", unit: "г" },
+      { name: "сливки", meta: "жирные", productId: 509, quantity: "300", unit: "мл" },
+      { name: "яичный желток", productId: 604, quantity: "1-2", unit: "шт" },
+      { name: "пармезан", subId: "cheese_type", substitutes: ["другой твёрдый сыр"], productId: 546, quantity: "100", unit: "г" },
+      { name: "чеснок", productId: 1370, quantity: "2", unit: "зубчика" },
+      { name: "перец чёрный молотый", productId: null, quantity: "", unit: "" },
+      { name: "оливковое масло", productId: 1205, quantity: "3", unit: "ст. л." },
+      { name: "петрушка", subId: "herbs", substitutes: ["другая зелень"], productId: null, quantity: "100", unit: "г" }
     ],
     instructions: [
       "Отварите пасту в большом количестве подсоленной воды до состояния al dente (обычно 10–12 минут).",
@@ -726,14 +727,14 @@ export const RECIPES_DATABASE = [
         labelEn: "With Bacon",
         time: "25",
         ingredients: [
-          { name: "спагетти", quantity: "320", unit: "г" },
-          { name: "бекон", quantity: "150-200", unit: "г" },
-          { name: "пармезан", meta: "тёртый 20–30 г для подачи", quantity: "150", unit: "г" },
-          { name: "яичные желтки", quantity: "2", unit: "шт" },
-          { name: "чеснок", quantity: "50-60", unit: "г" },
-          { name: "оливковое масло", quantity: "1-2", unit: "ст. л." },
-          { name: "соль", quantity: "", unit: "" },
-          { name: "свежемолотый чёрный перец", quantity: "2-3", unit: "щепотка" }
+          { name: "спагетти", productId: 202, quantity: "320", unit: "г" },
+          { name: "бекон", productId: 758, quantity: "150-200", unit: "г" },
+          { name: "пармезан", meta: "тёртый 20–30 г для подачи", productId: 546, quantity: "150", unit: "г" },
+          { name: "яичные желтки", productId: 604, quantity: "2", unit: "шт" },
+          { name: "чеснок", productId: 1370, quantity: "50-60", unit: "г" },
+          { name: "оливковое масло", productId: 1205, quantity: "1-2", unit: "ст. л." },
+          { name: "соль", productId: null, quantity: "", unit: "" },
+          { name: "свежемолотый чёрный перец", productId: null, quantity: "2-3", unit: "щепотка" }
         ],
         instructions: [
           "Отварите спагетти в подсоленной кипящей воде до состояния al dente (обычно на 1–2 минуты меньше, чем указано на упаковке). Перед сливом воды отложите 50–100 мл пасты-отвара.",
@@ -754,15 +755,15 @@ export const RECIPES_DATABASE = [
         labelEn: "With Chicken",
         time: "30",
         ingredients: [
-          { name: "спагетти", quantity: "200", unit: "г" },
-          { name: "куриное филе", quantity: "250", unit: "г" },
-          { name: "бекон", quantity: "100", unit: "г" },
-          { name: "сливки", meta: "22%", quantity: "150", unit: "мл" },
-          { name: "яйцо", quantity: "2", unit: "шт" },
-          { name: "сыр твёрдый", quantity: "50", unit: "г" },
-          { name: "чеснок", quantity: "2", unit: "зубчика" },
-          { name: "лук репчатый", quantity: "1", unit: "шт" },
-          { name: "масло растительное", subId: "oil_type", substitutes: ["сливочное"], quantity: "", unit: "" }
+          { name: "спагетти", productId: 202, quantity: "200", unit: "г" },
+          { name: "куриное филе", productId: 728, quantity: "250", unit: "г" },
+          { name: "бекон", productId: 758, quantity: "100", unit: "г" },
+          { name: "сливки", meta: "22%", productId: 511, quantity: "150", unit: "мл" },
+          { name: "яйцо", productId: 601, quantity: "2", unit: "шт" },
+          { name: "сыр твёрдый", productId: 560, quantity: "50", unit: "г" },
+          { name: "чеснок", productId: 1370, quantity: "2", unit: "зубчика" },
+          { name: "лук репчатый", productId: 1333, quantity: "1", unit: "шт" },
+          { name: "масло растительное", subId: "oil_type", substitutes: ["сливочное"], productId: 1206, quantity: "", unit: "" }
         ],
         instructions: [
           "Нарежьте куриное филе небольшими кусочками, бекон — полосками.",
@@ -783,16 +784,16 @@ export const RECIPES_DATABASE = [
         labelEn: "With Shrimp",
         time: "30",
         ingredients: [
-          { name: "спагетти", subId: "pasta_type", substitutes: ["паста"], quantity: "400", unit: "г" },
-          { name: "соль", quantity: "", unit: "" },
-          { name: "бекон", subId: "meat_type", substitutes: ["гуанчале 20%"], quantity: "100", unit: "г" },
-          { name: "сливки", meta: "жирные", quantity: "300", unit: "мл" },
-          { name: "яичный желток", quantity: "1-2", unit: "шт" },
-          { name: "пармезан", subId: "cheese_type", substitutes: ["другой твёрдый сыр"], quantity: "100", unit: "г" },
-          { name: "чеснок", quantity: "2", unit: "зубчика" },
-          { name: "перец чёрный молотый", quantity: "", unit: "" },
-          { name: "оливковое масло", quantity: "3", unit: "ст. л." },
-          { name: "петрушка", subId: "herbs", substitutes: ["другая зелень"], quantity: "100", unit: "г" }
+          { name: "спагетти", subId: "pasta_type", substitutes: ["паста"], productId: 202, quantity: "400", unit: "г" },
+          { name: "соль", productId: null, quantity: "", unit: "" },
+          { name: "бекон", subId: "meat_type", substitutes: ["гуанчале 20%"], productId: 758, quantity: "100", unit: "г" },
+          { name: "сливки", meta: "жирные", productId: 509, quantity: "300", unit: "мл" },
+          { name: "яичный желток", productId: 604, quantity: "1-2", unit: "шт" },
+          { name: "пармезан", subId: "cheese_type", substitutes: ["другой твёрдый сыр"], productId: 546, quantity: "100", unit: "г" },
+          { name: "чеснок", productId: 1370, quantity: "2", unit: "зубчика" },
+          { name: "перец чёрный молотый", productId: null, quantity: "", unit: "" },
+          { name: "оливковое масло", productId: 1205, quantity: "3", unit: "ст. л." },
+          { name: "петрушка", subId: "herbs", substitutes: ["другая зелень"], productId: null, quantity: "100", unit: "г" }
         ],
         instructions: [
           "Отварите пасту в большом количестве подсоленной воды до состояния al dente (обычно 10–12 минут).",
@@ -824,15 +825,15 @@ export const RECIPES_DATABASE = [
     difficulty: "легкий",
     tags: ["низкокалорийное", "популярное", "сытное"],
     ingredients: [
-      { name: "куриная грудка", quantity: "300", unit: "г" },
-      { name: "морковь", quantity: "300", unit: "г" },
-      { name: "лук репчатый", quantity: "1", unit: "шт" },
-      { name: "помидоры", quantity: "2", unit: "шт" },
-      { name: "чеснок", quantity: "2", unit: "зубчика" },
-      { name: "масло растительное", quantity: "3", unit: "ст. л." },
-      { name: "сыр", meta: "твёрдый", quantity: "50", unit: "г" },
-      { name: "соль, перец", quantity: "", unit: "" },
-      { name: "зелень", meta: "петрушка, укроп", quantity: "1", unit: "пучок" }
+      { name: "куриная грудка", productId: 728, quantity: "300", unit: "г" },
+      { name: "морковь", productId: 1337, quantity: "300", unit: "г" },
+      { name: "лук репчатый", productId: 1333, quantity: "1", unit: "шт" },
+      { name: "помидоры", productId: 1347, quantity: "2", unit: "шт" },
+      { name: "чеснок", productId: 1370, quantity: "2", unit: "зубчика" },
+      { name: "масло растительное", productId: 1206, quantity: "3", unit: "ст. л." },
+      { name: "сыр", meta: "твёрдый", productId: 534, quantity: "50", unit: "г" },
+      { name: "соль, перец", productId: null, quantity: "", unit: "" },
+      { name: "зелень", meta: "петрушка, укроп", productId: null, quantity: "1", unit: "пучок" }
     ],
     instructions: [
       "Нарежьте куриную грудку небольшими кусочками, посолите и поперчите.",
@@ -856,15 +857,15 @@ export const RECIPES_DATABASE = [
         calories: 150,
         caloriesPerServing: 150,
         ingredients: [
-          { name: "куриная грудка", quantity: "300", unit: "г" },
-          { name: "морковь", quantity: "300", unit: "г" },
-          { name: "лук репчатый", quantity: "1", unit: "шт" },
-          { name: "помидоры", quantity: "2", unit: "шт" },
-          { name: "чеснок", quantity: "2", unit: "зубчика" },
-          { name: "масло растительное", quantity: "3", unit: "ст. л." },
-          { name: "сыр", meta: "твёрдый", quantity: "50", unit: "г" },
-          { name: "соль, перец", quantity: "", unit: "" },
-          { name: "зелень", meta: "петрушка, укроп", quantity: "1", unit: "пучок" }
+          { name: "куриная грудка", productId: 728, quantity: "300", unit: "г" },
+          { name: "морковь", productId: 1337, quantity: "300", unit: "г" },
+          { name: "лук репчатый", productId: 1333, quantity: "1", unit: "шт" },
+          { name: "помидоры", productId: 1347, quantity: "2", unit: "шт" },
+          { name: "чеснок", productId: 1370, quantity: "2", unit: "зубчика" },
+          { name: "масло растительное", productId: 1206, quantity: "3", unit: "ст. л." },
+          { name: "сыр", meta: "твёрдый", productId: 534, quantity: "50", unit: "г" },
+          { name: "соль, перец", productId: null, quantity: "", unit: "" },
+          { name: "зелень", meta: "петрушка, укроп", productId: null, quantity: "1", unit: "пучок" }
         ],
         instructions: [
           "Нарежьте куриную грудку небольшими кусочками, посолите и поперчите.",
@@ -888,17 +889,17 @@ export const RECIPES_DATABASE = [
         calories: 160,
         caloriesPerServing: 160,
         ingredients: [
-          { name: "филе куриной грудки", quantity: "700", unit: "г" },
-          { name: "помидоры", quantity: "500", unit: "г" },
-          { name: "морковь", quantity: "2", unit: "шт" },
-          { name: "лук репчатый", quantity: "2", unit: "шт" },
-          { name: "чеснок", quantity: "1", unit: "зубчик" },
-          { name: "томатная паста", quantity: "2", unit: "ст. л." },
-          { name: "соль", quantity: "", unit: "" },
-          { name: "перец молотый чёрный", quantity: "3", unit: "щепотки" },
-          { name: "зелень", meta: "укроп, петрушка", quantity: "1", unit: "пучок" },
-          { name: "вода", subId: "liquid", substitutes: ["бульон"], quantity: "", unit: "" },
-          { name: "масло растительное", quantity: "1", unit: "ст. л." }
+          { name: "филе куриной грудки", productId: 728, quantity: "700", unit: "г" },
+          { name: "помидоры", productId: 1347, quantity: "500", unit: "г" },
+          { name: "морковь", productId: 1337, quantity: "2", unit: "шт" },
+          { name: "лук репчатый", productId: 1333, quantity: "2", unit: "шт" },
+          { name: "чеснок", productId: 1370, quantity: "1", unit: "зубчик" },
+          { name: "томатная паста", productId: null, quantity: "2", unit: "ст. л." },
+          { name: "соль", productId: null, quantity: "", unit: "" },
+          { name: "перец молотый чёрный", productId: null, quantity: "3", unit: "щепотки" },
+          { name: "зелень", meta: "укроп, петрушка", productId: null, quantity: "1", unit: "пучок" },
+          { name: "вода", subId: "liquid", substitutes: ["бульон"], productId: null, quantity: "", unit: "" },
+          { name: "масло растительное", productId: 1206, quantity: "1", unit: "ст. л." }
         ],
         instructions: [
           "Нарежьте куриные грудки небольшими кусочками, посолите и поперчите.",
@@ -919,17 +920,17 @@ export const RECIPES_DATABASE = [
         calories: 140,
         caloriesPerServing: 140,
         ingredients: [
-          { name: "куриная грудка", quantity: "1", unit: "шт" },
-          { name: "морковь", quantity: "1", unit: "шт" },
-          { name: "лук репчатый", quantity: "1", unit: "шт" },
-          { name: "помидоры", quantity: "4", unit: "шт" },
-          { name: "сметана", quantity: "150", unit: "г" },
-          { name: "соль, перец", quantity: "2", unit: "щепотки" },
-          { name: "чеснок", quantity: "1", unit: "зубчик" },
-          { name: "масло растительное", quantity: "2", unit: "ст. л." },
-          { name: "зелень", quantity: "3", unit: "веточки" },
-          { name: "вода", quantity: "", unit: "" },
-          { name: "сыр", quantity: "", unit: "" }
+          { name: "куриная грудка", productId: 728, quantity: "1", unit: "шт" },
+          { name: "морковь", productId: 1337, quantity: "1", unit: "шт" },
+          { name: "лук репчатый", productId: 1333, quantity: "1", unit: "шт" },
+          { name: "помидоры", productId: 1347, quantity: "4", unit: "шт" },
+          { name: "сметана", productId: 517, quantity: "150", unit: "г" },
+          { name: "соль, перец", productId: null, quantity: "2", unit: "щепотки" },
+          { name: "чеснок", productId: 1370, quantity: "1", unit: "зубчик" },
+          { name: "масло растительное", productId: 1206, quantity: "2", unit: "ст. л." },
+          { name: "зелень", productId: null, quantity: "3", unit: "веточки" },
+          { name: "вода", productId: null, quantity: "", unit: "" },
+          { name: "сыр", productId: 534, quantity: "", unit: "" }
         ],
         instructions: [
           "Нарежьте куриную грудку небольшими кусочками, посолите и поперчите.",
