@@ -11,6 +11,8 @@ import {
   getEffectiveIngredientName
 } from "./utils/substitutions";
 
+import { PRODUCTS_BY_ID } from './data/productsNutritionById.js';
+
 // Вынесенные компоненты
 import Header from "./components/Header";
 import HomeScreen from "./components/HomeScreen";
