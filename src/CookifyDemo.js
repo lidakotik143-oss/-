@@ -12,6 +12,7 @@ import {
 } from "./utils/substitutions";
 
 import { PRODUCTS_BY_ID } from './data/productsNutritionById.js';
+import { calculateRecipeNutrition } from "./utils/nutritionCalculator";
 
 // Вынесенные компоненты
 import Header from "./components/Header";
