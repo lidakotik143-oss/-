@@ -861,9 +861,15 @@ export default function CookifyDemo() {
         const timeInfo = getTimeCategory(recipeTime);
         const timeMinutes = parseInt(recipeTime, 10);
         const progressPercentage = Math.min((timeMinutes / 120) * 100, 100);
-        const kcalPerServing = recipeCalories;
         const servings = selectedRecipe.servings ?? 2;
         const closeModal = () => { setSelectedRecipe(null); setSelectedRecipeVariantKey(null); };
+
+        // 🆕 НОВОЕ: Расчёт БЖУ автоматически из ингредиентов
+        const nutritionInfo = calculateRecipeNutrition(activeRecipe.ingredients || [], servings);
+        const kcalPerServing = Math.round(nutritionInfo.perServing.calories || recipeCalories || 0);
+        const proteinPerServing = Math.round(nutritionInfo.perServing.protein || 0);
+        const fatPerServing = Math.round(nutritionInfo.perServing.fat || 0);
+        const carbsPerServing = Math.round(nutritionInfo.perServing.carbs || 0);
 
         const updateSubstitution = (subId, value) => {
           setUserSubstitutions(prev => {
@@ -925,11 +931,28 @@ export default function CookifyDemo() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className={`${fontSize.tiny} ${theme.textSecondary} mb-1`}>{t("Калории (на 1 порцию)", "Calories (per serving)")}</div>
+                    <div className={`${fontSize.tiny} ${theme.textSecondary} mb-1`}>{t("На 1 порцию", "Per serving")}</div>
                     <div className={`${fontSize.body} font-bold ${theme.accentText}`}>{kcalPerServing} {t("ккал", "kcal")}</div>
                     <div className={`${fontSize.tiny} ${theme.textSecondary} mt-1`}>{t("Порции:", "Servings:")} {servings}</div>
                   </div>
                 </div>
+                
+                {/* 🆕 НОВОЕ: Отображение БЖУ в красивых плитках */}
+                <div className="grid grid-cols-3 gap-2 mb-3">
+                  <div className={`${theme.cardBg} rounded-lg p-2 text-center border ${theme.border}`}>
+                    <div className={`${fontSize.tiny} ${theme.textSecondary}`}>{t("Белки", "Protein")}</div>
+                    <div className={`${fontSize.small} font-bold ${theme.text}`}>{proteinPerServing}{t("г", "g")}</div>
+                  </div>
+                  <div className={`${theme.cardBg} rounded-lg p-2 text-center border ${theme.border}`}>
+                    <div className={`${fontSize.tiny} ${theme.textSecondary}`}>{t("Жиры", "Fat")}</div>
+                    <div className={`${fontSize.small} font-bold ${theme.text}`}>{fatPerServing}{t("г", "g")}</div>
+                  </div>
+                  <div className={`${theme.cardBg} rounded-lg p-2 text-center border ${theme.border}`}>
+                    <div className={`${fontSize.tiny} ${theme.textSecondary}`}>{t("Углеводы", "Carbs")}</div>
+                    <div className={`${fontSize.small} font-bold ${theme.text}`}>{carbsPerServing}{t("г", "g")}</div>
+                  </div>
+                </div>
+
                 <div className="w-full bg-gray-200 rounded-full h-2.5 mb-2">
                   <div className="h-2.5 rounded-full transition-all duration-500" style={{ width: `${progressPercentage}%`, backgroundColor: timeInfo.color }}></div>
                 </div>
