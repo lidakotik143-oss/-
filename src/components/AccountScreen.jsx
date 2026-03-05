@@ -1,5 +1,5 @@
 import React from "react";
-import { FaUser, FaCalendarAlt, FaUtensils, FaShoppingCart } from "react-icons/fa";
+import { FaUser, FaCalendarAlt, FaUtensils, FaShoppingCart, FaTint } from "react-icons/fa";
 import ProfileCard from "./account/ProfileCard";
 import ProfileEditForm from "./account/ProfileEditForm";
 import CustomizationPanel from "./account/CustomizationPanel";
@@ -8,6 +8,7 @@ import PlannerModal from "./account/PlannerModal";
 import HistoryTab from "./account/HistoryTab";
 import PlannerTab from "./account/PlannerTab";
 import ShoppingListTab from "./account/ShoppingListTab";
+import WaterTracker from "./WaterTracker";
 
 export default function AccountScreen(props) {
   const {
@@ -23,7 +24,9 @@ export default function AccountScreen(props) {
     showAddMealModal,
     setShowAddMealModal,
     showPlannerModal,
-    setShowPlannerModal
+    setShowPlannerModal,
+    language,
+    userData
   } = props;
 
   return (
@@ -47,7 +50,7 @@ export default function AccountScreen(props) {
         <>
           <ProfileCard {...props} />
 
-          {/* Табы: История / План меню / Список покупок */}
+          {/* Табы: История / План меню / Список покупок / Трекер воды */}
           <div className={`${theme.cardBg} p-3 rounded-xl shadow flex gap-2 overflow-x-auto`}>
             <button
               onClick={() => setAccountTab("history")}
@@ -70,11 +73,19 @@ export default function AccountScreen(props) {
               <FaShoppingCart />
               {t("Покупки", "Shopping")}
             </button>
+            <button
+              onClick={() => setAccountTab("water")}
+              className={`flex-1 min-w-fit px-4 py-2 rounded-xl ${fontSize.small} transition flex items-center justify-center gap-2 ${accountTab === "water" ? `${theme.accent} text-white` : `${theme.border} border`}`}
+            >
+              <FaTint />
+              {t("Вода", "Water")}
+            </button>
           </div>
 
           {accountTab === "history" && <HistoryTab {...props} />}
           {accountTab === "planner" && <PlannerTab {...props} />}
           {accountTab === "shopping" && <ShoppingListTab {...props} />}
+          {accountTab === "water" && <WaterTracker theme={theme} fontSize={fontSize} language={language} userData={userData} />}
 
           <CustomizationPanel {...props} />
         </>
