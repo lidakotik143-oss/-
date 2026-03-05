@@ -528,15 +528,48 @@ export default function CookifyDemo() {
     }, 0);
   };
 
-  const calculatePeriodStats = () => {
+  // 🆕 НОВАЯ ФУНКЦИЯ: Расчёт общего КБЖУ для периода истории
+  const calculatePeriodNutrition = () => {
     const filtered = getFilteredHistory();
-    const totalCalories = filtered.reduce((sum, entry) => {
+    let totalCalories = 0;
+    let totalProtein = 0;
+    let totalFat = 0;
+    let totalCarbs = 0;
+
+    filtered.forEach(entry => {
+      // Определяем активный рецепт (базовый или вариант)
+      let activeRecipe = entry.recipe;
       if (entry.variantKey && entry.recipe.variants) {
         const variant = entry.recipe.variants.find(v => v.key === entry.variantKey);
-        if (variant) return sum + (variant.caloriesPerServing || variant.calories || entry.recipe.caloriesPerServing || entry.recipe.calories || 0);
+        if (variant) {
+          activeRecipe = variant;
+        }
       }
-      return sum + (entry.recipe.caloriesPerServing || entry.recipe.calories || 0);
-    }, 0);
+
+      // Получаем количество порций (по умолчанию servings рецепта)
+      const servings = entry.recipe.servings || 2;
+
+      // Рассчитываем КБЖУ для рецепта
+      const nutritionInfo = calculateRecipeNutrition(activeRecipe.ingredients || [], servings);
+      
+      totalCalories += nutritionInfo.total.calories || (activeRecipe.caloriesPerServing || activeRecipe.calories || 0) * servings;
+      totalProtein += nutritionInfo.total.protein || 0;
+      totalFat += nutritionInfo.total.fat || 0;
+      totalCarbs += nutritionInfo.total.carbs || 0;
+    });
+
+    return {
+      totalCalories: Math.round(totalCalories),
+      totalProtein: Math.round(totalProtein),
+      totalFat: Math.round(totalFat),
+      totalCarbs: Math.round(totalCarbs)
+    };
+  };
+
+  const calculatePeriodStats = () => {
+    const filtered = getFilteredHistory();
+    const { totalCalories } = calculatePeriodNutrition();
+    
     const getDaysInPeriod = () => {
       if (viewPeriod === "day") return 1;
       if (viewPeriod === "week") return 7;
@@ -1153,7 +1186,7 @@ export default function CookifyDemo() {
           selectedDate={selectedDate} setSelectedDate={setSelectedDate} selectedWeekDay={selectedWeekDay} setSelectedWeekDay={setSelectedWeekDay}
           MONTH_NAMES={MONTH_NAMES} WEEKDAY_NAMES={WEEKDAY_NAMES} WEEKDAY_SHORT={WEEKDAY_SHORT} MEAL_CATEGORIES={MEAL_CATEGORIES} MEAL_LABELS={MEAL_LABELS}
           SAMPLE_RECIPES={SAMPLE_RECIPES} getFilteredHistory={getFilteredHistory} getMealsForDay={getMealsForDay} calculateDayCalories={calculateDayCalories}
-          calculatePeriodStats={calculatePeriodStats} getWeekDays={getWeekDays} getWeekRange={getWeekRange} formatDate={formatDate}
+          calculatePeriodStats={calculatePeriodStats} calculatePeriodNutrition={calculatePeriodNutrition} getWeekDays={getWeekDays} getWeekRange={getWeekRange} formatDate={formatDate}
           getPeriodDisplayText={getPeriodDisplayText} addDays={addDays} addWeeks={addWeeks} addMonths={addMonths} setMonthYear={setMonthYear}
           plannerWeekDate={plannerWeekDate} setPlannerWeekDate={setPlannerWeekDate} weeklyPlan={weeklyPlan} getPlannerRecipes={getPlannerRecipes}
           calculatePlannerDayCalories={calculatePlannerDayCalories} showAddMealModal={showAddMealModal} setShowAddMealModal={setShowAddMealModal}
