@@ -876,7 +876,7 @@ export default function CookifyDemo() {
         // 🆕 Коэффициент масштабирования для ингредиентов
         const servingsMultiplier = currentServings / baseServings;
 
-        // 🔥 ИСПРАВЛЕНО: Расчёт ОБЩЕГО БЖУ на все порции (не делим на порции!)
+        // 🔥 ИСПРАВЛЕНО: Рассчитываем КБЖУ для базового количества порций, затем масштабируем
         const nutritionInfo = calculateRecipeNutrition(activeRecipe.ingredients || [], baseServings);
         const totalKcal = Math.round((nutritionInfo.total.calories || recipeCalories * baseServings || 0) * servingsMultiplier);
         const totalProtein = Math.round((nutritionInfo.total.protein || 0) * servingsMultiplier);
@@ -979,7 +979,7 @@ export default function CookifyDemo() {
                   </div>
                 </div>
                 
-                {/* 🔥 БЖУ плитки теперь показывают ОБЩИЕ значения */}
+                {/* БЖУ плитки */}
                 <div className="grid grid-cols-3 gap-2 mb-3">
                   <div className={`${theme.cardBg} rounded-lg p-2 text-center border ${theme.border}`}>
                     <div className={`${fontSize.tiny} ${theme.textSecondary}`}>{t("Белки", "Protein")}</div>
