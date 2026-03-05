@@ -1,6 +1,6 @@
 // =================== БЛОК 1: Импорты и примерные данные ===================
 import React, { useState, useEffect } from "react";
-import { FaTimes } from "react-icons/fa";
+import { FaTimes, FaPlus, FaMinus } from "react-icons/fa";
 import { RECIPES_DATABASE } from './recipesData';
 
 import {
@@ -273,6 +273,9 @@ export default function CookifyDemo() {
 
   const [selectedRecipe, setSelectedRecipe] = useState(null);
   const [selectedRecipeVariantKey, setSelectedRecipeVariantKey] = useState(null);
+  
+  // 🆕 НОВОЕ: количество порций для текущего открытого рецепта
+  const [currentServings, setCurrentServings] = useState(2);
 
   // ✅ НОВОЕ: сохранённые замены ингредиентов для пользователя
   const [userSubstitutions, setUserSubstitutions] = useState({});
@@ -370,6 +373,13 @@ export default function CookifyDemo() {
   useEffect(() => {
     setOpenSubPicker(null);
   }, [selectedRecipe, selectedRecipeVariantKey]);
+  
+  // 🆕 Сбрасываем количество порций при открытии нового рецепта
+  useEffect(() => {
+    if (selectedRecipe) {
+      setCurrentServings(selectedRecipe.servings ?? 2);
+    }
+  }, [selectedRecipe]);
 
   const GOALS = language === "ru" ? GOAL_OPTIONS_RU : GOAL_OPTIONS_EN;
   const LIFESTYLE = language === "ru" ? LIFESTYLE_RU : LIFESTYLE_EN;
@@ -854,18 +864,20 @@ export default function CookifyDemo() {
         const subsKey = getRecipeSubKey(selectedRecipe.id, activeVariant?.key || null);
         const recipeSubs = userSubstitutions?.[subsKey] || {};
         
-        // 🔥 ИСПРАВЛЕНО: Берем время и калории из варианта, если есть, иначе из базового рецепта
         const recipeTime = activeVariant?.time ?? selectedRecipe.time;
         const recipeCalories = activeVariant?.caloriesPerServing ?? activeVariant?.calories ?? selectedRecipe.caloriesPerServing ?? selectedRecipe.calories;
         
         const timeInfo = getTimeCategory(recipeTime);
         const timeMinutes = parseInt(recipeTime, 10);
         const progressPercentage = Math.min((timeMinutes / 120) * 100, 100);
-        const servings = selectedRecipe.servings ?? 2;
+        const baseServings = selectedRecipe.servings ?? 2;
         const closeModal = () => { setSelectedRecipe(null); setSelectedRecipeVariantKey(null); };
 
-        // 🆕 НОВОЕ: Расчёт БЖУ автоматически из ингредиентов
-        const nutritionInfo = calculateRecipeNutrition(activeRecipe.ingredients || [], servings);
+        // 🆕 Коэффициент масштабирования для ингредиентов
+        const servingsMultiplier = currentServings / baseServings;
+
+        // 🆕 НОВОЕ: Расчёт БЖУ с учётом выбранного количества порций
+        const nutritionInfo = calculateRecipeNutrition(activeRecipe.ingredients || [], currentServings);
         const kcalPerServing = Math.round(nutritionInfo.perServing.calories || recipeCalories || 0);
         const proteinPerServing = Math.round(nutritionInfo.perServing.protein || 0);
         const fatPerServing = Math.round(nutritionInfo.perServing.fat || 0);
@@ -895,6 +907,16 @@ export default function CookifyDemo() {
 
         const toggleSubPicker = (subId) => {
           setOpenSubPicker(prev => (prev === subId ? null : subId));
+        };
+        
+        // 🆕 Функция масштабирования количества ингредиента
+        const scaleIngredientQuantity = (quantity) => {
+          if (!quantity) return '';
+          const num = parseFloat(quantity.toString().replace(',', '.'));
+          if (isNaN(num)) return quantity;
+          const scaled = num * servingsMultiplier;
+          // Округляем до 1 знака после запятой
+          return scaled % 1 === 0 ? scaled.toString() : scaled.toFixed(1).replace('.', ',');
         };
 
         return (
@@ -933,11 +955,30 @@ export default function CookifyDemo() {
                   <div className="text-right">
                     <div className={`${fontSize.tiny} ${theme.textSecondary} mb-1`}>{t("На 1 порцию", "Per serving")}</div>
                     <div className={`${fontSize.body} font-bold ${theme.accentText}`}>{kcalPerServing} {t("ккал", "kcal")}</div>
-                    <div className={`${fontSize.tiny} ${theme.textSecondary} mt-1`}>{t("Порции:", "Servings:")} {servings}</div>
+                    
+                    {/* 🆕 НОВОЕ: Регулятор количества порций */}
+                    <div className="flex items-center justify-end gap-2 mt-2">
+                      <button
+                        onClick={() => setCurrentServings(Math.max(1, currentServings - 1))}
+                        className={`w-6 h-6 flex items-center justify-center rounded-full ${theme.accent} text-white hover:opacity-80 transition`}
+                        disabled={currentServings <= 1}
+                      >
+                        <FaMinus size={10} />
+                      </button>
+                      <span className={`${fontSize.small} font-semibold ${theme.text} min-w-[60px] text-center`}>
+                        {currentServings} {t(currentServings === 1 ? "порция" : "порции", currentServings === 1 ? "serving" : "servings")}
+                      </span>
+                      <button
+                        onClick={() => setCurrentServings(currentServings + 1)}
+                        className={`w-6 h-6 flex items-center justify-center rounded-full ${theme.accent} text-white hover:opacity-80 transition`}
+                      >
+                        <FaPlus size={10} />
+                      </button>
+                    </div>
                   </div>
                 </div>
                 
-                {/* 🆕 НОВОЕ: Отображение БЖУ в красивых плитках */}
+                {/* БЖУ плитки */}
                 <div className="grid grid-cols-3 gap-2 mb-3">
                   <div className={`${theme.cardBg} rounded-lg p-2 text-center border ${theme.border}`}>
                     <div className={`${fontSize.tiny} ${theme.textSecondary}`}>{t("Белки", "Protein")}</div>
@@ -976,6 +1017,9 @@ export default function CookifyDemo() {
                     const hasSubs = isObj && ing.subId && Array.isArray(ing.substitutes) && ing.substitutes.length > 0;
                     const currentChoice = isObj && ing.subId ? (recipeSubs?.[ing.subId] || "") : "";
                     const meta = isObj ? (ing.meta || "") : "";
+                    
+                    // 🆕 Масштабируем количество
+                    const scaledQuantity = isObj && ing.quantity ? scaleIngredientQuantity(ing.quantity) : '';
 
                     const canToggle = hasSubs && !isAllergy;
                     const isOpen = hasSubs && openSubPicker === ing.subId;
@@ -984,7 +1028,6 @@ export default function CookifyDemo() {
                       <li key={i} className={isAllergy ? "text-red-600 font-semibold" : ""}>
                         <div className="flex items-start justify-between gap-2">
                           <div className="flex-1 text-left">
-                            {/* Название + серый бейдж meta (без скобок) */}
                             <div className="flex flex-wrap items-baseline gap-2">
                               <span>{effectiveName}</span>
                               {meta && (
@@ -992,9 +1035,9 @@ export default function CookifyDemo() {
                                   {meta}
                                 </span>
                               )}
-                              {(isObj && (ing.quantity || ing.unit)) && (
+                              {(isObj && (scaledQuantity || ing.unit)) && (
                                 <span className={`${theme.textSecondary}`}>
-                                  {ing.quantity ? `— ${ing.quantity}` : ''} {ing.unit || ''}
+                                  {scaledQuantity ? `— ${scaledQuantity}` : ''} {ing.unit || ''}
                                 </span>
                               )}
                             </div>
@@ -1002,7 +1045,6 @@ export default function CookifyDemo() {
 
                           {hasSubs && (
                             <div className="flex items-center gap-2">
-                              {/* маленькая стрелка-тоггл */}
                               <button
                                 type="button"
                                 onClick={() => canToggle && toggleSubPicker(ing.subId)}
@@ -1087,7 +1129,6 @@ export default function CookifyDemo() {
                   <div className="flex gap-2 flex-wrap">
                     {MEAL_CATEGORIES.map(cat => (
                       <button key={cat} onClick={() => { 
-                        // Передаем текущий выбранный вариант при добавлении
                         addMealToHistory(selectedRecipe, cat, new Date().toISOString().split('T')[0], selectedRecipeVariantKey); 
                         closeModal(); 
                       }}
