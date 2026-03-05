@@ -13,6 +13,7 @@ import {
 
 import { PRODUCTS_BY_ID } from './data/productsNutritionById.js';
 import { calculateRecipeNutrition } from "./utils/nutritionCalculator";
+import { convertToGrams } from './unitConverter';
 
 // Вынесенные компоненты
 import Header from "./components/Header";
@@ -274,14 +275,9 @@ export default function CookifyDemo() {
   const [selectedRecipe, setSelectedRecipe] = useState(null);
   const [selectedRecipeVariantKey, setSelectedRecipeVariantKey] = useState(null);
   
-  // 🆕 НОВОЕ: количество порций для текущего открытого рецепта
   const [currentServings, setCurrentServings] = useState(2);
-
-  // ✅ НОВОЕ: сохранённые замены ингредиентов для пользователя
   const [userSubstitutions, setUserSubstitutions] = useState({});
-
-  // ✅ НОВОЕ: какое раскрыто меню замен внутри модалки рецепта
-  const [openSubPicker, setOpenSubPicker] = useState(null); // string subId | null
+  const [openSubPicker, setOpenSubPicker] = useState(null);
 
   const [searchMode, setSearchMode] = useState("name");
   const [searchQuery, setSearchQuery] = useState("");
@@ -307,20 +303,14 @@ export default function CookifyDemo() {
   const [plannerModalDate, setPlannerModalDate] = useState(null);
   const [plannerModalCategory, setPlannerModalCategory] = useState("breakfast");
   
-  // Новое состояние для списка покупок
   const [shoppingList, setShoppingList] = useState([]);
-
-  // ✨ НОВОЕ: Состояние для модального окна выбора варианта
   const [showVariantSelectionModal, setShowVariantSelectionModal] = useState(false);
   const [variantSelectionRecipe, setVariantSelectionRecipe] = useState(null);
   const [variantSelectionCallback, setVariantSelectionCallback] = useState(null);
-
-  // ✨ НОВОЕ: Состояние для кастомного модального уведомления
   const [showNotificationModal, setShowNotificationModal] = useState(false);
   const [notificationTitle, setNotificationTitle] = useState("");
   const [notificationMessage, setNotificationMessage] = useState("");
 
-  // ✅ ЗАГРУЗКА ИЗ localStorage ПРИ СТАРТЕ
   useEffect(() => {
     const savedUserData = localStorage.getItem("cookify_user");
     const savedLanguage = localStorage.getItem("cookify_language");
@@ -348,11 +338,9 @@ export default function CookifyDemo() {
     if (savedWeeklyPlan) setWeeklyPlan(JSON.parse(savedWeeklyPlan));
     if (savedShoppingList) setShoppingList(JSON.parse(savedShoppingList));
 
-    // ✅ замены ингредиентов (per-user, localStorage)
     setUserSubstitutions(loadUserSubstitutions());
   }, []);
 
-  // ✅ АВТОСОХРАНЕНИЕ ПРИ ИЗМЕНЕНИИ
   useEffect(() => { if (userData) localStorage.setItem("cookify_user", JSON.stringify(userData)); }, [userData]);
   useEffect(() => { localStorage.setItem("cookify_language", language); }, [language]);
   useEffect(() => { localStorage.setItem("cookify_unitSystem", unitSystem); }, [unitSystem]);
@@ -369,12 +357,10 @@ export default function CookifyDemo() {
     else setUnitSystem("metric");
   }, [language]);
 
-  // Сбрасываем раскрытый список замен при закрытии/переключении рецепта
   useEffect(() => {
     setOpenSubPicker(null);
   }, [selectedRecipe, selectedRecipeVariantKey]);
   
-  // 🆕 Сбрасываем количество порций при открытии нового рецепта
   useEffect(() => {
     if (selectedRecipe) {
       setCurrentServings(selectedRecipe.servings ?? 2);
@@ -477,9 +463,7 @@ export default function CookifyDemo() {
 
   const addToMealPlan = (recipe, category) => { setMealPlan(prev => ({ ...prev, [category]: [...prev[category], recipe] })); };
 
-  // ✨ ОБНОВЛЕННАЯ ФУНКЦИЯ: Добавление в историю с проверкой вариантов
   const addMealToHistory = (recipe, category, date = new Date().toISOString().split('T')[0], variantKey = null) => {
-    // Если у рецепта есть варианты и вариант не указан, показываем модальное окно выбора
     if (recipe.variants && recipe.variants.length > 0 && !variantKey) {
       setVariantSelectionRecipe(recipe);
       setVariantSelectionCallback(() => (selectedVariantKey) => {
@@ -495,7 +479,7 @@ export default function CookifyDemo() {
       date, 
       category, 
       recipe, 
-      variantKey, // Сохраняем выбранный вариант
+      variantKey,
       timestamp: new Date().toISOString() 
     };
     setMealHistory(prev => [...prev, newEntry]);
@@ -519,7 +503,6 @@ export default function CookifyDemo() {
   const calculateDayCalories = (dateKey) => {
     const dayMeals = getMealsForDay(dateKey);
     return dayMeals.reduce((sum, entry) => {
-      // Учитываем калории варианта, если он выбран
       if (entry.variantKey && entry.recipe.variants) {
         const variant = entry.recipe.variants.find(v => v.key === entry.variantKey);
         if (variant) return sum + (variant.caloriesPerServing || variant.calories || entry.recipe.caloriesPerServing || entry.recipe.calories || 0);
@@ -528,7 +511,6 @@ export default function CookifyDemo() {
     }, 0);
   };
 
-  // 🆕 НОВАЯ ФУНКЦИЯ: Расчёт общего КБЖУ для периода истории
   const calculatePeriodNutrition = () => {
     const filtered = getFilteredHistory();
     let totalCalories = 0;
@@ -537,7 +519,6 @@ export default function CookifyDemo() {
     let totalCarbs = 0;
 
     filtered.forEach(entry => {
-      // Определяем активный рецепт (базовый или вариант)
       let activeRecipe = entry.recipe;
       if (entry.variantKey && entry.recipe.variants) {
         const variant = entry.recipe.variants.find(v => v.key === entry.variantKey);
@@ -546,10 +527,7 @@ export default function CookifyDemo() {
         }
       }
 
-      // Получаем количество порций (по умолчанию servings рецепта)
       const servings = entry.recipe.servings || 2;
-
-      // Рассчитываем КБЖУ для рецепта
       const nutritionInfo = calculateRecipeNutrition(activeRecipe.ingredients || [], servings);
       
       totalCalories += nutritionInfo.total.calories || (activeRecipe.caloriesPerServing || activeRecipe.calories || 0) * servings;
@@ -582,12 +560,10 @@ export default function CookifyDemo() {
     return { totalMeals: filtered.length, totalCalories, avgCaloriesPerDay: viewPeriod === "day" ? totalCalories : Math.round(totalCalories / getDaysInPeriod()) };
   };
 
-  // ✨ ОБНОВЛЕННАЯ ФУНКЦИЯ: Добавление в планировщик с проверкой вариантов
   const addRecipeToPlanner = (dateKey, category, recipeIdOrRecipe, variantKey = null) => {
     const recipe = typeof recipeIdOrRecipe === 'object' ? recipeIdOrRecipe : SAMPLE_RECIPES.find(r => r.id === recipeIdOrRecipe);
     const recipeId = typeof recipeIdOrRecipe === 'object' ? recipeIdOrRecipe.id : recipeIdOrRecipe;
 
-    // Если у рецепта есть варианты и вариант не указан, показываем модальное окно выбора
     if (recipe && recipe.variants && recipe.variants.length > 0 && !variantKey) {
       setVariantSelectionRecipe(recipe);
       setVariantSelectionCallback(() => (selectedVariantKey) => {
@@ -600,7 +576,7 @@ export default function CookifyDemo() {
 
     setWeeklyPlan(prev => {
       const dayPlan = prev[dateKey] || { breakfast: [], lunch: [], snack: [], dinner: [] };
-      const planEntry = { recipeId, variantKey }; // Сохраняем и id рецепта и вариант
+      const planEntry = { recipeId, variantKey };
       return { ...prev, [dateKey]: { ...dayPlan, [category]: [...(dayPlan[category] || []), planEntry] } };
     });
   };
@@ -620,7 +596,6 @@ export default function CookifyDemo() {
     if (!dayPlan) return [];
     const entries = dayPlan[category] || [];
     return entries.map(entry => {
-      // Поддержка старого формата (просто ID) и нового (объект с recipeId и variantKey)
       const recipeId = typeof entry === 'object' ? entry.recipeId : entry;
       const variantKey = typeof entry === 'object' ? entry.variantKey : null;
       const recipe = SAMPLE_RECIPES.find(r => r.id === recipeId);
@@ -635,7 +610,6 @@ export default function CookifyDemo() {
     MEAL_CATEGORIES.forEach(cat => {
       const recipes = getPlannerRecipes(dateKey, cat);
       recipes.forEach(r => { 
-        // Учитываем калории варианта, если он выбран
         if (r.selectedVariantKey && r.variants) {
           const variant = r.variants.find(v => v.key === r.selectedVariantKey);
           if (variant) {
@@ -649,7 +623,6 @@ export default function CookifyDemo() {
     return total;
   };
 
-  // ИСПРАВЛЕННАЯ ФУНКЦИЯ: Генерация списка покупок из недельного плана
   const generateShoppingListFromPlanner = () => {
     const weekDays = getWeekDays(plannerWeekDate);
     const allIngredients = [];
@@ -658,10 +631,8 @@ export default function CookifyDemo() {
       MEAL_CATEGORIES.forEach(cat => {
         const recipes = getPlannerRecipes(dateKey, cat);
         recipes.forEach(recipeWithVariant => {
-          // Определяем какой набор ингредиентов использовать
           let ingredients = recipeWithVariant.ingredients || [];
           
-          // Если выбран вариант, используем его ингредиенты
           if (recipeWithVariant.selectedVariantKey && recipeWithVariant.variants) {
             const variant = recipeWithVariant.variants.find(v => v.key === recipeWithVariant.selectedVariantKey);
             if (variant && variant.ingredients) {
@@ -722,7 +693,6 @@ export default function CookifyDemo() {
       return [...prev, ...filtered];
     });
 
-    // Показываем кастомное модальное уведомление вместо alert
     setNotificationTitle(language === "ru" ? "Готово" : "Done");
     setNotificationMessage(
       language === "ru"
@@ -833,7 +803,6 @@ export default function CookifyDemo() {
     <div className={`min-h-screen ${theme.bg} ${theme.text} ${font.class} ${fontSize.body} p-6 transition-all duration-500`}>
       <Header activeScreen={activeScreen} setActiveScreen={setActiveScreen} language={language} setLanguage={setLanguage} theme={theme} fontSize={fontSize} />
 
-      {/* ✨ Кастомное модальное уведомление */}
       <NotificationModal
         isOpen={showNotificationModal}
         onClose={() => setShowNotificationModal(false)}
@@ -858,7 +827,6 @@ export default function CookifyDemo() {
         />
       )}
 
-      {/* ✨ НОВОЕ: Модальное окно выбора варианта */}
       {showVariantSelectionModal && variantSelectionRecipe && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" onClick={() => setShowVariantSelectionModal(false)}>
           <div className={`${theme.cardBg} ${fontSize.body} rounded-2xl max-w-md w-full p-6`} onClick={(e) => e.stopPropagation()}>
@@ -906,10 +874,8 @@ export default function CookifyDemo() {
         const baseServings = selectedRecipe.servings ?? 2;
         const closeModal = () => { setSelectedRecipe(null); setSelectedRecipeVariantKey(null); };
 
-        // 🆕 Коэффициент масштабирования для ингредиентов
         const servingsMultiplier = currentServings / baseServings;
 
-        // 🔥 ИСПРАВЛЕНО: Рассчитываем КБЖУ для базового количества порций, затем масштабируем
         const nutritionInfo = calculateRecipeNutrition(activeRecipe.ingredients || [], baseServings);
         const totalKcal = Math.round((nutritionInfo.total.calories || recipeCalories * baseServings || 0) * servingsMultiplier);
         const totalProtein = Math.round((nutritionInfo.total.protein || 0) * servingsMultiplier);
@@ -942,13 +908,11 @@ export default function CookifyDemo() {
           setOpenSubPicker(prev => (prev === subId ? null : subId));
         };
         
-        // 🆕 Функция масштабирования количества ингредиента
         const scaleIngredientQuantity = (quantity) => {
           if (!quantity) return '';
           const num = parseFloat(quantity.toString().replace(',', '.'));
           if (isNaN(num)) return quantity;
           const scaled = num * servingsMultiplier;
-          // Округляем до 1 знака после запятой
           return scaled % 1 === 0 ? scaled.toString() : scaled.toFixed(1).replace('.', ',');
         };
 
@@ -986,11 +950,9 @@ export default function CookifyDemo() {
                     </div>
                   </div>
                   <div className="text-right">
-                    {/* 🔥 ИСПРАВЛЕНА ПОДПИСЬ: теперь "Всего" вместо "На 1 порцию" */}
                     <div className={`${fontSize.tiny} ${theme.textSecondary} mb-1`}>{t("Всего", "Total")}</div>
                     <div className={`${fontSize.body} font-bold ${theme.accentText}`}>{totalKcal} {t("ккал", "kcal")}</div>
                     
-                    {/* 🆕 НОВОЕ: Регулятор количества порций */}
                     <div className="flex items-center justify-end gap-2 mt-2">
                       <button
                         onClick={() => setCurrentServings(Math.max(1, currentServings - 1))}
@@ -1012,7 +974,6 @@ export default function CookifyDemo() {
                   </div>
                 </div>
                 
-                {/* БЖУ плитки */}
                 <div className="grid grid-cols-3 gap-2 mb-3">
                   <div className={`${theme.cardBg} rounded-lg p-2 text-center border ${theme.border}`}>
                     <div className={`${fontSize.tiny} ${theme.textSecondary}`}>{t("Белки", "Protein")}</div>
@@ -1052,8 +1013,15 @@ export default function CookifyDemo() {
                     const currentChoice = isObj && ing.subId ? (recipeSubs?.[ing.subId] || "") : "";
                     const meta = isObj ? (ing.meta || "") : "";
                     
-                    // 🆕 Масштабируем количество
                     const scaledQuantity = isObj && ing.quantity ? scaleIngredientQuantity(ing.quantity) : '';
+                    const scaledUnit = isObj ? (ing.unit || '') : '';
+
+                    // 🔥 НОВОЕ: Применяем convertToGrams для автоформатирования
+                    let displayText = '';
+                    if (scaledQuantity && scaledUnit) {
+                      const converted = convertToGrams(scaledQuantity, scaledUnit, effectiveName);
+                      displayText = converted.displayText;
+                    }
 
                     const canToggle = hasSubs && !isAllergy;
                     const isOpen = hasSubs && openSubPicker === ing.subId;
@@ -1069,9 +1037,9 @@ export default function CookifyDemo() {
                                   {meta}
                                 </span>
                               )}
-                              {(isObj && (scaledQuantity || ing.unit)) && (
+                              {displayText && (
                                 <span className={`${theme.textSecondary}`}>
-                                  {scaledQuantity ? `— ${scaledQuantity}` : ''} {ing.unit || ''}
+                                  — {displayText}
                                 </span>
                               )}
                             </div>
