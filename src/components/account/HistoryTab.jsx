@@ -22,6 +22,7 @@ export default function HistoryTab({
   getMealsForDay,
   calculateDayCalories,
   calculatePeriodStats,
+  calculatePeriodNutrition,
   getWeekDays,
   formatDate,
   getPeriodDisplayText,
@@ -173,23 +174,46 @@ export default function HistoryTab({
         )}
       </div>
 
-      {/* Статистика за период */}
+      {/* 🆕 ОБНОВЛЕННАЯ Статистика за период с КБЖУ */}
       {(() => {
         const stats = calculatePeriodStats();
+        const nutrition = calculatePeriodNutrition ? calculatePeriodNutrition() : null;
+        
         return (
-          <div className={`grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 p-4 ${theme.border} border rounded-xl`}>
-            <div>
-              <div className={`${fontSize.small} ${theme.textSecondary}`}>{t("Всего приемов пищи", "Total meals")}</div>
-              <div className={`${fontSize.cardTitle} font-bold ${theme.accentText}`}>{stats.totalMeals}</div>
+          <div className="mb-6">
+            {/* Основная статистика */}
+            <div className={`grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 p-4 ${theme.border} border rounded-xl`}>
+              <div>
+                <div className={`${fontSize.small} ${theme.textSecondary}`}>{t("Всего приемов пищи", "Total meals")}</div>
+                <div className={`${fontSize.cardTitle} font-bold ${theme.accentText}`}>{stats.totalMeals}</div>
+              </div>
+              <div>
+                <div className={`${fontSize.small} ${theme.textSecondary}`}>{t("Всего калорий", "Total calories")}</div>
+                <div className={`${fontSize.cardTitle} font-bold ${theme.accentText}`}>{stats.totalCalories} {t("ккал", "kcal")}</div>
+              </div>
+              <div>
+                <div className={`${fontSize.small} ${theme.textSecondary}`}>{t("Среднее в день", "Avg per day")}</div>
+                <div className={`${fontSize.cardTitle} font-bold ${theme.accentText}`}>{stats.avgCaloriesPerDay} {t("ккал", "kcal")}</div>
+              </div>
             </div>
-            <div>
-              <div className={`${fontSize.small} ${theme.textSecondary}`}>{t("Всего калорий", "Total calories")}</div>
-              <div className={`${fontSize.cardTitle} font-bold ${theme.accentText}`}>{stats.totalCalories} {t("ккал", "kcal")}</div>
-            </div>
-            <div>
-              <div className={`${fontSize.small} ${theme.textSecondary}`}>{t("Среднее в день", "Avg per day")}</div>
-              <div className={`${fontSize.cardTitle} font-bold ${theme.accentText}`}>{stats.avgCaloriesPerDay} {t("ккал", "kcal")}</div>
-            </div>
+
+            {/* 🆕 НОВОЕ: Плитки с БЖУ */}
+            {nutrition && (
+              <div className={`grid grid-cols-3 gap-3 p-4 ${theme.border} border rounded-xl`}>
+                <div className={`${theme.cardBg} rounded-lg p-3 text-center`}>
+                  <div className={`${fontSize.tiny} ${theme.textSecondary} mb-1`}>{t("Белки", "Protein")}</div>
+                  <div className={`${fontSize.cardTitle} font-bold ${theme.text}`}>{nutrition.totalProtein}{t("г", "g")}</div>
+                </div>
+                <div className={`${theme.cardBg} rounded-lg p-3 text-center`}>
+                  <div className={`${fontSize.tiny} ${theme.textSecondary} mb-1`}>{t("Жиры", "Fat")}</div>
+                  <div className={`${fontSize.cardTitle} font-bold ${theme.text}`}>{nutrition.totalFat}{t("г", "g")}</div>
+                </div>
+                <div className={`${theme.cardBg} rounded-lg p-3 text-center`}>
+                  <div className={`${fontSize.tiny} ${theme.textSecondary} mb-1`}>{t("Углеводы", "Carbs")}</div>
+                  <div className={`${fontSize.cardTitle} font-bold ${theme.text}`}>{nutrition.totalCarbs}{t("г", "g")}</div>
+                </div>
+              </div>
+            )}
           </div>
         );
       })()}
