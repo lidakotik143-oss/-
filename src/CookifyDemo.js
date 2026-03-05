@@ -876,12 +876,12 @@ export default function CookifyDemo() {
         // 🆕 Коэффициент масштабирования для ингредиентов
         const servingsMultiplier = currentServings / baseServings;
 
-        // 🆕 НОВОЕ: Расчёт БЖУ с учётом выбранного количества порций
-        const nutritionInfo = calculateRecipeNutrition(activeRecipe.ingredients || [], currentServings);
-        const kcalPerServing = Math.round(nutritionInfo.perServing.calories || recipeCalories || 0);
-        const proteinPerServing = Math.round(nutritionInfo.perServing.protein || 0);
-        const fatPerServing = Math.round(nutritionInfo.perServing.fat || 0);
-        const carbsPerServing = Math.round(nutritionInfo.perServing.carbs || 0);
+        // 🔥 ИСПРАВЛЕНО: Расчёт ОБЩЕГО БЖУ на все порции (не делим на порции!)
+        const nutritionInfo = calculateRecipeNutrition(activeRecipe.ingredients || [], baseServings);
+        const totalKcal = Math.round((nutritionInfo.total.calories || recipeCalories * baseServings || 0) * servingsMultiplier);
+        const totalProtein = Math.round((nutritionInfo.total.protein || 0) * servingsMultiplier);
+        const totalFat = Math.round((nutritionInfo.total.fat || 0) * servingsMultiplier);
+        const totalCarbs = Math.round((nutritionInfo.total.carbs || 0) * servingsMultiplier);
 
         const updateSubstitution = (subId, value) => {
           setUserSubstitutions(prev => {
@@ -953,8 +953,9 @@ export default function CookifyDemo() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className={`${fontSize.tiny} ${theme.textSecondary} mb-1`}>{t("На 1 порцию", "Per serving")}</div>
-                    <div className={`${fontSize.body} font-bold ${theme.accentText}`}>{kcalPerServing} {t("ккал", "kcal")}</div>
+                    {/* 🔥 ИСПРАВЛЕНА ПОДПИСЬ: теперь "Всего" вместо "На 1 порцию" */}
+                    <div className={`${fontSize.tiny} ${theme.textSecondary} mb-1`}>{t("Всего", "Total")}</div>
+                    <div className={`${fontSize.body} font-bold ${theme.accentText}`}>{totalKcal} {t("ккал", "kcal")}</div>
                     
                     {/* 🆕 НОВОЕ: Регулятор количества порций */}
                     <div className="flex items-center justify-end gap-2 mt-2">
@@ -978,19 +979,19 @@ export default function CookifyDemo() {
                   </div>
                 </div>
                 
-                {/* БЖУ плитки */}
+                {/* 🔥 БЖУ плитки теперь показывают ОБЩИЕ значения */}
                 <div className="grid grid-cols-3 gap-2 mb-3">
                   <div className={`${theme.cardBg} rounded-lg p-2 text-center border ${theme.border}`}>
                     <div className={`${fontSize.tiny} ${theme.textSecondary}`}>{t("Белки", "Protein")}</div>
-                    <div className={`${fontSize.small} font-bold ${theme.text}`}>{proteinPerServing}{t("г", "g")}</div>
+                    <div className={`${fontSize.small} font-bold ${theme.text}`}>{totalProtein}{t("г", "g")}</div>
                   </div>
                   <div className={`${theme.cardBg} rounded-lg p-2 text-center border ${theme.border}`}>
                     <div className={`${fontSize.tiny} ${theme.textSecondary}`}>{t("Жиры", "Fat")}</div>
-                    <div className={`${fontSize.small} font-bold ${theme.text}`}>{fatPerServing}{t("г", "g")}</div>
+                    <div className={`${fontSize.small} font-bold ${theme.text}`}>{totalFat}{t("г", "g")}</div>
                   </div>
                   <div className={`${theme.cardBg} rounded-lg p-2 text-center border ${theme.border}`}>
                     <div className={`${fontSize.tiny} ${theme.textSecondary}`}>{t("Углеводы", "Carbs")}</div>
-                    <div className={`${fontSize.small} font-bold ${theme.text}`}>{carbsPerServing}{t("г", "g")}</div>
+                    <div className={`${fontSize.small} font-bold ${theme.text}`}>{totalCarbs}{t("г", "g")}</div>
                   </div>
                 </div>
 
