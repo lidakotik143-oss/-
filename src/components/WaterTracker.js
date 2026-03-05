@@ -1,27 +1,84 @@
 import React, { useState, useEffect } from 'react';
-import { FaPlus, FaTint, FaChartLine, FaTrash } from 'react-icons/fa';
+import { FaPlus, FaTint, FaChartLine, FaTrash, FaCalculator } from 'react-icons/fa';
 
 const WaterTracker = ({ theme, fontSize, language, userData }) => {
   const [waterIntake, setWaterIntake] = useState([]);
   const [dailyGoal, setDailyGoal] = useState(2000);
   const [showHistory, setShowHistory] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [useAutoCalculation, setUseAutoCalculation] = useState(true);
 
   const t = (ru, en) => (language === 'ru' ? ru : en);
+
+  // Умный расчет нормы воды на основе профиля пользователя
+  const calculateWaterGoal = () => {
+    if (!userData?.weight) return 2000; // Значение по умолчанию
+
+    let baseAmount = userData.weight * 35; // Базовая формула: 35 мл на кг веса
+
+    // Корректировка по возрасту
+    if (userData.age) {
+      if (userData.age < 30) baseAmount *= 1.0; // Молодые - стандартная норма
+      else if (userData.age < 55) baseAmount *= 0.95; // Средний возраст - чуть меньше
+      else baseAmount *= 0.9; // Пожилые - еще меньше
+    }
+
+    // Корректировка по уровню активности
+    if (userData.lifestyle) {
+      const lifestyleLower = userData.lifestyle.toLowerCase();
+      if (lifestyleLower.includes('сидячий') || lifestyleLower.includes('sedentary')) {
+        baseAmount *= 1.0; // Сидячий образ жизни - стандартная норма
+      } else if (lifestyleLower.includes('умеренно') || lifestyleLower.includes('moderate')) {
+        baseAmount *= 1.15; // Умеренная активность - +15%
+      } else if (lifestyleLower.includes('активный') || lifestyleLower.includes('active')) {
+        baseAmount *= 1.3; // Высокая активность - +30%
+      }
+    }
+
+    // Корректировка по целям
+    if (userData.goal) {
+      const goalLower = userData.goal.toLowerCase();
+      if (goalLower.includes('снижение') || goalLower.includes('weight loss')) {
+        baseAmount *= 1.1; // При похудении нужно больше воды
+      } else if (goalLower.includes('набор') || goalLower.includes('muscle gain')) {
+        baseAmount *= 1.2; // При наборе массы тоже больше
+      }
+    }
+
+    return Math.round(baseAmount);
+  };
 
   // Загрузка данных из localStorage
   useEffect(() => {
     const saved = localStorage.getItem('cookify_waterIntake');
     const savedGoal = localStorage.getItem('cookify_waterGoal');
+    const savedAutoCalc = localStorage.getItem('cookify_waterAutoCalc');
     
     if (saved) setWaterIntake(JSON.parse(saved));
-    if (savedGoal) setDailyGoal(Number(savedGoal));
-    else if (userData?.weight) {
-      // Автоматический расчет: 30-35 мл на кг веса
-      const calculated = Math.round(userData.weight * 35);
-      setDailyGoal(calculated);
+    
+    // Проверяем, включен ли автоматический расчет
+    if (savedAutoCalc !== null) {
+      const autoCalc = savedAutoCalc === 'true';
+      setUseAutoCalculation(autoCalc);
+      
+      if (autoCalc) {
+        setDailyGoal(calculateWaterGoal());
+      } else if (savedGoal) {
+        setDailyGoal(Number(savedGoal));
+      }
+    } else {
+      // Первый запуск - используем автоматический расчет
+      setDailyGoal(calculateWaterGoal());
     }
-  }, [userData]);
+  }, []);
+
+  // Пересчитываем цель при изменении профиля пользователя
+  useEffect(() => {
+    if (useAutoCalculation && userData) {
+      const newGoal = calculateWaterGoal();
+      setDailyGoal(newGoal);
+    }
+  }, [userData?.weight, userData?.age, userData?.lifestyle, userData?.goal, useAutoCalculation]);
 
   // Сохранение данных
   useEffect(() => {
@@ -29,8 +86,14 @@ const WaterTracker = ({ theme, fontSize, language, userData }) => {
   }, [waterIntake]);
 
   useEffect(() => {
-    localStorage.setItem('cookify_waterGoal', dailyGoal.toString());
-  }, [dailyGoal]);
+    if (!useAutoCalculation) {
+      localStorage.setItem('cookify_waterGoal', dailyGoal.toString());
+    }
+  }, [dailyGoal, useAutoCalculation]);
+
+  useEffect(() => {
+    localStorage.setItem('cookify_waterAutoCalc', useAutoCalculation.toString());
+  }, [useAutoCalculation]);
 
   // Получить сегодняшнюю дату в формате YYYY-MM-DD
   const getTodayKey = () => {
@@ -100,6 +163,33 @@ const WaterTracker = ({ theme, fontSize, language, userData }) => {
   const todayIntake = getTodayIntake();
   const progress = Math.min((todayIntake / dailyGoal) * 100, 100);
   const remaining = Math.max(dailyGoal - todayIntake, 0);
+
+  // Получить описание факторов расчета
+  const getCalculationDetails = () => {
+    if (!userData?.weight) {
+      return t(
+        'Заполните вес в профиле для автоматического расчета',
+        'Fill in your weight in profile for automatic calculation'
+      );
+    }
+
+    const factors = [];
+    factors.push(t(`Вес: ${userData.weight} кг`, `Weight: ${userData.weight} kg`));
+    
+    if (userData.age) {
+      factors.push(t(`Возраст: ${userData.age} лет`, `Age: ${userData.age} years`));
+    }
+    
+    if (userData.lifestyle) {
+      factors.push(t(`Активность: ${userData.lifestyle}`, `Activity: ${userData.lifestyle}`));
+    }
+    
+    if (userData.goal) {
+      factors.push(t(`Цель: ${userData.goal}`, `Goal: ${userData.goal}`));
+    }
+
+    return factors.join(' • ');
+  };
 
   // Визуализация волны воды
   const WaveProgress = ({ percentage }) => {
@@ -199,22 +289,67 @@ const WaterTracker = ({ theme, fontSize, language, userData }) => {
       {/* Настройки цели */}
       {showSettings && (
         <div className={`mb-6 p-4 rounded-xl ${theme.bg} border ${theme.border}`}>
-          <label className={`block ${fontSize.small} ${theme.textSecondary} mb-2`}>
-            {t('Дневная цель (мл):', 'Daily goal (ml):')}
-          </label>
-          <input
-            type="number"
-            value={dailyGoal}
-            onChange={(e) => setDailyGoal(Number(e.target.value))}
-            className={`w-full px-4 py-2 rounded-lg ${theme.input} ${fontSize.body}`}
-            min="500"
-            max="5000"
-            step="100"
-          />
-          <p className={`mt-2 ${fontSize.tiny} ${theme.textSecondary}`}>
+          {/* Переключатель автоматического расчета */}
+          <div className="mb-4 flex items-center justify-between">
+            <div>
+              <label className={`block ${fontSize.body} ${theme.text} font-semibold mb-1`}>
+                <FaCalculator className="inline mr-2" />
+                {t('Автоматический расчет', 'Automatic calculation')}
+              </label>
+              <p className={`${fontSize.small} ${theme.textSecondary}`}>
+                {t('Расчет нормы воды на основе данных профиля', 'Calculate water goal based on profile data')}
+              </p>
+            </div>
+            <button
+              onClick={() => setUseAutoCalculation(!useAutoCalculation)}
+              className={`relative w-14 h-8 rounded-full transition ${useAutoCalculation ? theme.accent : 'bg-gray-300'}`}
+            >
+              <span
+                className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full transition-transform duration-200 ${useAutoCalculation ? 'translate-x-6' : ''}`}
+              />
+            </button>
+          </div>
+
+          {/* Детали автоматического расчета */}
+          {useAutoCalculation && (
+            <div className={`mb-4 p-3 rounded-lg bg-blue-50 border border-blue-200`}>
+              <p className={`${fontSize.small} text-blue-800 font-semibold mb-2`}>
+                📊 {t('Факторы расчета:', 'Calculation factors:')}
+              </p>
+              <p className={`${fontSize.tiny} text-blue-700`}>
+                {getCalculationDetails()}
+              </p>
+              <p className={`${fontSize.tiny} text-blue-600 mt-2`}>
+                💡 {t(
+                  'Норма автоматически обновляется при изменении профиля',
+                  'The goal updates automatically when you change your profile'
+                )}
+              </p>
+            </div>
+          )}
+
+          {/* Ручная настройка цели */}
+          {!useAutoCalculation && (
+            <div>
+              <label className={`block ${fontSize.small} ${theme.textSecondary} mb-2`}>
+                {t('Дневная цель (мл):', 'Daily goal (ml):')}
+              </label>
+              <input
+                type="number"
+                value={dailyGoal}
+                onChange={(e) => setDailyGoal(Number(e.target.value))}
+                className={`w-full px-4 py-2 rounded-lg ${theme.input} ${fontSize.body}`}
+                min="500"
+                max="5000"
+                step="100"
+              />
+            </div>
+          )}
+
+          <p className={`mt-3 ${fontSize.tiny} ${theme.textSecondary} italic`}>
             {t(
-              'Рекомендация: 30-35 мл на кг веса',
-              'Recommendation: 30-35 ml per kg of body weight'
+              'Рекомендация ВОЗ: 30-35 мл на кг веса',
+              'WHO recommendation: 30-35 ml per kg of body weight'
             )}
           </p>
         </div>
