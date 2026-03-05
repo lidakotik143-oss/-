@@ -126,9 +126,9 @@ export function convertToGrams(quantity, unit, ingredientName) {
   const coefficient = coefficients[product] || coefficients.default;
   const grams = Math.round(numericQuantity * coefficient);
   
-  // Формируем текст для отображения: "граммы (оригинальная мера)"
+  // 🔥 ИЗМЕНЕНО: Формируем текст "оригинальная мера (≈ граммы)"
   const originalText = `${quantity} ${unit}`.trim();
-  const displayText = `${grams} г (${originalText})`;
+  const displayText = `${originalText} (≈ ${grams} г)`;
   
   return {
     grams: grams,
