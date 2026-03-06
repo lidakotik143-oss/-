@@ -7,8 +7,8 @@ export const RECIPES_DATABASE = [
     id: 1,
     title: "Овсянка с бананом",
     time: "25",
-    calories: 140,
-    caloriesPerServing: 140,
+    calories: 321,
+    caloriesPerServing: 321,
     servings: 1,
     type: "завтрак",
     diet: "вегетарианское",
@@ -34,6 +34,7 @@ export const RECIPES_DATABASE = [
         labelRu: "Кастрюля",
         labelEn: "Saucepan",
         time: "25",
+        caloriesPerServing: 321,
         ingredients: [
           { name: "овсяные хлопья", productId: 301, quantity: "50", unit: "г" },
           { name: "бананы", productId: 1708, quantity: "85", unit: "г" },
@@ -53,6 +54,7 @@ export const RECIPES_DATABASE = [
         labelRu: "Ленивая",
         labelEn: "Lazy",
         time: "120",
+        caloriesPerServing: 526,
         ingredients: [
           { name: "овсяные хлопья", meta: "быстрого приготовления", productId: 301, quantity: "100", unit: "г" },
           { name: "банан", productId: 1708, quantity: "1", unit: "шт" },
@@ -74,6 +76,7 @@ export const RECIPES_DATABASE = [
         labelRu: "Мультиварка",
         labelEn: "Multicooker",
         time: "25",
+        caloriesPerServing: 693,
         ingredients: [
           { name: "овсяные хлопья", meta: "геркулес", productId: 301, quantity: "100", unit: "г" },
           { name: "вода", productId: null, quantity: "150", unit: "мл" },
@@ -96,6 +99,7 @@ export const RECIPES_DATABASE = [
         labelRu: "Духовка",
         labelEn: "Oven",
         time: "150",
+        caloriesPerServing: 255,
         ingredients: [
           { name: "овсяные хлопья", productId: 301, quantity: "30", unit: "г" },
           { name: "бананы", productId: 1708, quantity: "1", unit: "шт" },
