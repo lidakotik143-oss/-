@@ -503,11 +503,23 @@ export default function CookifyDemo() {
   const calculateDayCalories = (dateKey) => {
     const dayMeals = getMealsForDay(dateKey);
     return dayMeals.reduce((sum, entry) => {
+      // Определяем активный рецепт (вариант или основной)
+      let activeRecipe = entry.recipe;
       if (entry.variantKey && entry.recipe.variants) {
         const variant = entry.recipe.variants.find(v => v.key === entry.variantKey);
-        if (variant) return sum + (variant.caloriesPerServing || variant.calories || entry.recipe.caloriesPerServing || entry.recipe.calories || 0);
+        if (variant) {
+          activeRecipe = variant;
+        }
       }
-      return sum + (entry.recipe.caloriesPerServing || entry.recipe.calories || 0);
+
+      // Используем nutritionCalculator для точного расчёта
+      const servings = entry.recipe.servings || 2;
+      const nutritionInfo = calculateRecipeNutrition(activeRecipe.ingredients || [], servings);
+      
+      // Берём калории из расчёта или fallback на указанные в рецепте
+      const calories = nutritionInfo.total.calories || (activeRecipe.caloriesPerServing || activeRecipe.calories || entry.recipe.caloriesPerServing || entry.recipe.calories || 0) * servings;
+      
+      return sum + calories;
     }, 0);
   };
 
