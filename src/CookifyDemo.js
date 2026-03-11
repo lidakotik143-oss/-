@@ -20,7 +20,6 @@ import Header from "./components/Header";
 import HomeScreen from "./components/HomeScreen";
 import SearchScreen from "./components/SearchScreen";
 import AccountScreen from "./components/AccountScreen";
-import AuthScreen from "./components/AuthScreen";
 
 // 🔧 Временные точечные исправления некорректных типов блюд из базы рецептов
 const RECIPE_TYPE_FIXES = {
@@ -225,14 +224,6 @@ export default function CookifyDemo() {
   const [userData, setUserData] = useState(null);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
 
-  // Экран авторизации: 'auth' | 'app'
-  const [appMode, setAppMode] = useState('auth');
-
-  // Список аккаунтов хранится в localStorage
-  const [accounts, setAccounts] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('cookify_accounts') || '[]'); } catch { return []; }
-  });
-
   const [selectedRecipe, setSelectedRecipe] = useState(null);
   const [selectedRecipeVariantKey, setSelectedRecipeVariantKey] = useState(null);
   const [currentServings, setCurrentServings] = useState(2);
@@ -283,12 +274,7 @@ export default function CookifyDemo() {
     const savedWeeklyPlan = localStorage.getItem("cookify_weeklyPlan");
     const savedShoppingList = localStorage.getItem("cookify_shoppingList");
 
-    if (savedUserData) {
-      const parsed = JSON.parse(savedUserData);
-      setUserData(parsed);
-      setRegistered(true);
-      setAppMode('app'); // Уже залогинен — сразу в приложение
-    }
+    if (savedUserData) { const parsed = JSON.parse(savedUserData); setUserData(parsed); setRegistered(true); }
     if (savedLanguage) setLanguage(savedLanguage);
     if (savedUnitSystem) setUnitSystem(savedUnitSystem);
     if (savedTheme) setCurrentTheme(savedTheme);
@@ -315,35 +301,6 @@ export default function CookifyDemo() {
   useEffect(() => { if (language === "en") setUnitSystem("imperial"); else setUnitSystem("metric"); }, [language]);
   useEffect(() => { setOpenSubPicker(null); }, [selectedRecipe, selectedRecipeVariantKey]);
   useEffect(() => { if (selectedRecipe) setCurrentServings(selectedRecipe.servings ?? 2); }, [selectedRecipe]);
-
-  // ===== Обработчики авторизации =====
-  const handleAuthLogin = (login, password) => {
-    const acc = accounts.find(a => a.login === login && a.password === password);
-    if (!acc) {
-      return { ok: false, message: language === 'ru' ? 'Неверный логин или пароль' : 'Wrong login or password' };
-    }
-    const userObj = { ...acc, name: acc.name || acc.login };
-    setUserData(userObj);
-    setRegistered(true);
-    localStorage.setItem('cookify_user', JSON.stringify(userObj));
-    setAppMode('app');
-    return { ok: true };
-  };
-
-  const handleAuthRegister = (login, password) => {
-    if (accounts.some(a => a.login === login)) {
-      return { ok: false, message: language === 'ru' ? 'Такой логин уже занят' : 'This login is already taken' };
-    }
-    const newUser = { login, password, name: login };
-    const newAccounts = [...accounts, newUser];
-    setAccounts(newAccounts);
-    localStorage.setItem('cookify_accounts', JSON.stringify(newAccounts));
-    setUserData(newUser);
-    setRegistered(true);
-    localStorage.setItem('cookify_user', JSON.stringify(newUser));
-    setAppMode('app');
-    return { ok: true };
-  };
 
   const GOALS = language === "ru" ? GOAL_OPTIONS_RU : GOAL_OPTIONS_EN;
   const LIFESTYLE = language === "ru" ? LIFESTYLE_RU : LIFESTYLE_EN;
@@ -425,7 +382,6 @@ export default function CookifyDemo() {
     localStorage.removeItem("cookify_user"); localStorage.removeItem("cookify_mealPlan");
     localStorage.removeItem("cookify_mealHistory"); localStorage.removeItem("cookify_weeklyPlan");
     localStorage.removeItem("cookify_shoppingList"); localStorage.removeItem(SUBSTITUTIONS_STORAGE_KEY);
-    setAppMode('auth'); // Возврат на экран входа
   };
 
   const toggleUnitSystem = () => { setUnitSystem(prev => prev === "metric" ? "imperial" : "metric"); };
@@ -728,19 +684,6 @@ export default function CookifyDemo() {
     }
     return formatDate(selectedDate, language);
   };
-
-  // ===== Стартовый экран авторизации =====
-  if (appMode === 'auth') {
-    return (
-      <AuthScreen
-        onLogin={handleAuthLogin}
-        onRegister={handleAuthRegister}
-        theme={theme}
-        fontSize={fontSize}
-        language={language}
-      />
-    );
-  }
 
   return (
     <div className={`min-h-screen ${theme.bg} ${theme.text} ${font.class} ${fontSize.body} p-6 transition-all duration-500`}>
