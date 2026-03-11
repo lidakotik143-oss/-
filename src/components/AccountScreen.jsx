@@ -1,5 +1,5 @@
-import React from "react";
-import { FaUser, FaCalendarAlt, FaUtensils, FaShoppingCart, FaTint } from "react-icons/fa";
+import React, { useState } from "react";
+import { FaUser, FaCalendarAlt, FaUtensils, FaShoppingCart, FaTint, FaEye, FaEyeSlash, FaLeaf } from "react-icons/fa";
 import ProfileCard from "./account/ProfileCard";
 import ProfileEditForm from "./account/ProfileEditForm";
 import CustomizationPanel from "./account/CustomizationPanel";
@@ -9,6 +9,160 @@ import HistoryTab from "./account/HistoryTab";
 import PlannerTab from "./account/PlannerTab";
 import ShoppingListTab from "./account/ShoppingListTab";
 import WaterTracker from "./WaterTracker";
+
+// Мини-компонент аутентификации внутри вкладки
+function AuthPanel({ t, theme, fontSize, handleRegister, language }) {
+  const [mode, setMode] = useState('choice'); // 'choice' | 'login' | 'register'
+  const [login, setLogin] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPass, setShowPass] = useState(false);
+  const [error, setError] = useState('');
+
+  const getAccounts = () => {
+    try { return JSON.parse(localStorage.getItem('cookify_accounts') || '[]'); } catch { return []; }
+  };
+
+  const handleLogin = (e) => {
+    e.preventDefault();
+    setError('');
+    const accounts = getAccounts();
+    const acc = accounts.find(a => a.login === login.trim() && a.password === password);
+    if (!acc) {
+      setError(t('Неверный логин или пароль', 'Wrong login or password'));
+      return;
+    }
+    // Передаём через синтетический submit event
+    const fakeForm = document.createElement('form');
+    const fakeData = { name: acc.name || acc.login, login: acc.login };
+    Object.entries(fakeData).forEach(([k, v]) => {
+      const input = document.createElement('input');
+      input.name = k; input.value = v;
+      fakeForm.appendChild(input);
+    });
+    // Используем handleRegister через прямое сохранение
+    const userData = { name: acc.name || acc.login, login: acc.login };
+    localStorage.setItem('cookify_user', JSON.stringify(userData));
+    window.location.reload();
+  };
+
+  const handleReg = (e) => {
+    e.preventDefault();
+    setError('');
+    if (login.trim().length < 3) { setError(t('Логин мин. 3 символа', 'Login min 3 chars')); return; }
+    if (password.length < 4) { setError(t('Пароль мин. 4 символа', 'Password min 4 chars')); return; }
+    if (password !== confirmPassword) { setError(t('Пароли не совпадают', 'Passwords do not match')); return; }
+    const accounts = getAccounts();
+    if (accounts.some(a => a.login === login.trim())) { setError(t('Логин уже занят', 'Login already taken')); return; }
+    const newUser = { login: login.trim(), password, name: login.trim() };
+    const newAccounts = [...accounts, newUser];
+    localStorage.setItem('cookify_accounts', JSON.stringify(newAccounts));
+    localStorage.setItem('cookify_user', JSON.stringify({ name: newUser.name, login: newUser.login }));
+    window.location.reload();
+  };
+
+  const inputCls = `w-full px-4 py-2.5 rounded-xl border ${theme.border} ${theme.input} focus:outline-none focus:ring-2 focus:ring-[#606C38] ${fontSize.body}`;
+  const btnPrimary = `w-full py-3 rounded-xl ${theme.accent} ${theme.accentHover} text-white font-semibold transition ${fontSize.body}`;
+  const btnOutline = `w-full py-3 rounded-xl border-2 ${theme.border} ${theme.text} font-semibold transition hover:opacity-80 ${fontSize.body}`;
+
+  return (
+    <div className={`${theme.cardBg} p-8 rounded-xl shadow max-w-md mx-auto`}>
+      {/* Лого */}
+      <div className="text-center mb-6">
+        <div className={`inline-flex items-center justify-center w-14 h-14 rounded-2xl ${theme.accent} mb-3`}>
+          <FaLeaf className="text-white text-2xl" />
+        </div>
+        <h2 className={`${fontSize.subheading} font-bold ${theme.headerText}`}>
+          {mode === 'choice' ? t('Мой аккаунт', 'My Account')
+            : mode === 'login' ? t('Вход в аккаунт', 'Sign In')
+            : t('Регистрация', 'Register')}
+        </h2>
+      </div>
+
+      {/* Выбор */}
+      {mode === 'choice' && (
+        <div className="space-y-3">
+          <button onClick={() => { setMode('login'); setError(''); }} className={btnPrimary}>
+            {t('Войти в аккаунт', 'Sign In')}
+          </button>
+          <button onClick={() => { setMode('register'); setError(''); }} className={btnOutline}>
+            {t('Зарегистрироваться', 'Create Account')}
+          </button>
+        </div>
+      )}
+
+      {/* Форма входа */}
+      {mode === 'login' && (
+        <form onSubmit={handleLogin} className="space-y-4">
+          <div>
+            <label className={`block ${fontSize.small} font-medium ${theme.textSecondary} mb-1`}>{t('Логин', 'Login')}</label>
+            <input type="text" required value={login} onChange={e => setLogin(e.target.value)}
+              placeholder={t('Введите логин', 'Enter login')} className={inputCls} />
+          </div>
+          <div>
+            <label className={`block ${fontSize.small} font-medium ${theme.textSecondary} mb-1`}>{t('Пароль', 'Password')}</label>
+            <div className="relative">
+              <input type={showPass ? 'text' : 'password'} required value={password} onChange={e => setPassword(e.target.value)}
+                placeholder={t('Введите пароль', 'Enter password')} className={`${inputCls} pr-10`} />
+              <button type="button" onClick={() => setShowPass(p => !p)} className={`absolute right-3 top-1/2 -translate-y-1/2 ${theme.textSecondary}`}>
+                {showPass ? <FaEyeSlash /> : <FaEye />}
+              </button>
+            </div>
+          </div>
+          {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+          <button type="submit" className={btnPrimary}>{t('Войти', 'Sign In')}</button>
+          <p className={`text-center ${fontSize.small} ${theme.textSecondary}`}>
+            {t('Нет аккаунта?', "Don't have an account?")}{' '}
+            <button type="button" onClick={() => { setMode('register'); setError(''); }} className="font-semibold underline">
+              {t('Зарегистрироваться', 'Register')}
+            </button>
+          </p>
+          <button type="button" onClick={() => { setMode('choice'); setError(''); }} className={`w-full text-center ${fontSize.small} ${theme.textSecondary} opacity-60 hover:opacity-100 transition`}>
+            ← {t('Назад', 'Back')}
+          </button>
+        </form>
+      )}
+
+      {/* Форма регистрации */}
+      {mode === 'register' && (
+        <form onSubmit={handleReg} className="space-y-4">
+          <div>
+            <label className={`block ${fontSize.small} font-medium ${theme.textSecondary} mb-1`}>{t('Логин', 'Login')}</label>
+            <input type="text" required value={login} onChange={e => setLogin(e.target.value)}
+              placeholder={t('Придумайте логин', 'Choose a login')} className={inputCls} />
+          </div>
+          <div>
+            <label className={`block ${fontSize.small} font-medium ${theme.textSecondary} mb-1`}>{t('Пароль', 'Password')}</label>
+            <div className="relative">
+              <input type={showPass ? 'text' : 'password'} required value={password} onChange={e => setPassword(e.target.value)}
+                placeholder={t('Мин. 4 символа', 'Min 4 chars')} className={`${inputCls} pr-10`} />
+              <button type="button" onClick={() => setShowPass(p => !p)} className={`absolute right-3 top-1/2 -translate-y-1/2 ${theme.textSecondary}`}>
+                {showPass ? <FaEyeSlash /> : <FaEye />}
+              </button>
+            </div>
+          </div>
+          <div>
+            <label className={`block ${fontSize.small} font-medium ${theme.textSecondary} mb-1`}>{t('Повторите пароль', 'Confirm Password')}</label>
+            <input type={showPass ? 'text' : 'password'} required value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)}
+              placeholder={t('Повторите пароль', 'Repeat password')} className={inputCls} />
+          </div>
+          {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+          <button type="submit" className={btnPrimary}>{t('Зарегистрироваться', 'Register')}
+          </button>
+          <p className={`text-center ${fontSize.small} ${theme.textSecondary}`}>
+            {t('Уже есть аккаунт?', 'Already have an account?')}{' '}
+            <button type="button" onClick={() => { setMode('login'); setError(''); }} className="font-semibold underline">
+              {t('Войти', 'Sign In')}
+            </button>
+          </p>
+          <button type="button" onClick={() => { setMode('choice'); setError(''); }} className={`w-full text-center ${fontSize.small} ${theme.textSecondary} opacity-60 hover:opacity-100 transition`}>
+            ← {t('Назад', 'Back')}
+          </button>
+        </form>
+      )}
+    </div>
+  );
+}
 
 export default function AccountScreen(props) {
   const {
@@ -26,26 +180,20 @@ export default function AccountScreen(props) {
     showPlannerModal,
     setShowPlannerModal,
     language,
-    userData
+    userData,
+    handleRegister
   } = props;
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
       {!registered ? (
-        <div className={`${theme.cardBg} p-6 rounded-xl shadow text-center`}>
-          <FaUser className={`w-16 h-16 mx-auto ${theme.textSecondary} mb-4`} />
-          <h2 className={`${fontSize.subheading} font-semibold mb-3`}>{t("Создайте свой профиль", "Create your profile")}</h2>
-          <p className={`${theme.textSecondary} ${fontSize.body} mb-4`}>
-            {t("Заполните данные, чтобы получать персонализированные рекомендации и управлять планом питания.", 
-               "Fill in your details to get personalized recommendations and manage your meal plan.")}
-          </p>
-          <button
-            onClick={() => setShowRegisterForm(true)}
-            className={`px-6 py-3 rounded-xl ${fontSize.body} ${theme.accent} ${theme.accentHover} text-white`}
-          >
-            {t("Начать", "Get Started")}
-          </button>
-        </div>
+        <AuthPanel
+          t={t}
+          theme={theme}
+          fontSize={fontSize}
+          handleRegister={handleRegister}
+          language={language}
+        />
       ) : (
         <>
           <ProfileCard {...props} />
