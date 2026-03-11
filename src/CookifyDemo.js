@@ -950,6 +950,8 @@ export default function CookifyDemo() {
           setSelectedRecipeVariantKey={setSelectedRecipeVariantKey} DISH_TYPE_LABELS={DISH_TYPE_LABELS} normalize={normalize} THEMES={THEMES}
           FONTS={FONTS} FONT_SIZES={FONT_SIZES} convertWeight={convertWeight} convertHeight={convertHeight}
           shoppingList={shoppingList} setShoppingList={setShoppingList} generateShoppingListFromPlanner={generateShoppingListFromPlanner}
+          setUserData={setUserData} setRegistered={setRegistered} setMealHistory={setMealHistory}
+          setWeeklyPlan={setWeeklyPlan}
         />
       )}
     </div>
