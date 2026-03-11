@@ -34,48 +34,68 @@ export default function HistoryTab({
   removeMealFromHistory,
   userData
 }) {
-  // Рассчитать целевые значения на основе профиля
+  // Формула Миффлина - Сан Жеора
   const calculateDailyGoals = () => {
-    if (!userData?.weight) {
-      return {
-        calories: 2000,
-        protein: 150,
-        fat: 70,
-        carbs: 250
-      };
+    const weight = parseFloat(userData?.weight);
+    const height = parseFloat(userData?.height);
+    const age = parseFloat(userData?.age);
+
+    if (!weight) {
+      return { calories: 2000, protein: 150, fat: 70, carbs: 250 };
     }
 
-    const weight = userData.weight;
-    let calorieGoal = weight * 30; // Базовый расчет
+    // BMR по формуле Миффлина — Сан Жеора
+    // Мужчины: 10*вес + 6.25*рост - 5*возраст + 5
+    // Женщины: 10*вес + 6.25*рост - 5*возраст - 161
+    // Если пол не указан — используем среднее (женская формула как более распространённый случай)
+    const genderLower = (userData?.gender || '').toLowerCase();
+    const isMale = genderLower.includes('муж') || genderLower.includes('male') || genderLower.includes('м');
 
-    // Коррекция по целям
-    if (userData.goal) {
-      const goalLower = userData.goal.toLowerCase();
-      if (goalLower.includes('снижение') || goalLower.includes('weight loss')) {
-        calorieGoal *= 0.8; // -20% для похудения
-      } else if (goalLower.includes('набор') || goalLower.includes('muscle gain')) {
-        calorieGoal *= 1.15; // +15% для набора массы
+    const h = height || 170; // fallback рост 170 см
+    const a = age || 25;     // fallback возраст 25 лет
+
+    let bmr;
+    if (isMale) {
+      bmr = 10 * weight + 6.25 * h - 5 * a + 5;
+    } else {
+      bmr = 10 * weight + 6.25 * h - 5 * a - 161;
+    }
+
+    // Коэффициент активности (TDEE)
+    let activityFactor = 1.2; // по умолчанию — сидячий
+    if (userData?.lifestyle) {
+      const lf = userData.lifestyle.toLowerCase();
+      if (lf.includes('умеренн') || lf.includes('moderate')) {
+        activityFactor = 1.55;
+      } else if (lf.includes('высок') || lf.includes('активн') || lf.includes('active')) {
+        activityFactor = 1.725;
+      } else if (lf.includes('очень') || lf.includes('very')) {
+        activityFactor = 1.9;
+      } else if (lf.includes('лёгк') || lf.includes('легк') || lf.includes('light')) {
+        activityFactor = 1.375;
       }
     }
 
-    // Коррекция по активности
-    if (userData.lifestyle) {
-      const lifestyleLower = userData.lifestyle.toLowerCase();
-      if (lifestyleLower.includes('умеренно') || lifestyleLower.includes('moderate')) {
-        calorieGoal *= 1.2;
-      } else if (lifestyleLower.includes('активный') || lifestyleLower.includes('active')) {
-        calorieGoal *= 1.5;
+    let calorieGoal = bmr * activityFactor;
+
+    // Коррекция по цели
+    if (userData?.goal) {
+      const gl = userData.goal.toLowerCase();
+      if (gl.includes('снижен') || gl.includes('похуд') || gl.includes('weight loss') || gl.includes('loss')) {
+        calorieGoal *= 0.8; // дефицит 20%
+      } else if (gl.includes('набор') || gl.includes('muscle') || gl.includes('gain')) {
+        calorieGoal *= 1.15; // профицит 15%
       }
     }
 
     calorieGoal = Math.round(calorieGoal);
 
-    // Расчет макронутриентов (30% белки, 25% жиры, 45% углеводы)
+    // Расчёт макронутриентов: 30% белки, 25% жиры, 45% углеводы
     return {
       calories: calorieGoal,
-      protein: Math.round((calorieGoal * 0.3) / 4), // 1г белка = 4 ккал
-      fat: Math.round((calorieGoal * 0.25) / 9), // 1г жира = 9 ккал
-      carbs: Math.round((calorieGoal * 0.45) / 4) // 1г углеводов = 4 ккал
+      protein: Math.round((calorieGoal * 0.3) / 4),
+      fat: Math.round((calorieGoal * 0.25) / 9),
+      carbs: Math.round((calorieGoal * 0.45) / 4)
     };
   };
 
@@ -88,7 +108,6 @@ export default function HistoryTab({
         const stats = calculatePeriodStats();
         const nutrition = calculatePeriodNutrition ? calculatePeriodNutrition() : null;
         
-        // Для дня или выбранного дня недели показываем полную диаграмму
         if ((viewPeriod === 'day' || selectedWeekDay) && nutrition) {
           return (
             <NutritionDashboard
@@ -297,7 +316,6 @@ export default function HistoryTab({
 
         {/* Отображение в зависимости от периода */}
         {viewPeriod === "week" && !selectedWeekDay ? (
-          // Просмотр недели - показываем дни
           (() => {
             const weekDays = getWeekDays(selectedDate);
             return (
@@ -339,7 +357,6 @@ export default function HistoryTab({
             );
           })()
         ) : (
-          // Детальный просмотр дня или обычный список
           (() => {
             const filteredHistory = selectedWeekDay 
               ? getMealsForDay(selectedWeekDay)
