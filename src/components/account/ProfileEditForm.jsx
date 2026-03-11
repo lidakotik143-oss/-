@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { FaTimes } from "react-icons/fa";
+import { FaTimes, FaEye, FaEyeSlash } from "react-icons/fa";
 import { RECIPES_DATABASE } from "../../recipesData";
 import { ALLERGEN_CATEGORIES_EN, ALLERGEN_CATEGORIES_RU } from "../../utils/allergenCategories";
 
@@ -74,6 +74,9 @@ export default function ProfileEditForm({
 }) {
   const [allergyInput, setAllergyInput] = useState(userData?.allergies || "");
   const [showAllergySuggestions, setShowAllergySuggestions] = useState(false);
+  const [showPass, setShowPass] = useState(false);
+  const [showPass2, setShowPass2] = useState(false);
+  const [passError, setPassError] = useState('');
 
   const allergenCategoryMap = language === "ru" ? ALLERGEN_CATEGORIES_RU : ALLERGEN_CATEGORIES_EN;
 
@@ -119,6 +122,26 @@ export default function ProfileEditForm({
     setShowAllergySuggestions(false);
   };
 
+  const handleSubmitWithValidation = (e) => {
+    // Проверка совпадения паролей при регистрации
+    if (!isEditingProfile) {
+      const pass = e.target.password?.value || '';
+      const pass2 = e.target.password2?.value || '';
+      if (pass !== pass2) {
+        e.preventDefault();
+        setPassError(t('Пароли не совпадают', 'Passwords do not match'));
+        return;
+      }
+      if (pass.length < 4) {
+        e.preventDefault();
+        setPassError(t('Пароль должен быть не менее 4 символов', 'Password must be at least 4 characters'));
+        return;
+      }
+    }
+    setPassError('');
+    handleRegister(e);
+  };
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div className={`${theme.cardBg} rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6`}>
@@ -131,52 +154,86 @@ export default function ProfileEditForm({
           </button>
         </div>
 
-        <form onSubmit={handleRegister} className="space-y-4">
+        <form onSubmit={handleSubmitWithValidation} className="space-y-4">
           {/* Аватар */}
           <div className="text-center">
             {userData?.avatarURL && (
               <img src={userData.avatarURL} alt="Avatar" className="w-24 h-24 rounded-full object-cover mx-auto mb-2" />
             )}
             <label className={`block ${fontSize.body} font-semibold mb-2`}>{t("Фото профиля", "Profile Photo")}</label>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleAvatarUpload}
-              className={`w-full p-2 ${theme.input} ${fontSize.body} rounded-xl`}
-            />
+            <input type="file" accept="image/*" onChange={handleAvatarUpload}
+              className={`w-full p-2 ${theme.input} ${fontSize.body} rounded-xl`} />
           </div>
+
+          {/* Логин */}
+          {!isEditingProfile && (
+            <div>
+              <label className={`block ${fontSize.body} font-semibold mb-2`}>
+                {t("Логин", "Login")} *
+              </label>
+              <input type="text" name="login" required
+                defaultValue={userData?.login || ""}
+                placeholder={t("Придумайте логин", "Choose a login")}
+                className={`w-full p-3 ${theme.input} ${fontSize.body} rounded-xl`} />
+            </div>
+          )}
+
+          {/* Пароль */}
+          {!isEditingProfile && (
+            <>
+              <div>
+                <label className={`block ${fontSize.body} font-semibold mb-2`}>
+                  {t("Пароль", "Password")} *
+                </label>
+                <div className="relative">
+                  <input type={showPass ? 'text' : 'password'} name="password" required
+                    placeholder={t("Не менее 4 символов", "At least 4 characters")}
+                    onChange={() => setPassError('')}
+                    className={`w-full pr-10 p-3 ${theme.input} ${fontSize.body} rounded-xl`} />
+                  <button type="button" onClick={() => setShowPass(p => !p)}
+                    className={`absolute right-3 top-1/2 -translate-y-1/2 ${theme.textSecondary}`}>
+                    {showPass ? <FaEyeSlash /> : <FaEye />}
+                  </button>
+                </div>
+              </div>
+              <div>
+                <label className={`block ${fontSize.body} font-semibold mb-2`}>
+                  {t("Повторите пароль", "Confirm password")} *
+                </label>
+                <div className="relative">
+                  <input type={showPass2 ? 'text' : 'password'} name="password2" required
+                    placeholder={t("Повторите пароль", "Repeat password")}
+                    onChange={() => setPassError('')}
+                    className={`w-full pr-10 p-3 ${theme.input} ${fontSize.body} rounded-xl`} />
+                  <button type="button" onClick={() => setShowPass2(p => !p)}
+                    className={`absolute right-3 top-1/2 -translate-y-1/2 ${theme.textSecondary}`}>
+                    {showPass2 ? <FaEyeSlash /> : <FaEye />}
+                  </button>
+                </div>
+              </div>
+              {passError && <p className={`text-red-500 ${fontSize.small}`}>{passError}</p>}
+            </>
+          )}
 
           {/* Имя */}
           <div>
             <label className={`block ${fontSize.body} font-semibold mb-2`}>{t("Имя", "Name")} *</label>
-            <input
-              type="text"
-              name="name"
-              required
-              defaultValue={userData?.name || ""}
-              className={`w-full p-3 ${theme.input} ${fontSize.body} rounded-xl`}
-            />
+            <input type="text" name="name" required defaultValue={userData?.name || ""}
+              className={`w-full p-3 ${theme.input} ${fontSize.body} rounded-xl`} />
           </div>
 
           {/* Email */}
           <div>
             <label className={`block ${fontSize.body} font-semibold mb-2`}>{t("Email", "Email")}</label>
-            <input
-              type="email"
-              name="email"
-              defaultValue={userData?.email || ""}
-              className={`w-full p-3 ${theme.input} ${fontSize.body} rounded-xl`}
-            />
+            <input type="email" name="email" defaultValue={userData?.email || ""}
+              className={`w-full p-3 ${theme.input} ${fontSize.body} rounded-xl`} />
           </div>
 
           {/* Пол */}
           <div>
             <label className={`block ${fontSize.body} font-semibold mb-2`}>{t("Пол", "Gender")}</label>
-            <select
-              name="gender"
-              defaultValue={userData?.gender || ""}
-              className={`w-full p-3 ${theme.input} ${fontSize.body} rounded-xl`}
-            >
+            <select name="gender" defaultValue={userData?.gender || ""}
+              className={`w-full p-3 ${theme.input} ${fontSize.body} rounded-xl`}>
               <option value="">{t("Не указан", "Not specified")}</option>
               <option value="female">{t("Женский", "Female")}</option>
               <option value="male">{t("Мужской", "Male")}</option>
@@ -187,116 +244,69 @@ export default function ProfileEditForm({
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className={`block ${fontSize.body} font-semibold mb-2`}>{t("Возраст", "Age")}</label>
-              <input
-                type="number"
-                name="age"
-                defaultValue={userData?.age || ""}
-                className={`w-full p-3 ${theme.input} ${fontSize.body} rounded-xl`}
-              />
+              <input type="number" name="age" defaultValue={userData?.age || ""}
+                className={`w-full p-3 ${theme.input} ${fontSize.body} rounded-xl`} />
             </div>
             <div>
               <label className={`block ${fontSize.body} font-semibold mb-2`}>
                 {t("Вес", "Weight")} ({unitSystem === "metric" ? (language === "ru" ? "кг" : "kg") : "lb"})
               </label>
-              <input
-                type="number"
-                step="0.1"
-                name="weight"
-                defaultValue={
-                  userData?.weight
-                    ? (unitSystem === "metric" ? userData.weight : convertWeight(userData.weight, "metric"))
-                    : ""
-                }
-                className={`w-full p-3 ${theme.input} ${fontSize.body} rounded-xl`}
-              />
+              <input type="number" step="0.1" name="weight"
+                defaultValue={userData?.weight ? (unitSystem === "metric" ? userData.weight : convertWeight(userData.weight, "metric")) : ""}
+                className={`w-full p-3 ${theme.input} ${fontSize.body} rounded-xl`} />
             </div>
             <div>
               <label className={`block ${fontSize.body} font-semibold mb-2`}>
                 {t("Рост", "Height")} ({unitSystem === "metric" ? (language === "ru" ? "см" : "cm") : "in"})
               </label>
-              <input
-                type="number"
-                step="0.1"
-                name="height"
-                defaultValue={
-                  userData?.height
-                    ? (unitSystem === "metric" ? userData.height : convertHeight(userData.height, "metric"))
-                    : ""
-                }
-                className={`w-full p-3 ${theme.input} ${fontSize.body} rounded-xl`}
-              />
+              <input type="number" step="0.1" name="height"
+                defaultValue={userData?.height ? (unitSystem === "metric" ? userData.height : convertHeight(userData.height, "metric")) : ""}
+                className={`w-full p-3 ${theme.input} ${fontSize.body} rounded-xl`} />
             </div>
           </div>
 
           {/* Цель */}
           <div>
             <label className={`block ${fontSize.body} font-semibold mb-2`}>{t("Цель", "Goal")}</label>
-            <select
-              name="goal"
-              defaultValue={userData?.goal || ""}
-              className={`w-full p-3 ${theme.input} ${fontSize.body} rounded-xl`}
-            >
+            <select name="goal" defaultValue={userData?.goal || ""}
+              className={`w-full p-3 ${theme.input} ${fontSize.body} rounded-xl`}>
               <option value="">{t("Выберите цель", "Select goal")}</option>
-              {GOALS.map((g, i) => (
-                <option key={i} value={g}>{g}</option>
-              ))}
+              {GOALS.map((g, i) => <option key={i} value={g}>{g}</option>)}
             </select>
           </div>
 
           {/* Образ жизни */}
           <div>
             <label className={`block ${fontSize.body} font-semibold mb-2`}>{t("Образ жизни", "Lifestyle")}</label>
-            <select
-              name="lifestyle"
-              defaultValue={userData?.lifestyle || ""}
-              className={`w-full p-3 ${theme.input} ${fontSize.body} rounded-xl`}
-            >
+            <select name="lifestyle" defaultValue={userData?.lifestyle || ""}
+              className={`w-full p-3 ${theme.input} ${fontSize.body} rounded-xl`}>
               <option value="">{t("Выберите образ жизни", "Select lifestyle")}</option>
-              {LIFESTYLE.map((l, i) => (
-                <option key={i} value={l}>{l}</option>
-              ))}
+              {LIFESTYLE.map((l, i) => <option key={i} value={l}>{l}</option>)}
             </select>
           </div>
 
           {/* Аллергии */}
           <div className="relative">
             <label className={`block ${fontSize.body} font-semibold mb-2`}>{t("Аллергии", "Allergies")}</label>
-            <input
-              type="text"
-              name="allergies"
-              value={allergyInput}
-              onChange={(e) => {
-                setAllergyInput(e.target.value);
-                setShowAllergySuggestions(true);
-              }}
+            <input type="text" name="allergies" value={allergyInput}
+              onChange={(e) => { setAllergyInput(e.target.value); setShowAllergySuggestions(true); }}
               onFocus={() => setShowAllergySuggestions(true)}
               onBlur={() => setTimeout(() => setShowAllergySuggestions(false), 120)}
-              placeholder={t(
-                "Начните вводить (категории и продукты, можно через запятую)",
-                "Start typing (categories & ingredients, comma separated)"
-              )}
+              placeholder={t("Начните вводить (категории и продукты, можно через запятую)", "Start typing (categories & ingredients, comma separated)")}
               className={`w-full p-3 ${theme.input} ${fontSize.body} rounded-xl`}
-              autoComplete="off"
-            />
+              autoComplete="off" />
 
             {showAllergySuggestions && filteredSuggestions.length > 0 && (
               <div className={`absolute left-0 right-0 mt-2 rounded-xl border ${theme.border} ${theme.cardBg} shadow-lg overflow-hidden z-10 max-h-64 overflow-y-auto`}>
                 {filteredSuggestions.map((s) => {
                   const isCategory = Object.prototype.hasOwnProperty.call(allergenCategoryMap || {}, s);
                   return (
-                    <button
-                      key={s}
-                      type="button"
+                    <button key={s} type="button"
                       onMouseDown={(e) => e.preventDefault()}
                       onClick={() => addAllergyToken(s)}
-                      className={`w-full text-left px-4 py-3 ${fontSize.body} ${theme.text} hover:${theme.accent} hover:text-white transition flex items-center justify-between`}
-                    >
+                      className={`w-full text-left px-4 py-3 ${fontSize.body} ${theme.text} hover:${theme.accent} hover:text-white transition flex items-center justify-between`}>
                       <span>{s}</span>
-                      {isCategory && (
-                        <span className={`${fontSize.tiny} opacity-80`}>
-                          {t("Категория", "Category")}
-                        </span>
-                      )}
+                      {isCategory && <span className={`${fontSize.tiny} opacity-80`}>{t("Категория", "Category")}</span>}
                     </button>
                   );
                 })}
@@ -306,28 +316,14 @@ export default function ProfileEditForm({
             {allergyTokens.length > 0 && (
               <div className="mt-2 flex flex-wrap gap-2">
                 {allergyTokens.map((tok) => (
-                  <span
-                    key={tok}
-                    className={`px-3 py-1 rounded-full ${fontSize.small} border ${theme.border} ${theme.textSecondary}`}
-                  >
-                    {tok}
-                  </span>
+                  <span key={tok} className={`px-3 py-1 rounded-full ${fontSize.small} border ${theme.border} ${theme.textSecondary}`}>{tok}</span>
                 ))}
               </div>
             )}
-
-            <div className={`${fontSize.tiny} ${theme.textSecondary} mt-2`}>
-              {t(
-                "Подсказки: категории аллергенов + ингредиенты из рецептов (нормализованные названия).",
-                "Suggestions: allergen categories + recipe ingredients (normalized)."
-              )}
-            </div>
           </div>
 
-          <button
-            type="submit"
-            className={`w-full px-6 py-3 rounded-xl ${fontSize.body} ${theme.accent} ${theme.accentHover} text-white font-semibold`}
-          >
+          <button type="submit"
+            className={`w-full px-6 py-3 rounded-xl ${fontSize.body} ${theme.accent} ${theme.accentHover} text-white font-semibold`}>
             {isEditingProfile ? t("Сохранить изменения", "Save Changes") : t("Зарегистрироваться", "Register")}
           </button>
         </form>
