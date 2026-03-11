@@ -298,6 +298,37 @@ export default function CookifyDemo() {
   useEffect(() => { localStorage.setItem("cookify_weeklyPlan", JSON.stringify(weeklyPlan)); }, [weeklyPlan]);
   useEffect(() => { localStorage.setItem("cookify_shoppingList", JSON.stringify(shoppingList)); }, [shoppingList]);
 
+  // 💾 Синхронизация данных с ключом пользователя при каждом изменении (пока залогинен)
+  useEffect(() => {
+    if (userData?.login) {
+      localStorage.setItem(`cookify_userdata_${userData.login}`, JSON.stringify(userData));
+    }
+  }, [userData]);
+
+  useEffect(() => {
+    if (userData?.login) {
+      localStorage.setItem(`cookify_mealHistory_${userData.login}`, JSON.stringify(mealHistory));
+    }
+  }, [mealHistory, userData]);
+
+  useEffect(() => {
+    if (userData?.login) {
+      localStorage.setItem(`cookify_weeklyPlan_${userData.login}`, JSON.stringify(weeklyPlan));
+    }
+  }, [weeklyPlan, userData]);
+
+  useEffect(() => {
+    if (userData?.login) {
+      localStorage.setItem(`cookify_shoppingList_${userData.login}`, JSON.stringify(shoppingList));
+    }
+  }, [shoppingList, userData]);
+
+  useEffect(() => {
+    if (userData?.login) {
+      localStorage.setItem(`cookify_waterIntake_${userData.login}`, localStorage.getItem('cookify_waterIntake') || '[]');
+    }
+  }, [userData]);
+
   useEffect(() => { if (language === "en") setUnitSystem("imperial"); else setUnitSystem("metric"); }, [language]);
   useEffect(() => { setOpenSubPicker(null); }, [selectedRecipe, selectedRecipeVariantKey]);
   useEffect(() => { if (selectedRecipe) setCurrentServings(selectedRecipe.servings ?? 2); }, [selectedRecipe]);
@@ -367,21 +398,41 @@ export default function CookifyDemo() {
       if (data.weight) data.weight = convertWeight(data.weight, "imperial");
       if (data.height) data.height = convertHeight(data.height, "imperial");
     }
+    // Если пользователь уже залогинен (редактирование), сохраняем login из текущего userData
+    if (!data.login && userData?.login) data.login = userData.login;
     setUserData(data);
     setRegistered(true);
     setShowRegisterForm(false);
     setIsEditingProfile(false);
+    // Сохраняем профиль под ключом логина
+    if (data.login) {
+      localStorage.setItem(`cookify_userdata_${data.login}`, JSON.stringify(data));
+    }
   };
 
   const handleStartEditProfile = () => { setIsEditingProfile(true); setShowRegisterForm(true); };
 
   const handleLogout = () => {
+    // 💾 Сохраняем все данные пользователя под его логином ПЕРЕД выходом
+    const login = userData?.login;
+    if (login) {
+      localStorage.setItem(`cookify_userdata_${login}`, JSON.stringify(userData));
+      localStorage.setItem(`cookify_mealHistory_${login}`, JSON.stringify(mealHistory));
+      localStorage.setItem(`cookify_weeklyPlan_${login}`, JSON.stringify(weeklyPlan));
+      localStorage.setItem(`cookify_shoppingList_${login}`, JSON.stringify(shoppingList));
+      // Сохраняем водный трекер
+      const water = localStorage.getItem('cookify_waterIntake');
+      if (water) localStorage.setItem(`cookify_waterIntake_${login}`, water);
+      const waterGoal = localStorage.getItem('cookify_waterGoal');
+      if (waterGoal) localStorage.setItem(`cookify_waterGoal_${login}`, waterGoal);
+    }
     setUserData(null); setRegistered(false); setShowRegisterForm(false); setIsEditingProfile(false);
     setMealPlan({ breakfast: [], lunch: [], snack: [], dinner: [] });
     setMealHistory([]); setWeeklyPlan({}); setShoppingList([]); setUserSubstitutions({});
     localStorage.removeItem("cookify_user"); localStorage.removeItem("cookify_mealPlan");
     localStorage.removeItem("cookify_mealHistory"); localStorage.removeItem("cookify_weeklyPlan");
     localStorage.removeItem("cookify_shoppingList"); localStorage.removeItem(SUBSTITUTIONS_STORAGE_KEY);
+    localStorage.removeItem("cookify_waterIntake"); localStorage.removeItem("cookify_waterGoal");
   };
 
   const toggleUnitSystem = () => { setUnitSystem(prev => prev === "metric" ? "imperial" : "metric"); };
