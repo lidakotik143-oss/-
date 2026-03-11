@@ -1,6 +1,7 @@
 import React from "react";
 import { FaCalendarAlt, FaPlus, FaChevronLeft, FaChevronRight, FaTimes } from "react-icons/fa";
 import { NutritionDashboard } from "../NutritionVisuals";
+import { calculateDailyGoals } from "../../utils/nutrition";
 
 export default function HistoryTab({
   t,
@@ -34,80 +35,7 @@ export default function HistoryTab({
   removeMealFromHistory,
   userData
 }) {
-  // Формула Миффлина - Сан Жеора + КБЖУ по цели
-  const calculateDailyGoals = () => {
-    const weight = parseFloat(userData?.weight);
-    const height = parseFloat(userData?.height);
-    const age = parseFloat(userData?.age);
-
-    if (!weight) {
-      return { calories: 2000, protein: 150, fat: 70, carbs: 250 };
-    }
-
-    const genderLower = (userData?.gender || '').toLowerCase();
-    const isMale = genderLower.includes('муж') || genderLower.includes('male') || genderLower.includes('м');
-
-    const h = height || 170;
-    const a = age || 25;
-
-    let bmr;
-    if (isMale) {
-      bmr = 10 * weight + 6.25 * h - 5 * a + 5;
-    } else {
-      bmr = 10 * weight + 6.25 * h - 5 * a - 161;
-    }
-
-    // Коэффициент активности (TDEE)
-    let activityFactor = 1.2;
-    if (userData?.lifestyle) {
-      const lf = userData.lifestyle.toLowerCase();
-      if (lf.includes('умеренн') || lf.includes('moderate')) {
-        activityFactor = 1.55;
-      } else if (lf.includes('высок') || lf.includes('активн') || lf.includes('active')) {
-        activityFactor = 1.725;
-      } else if (lf.includes('очень') || lf.includes('very')) {
-        activityFactor = 1.9;
-      } else if (lf.includes('лёгк') || lf.includes('легк') || lf.includes('light')) {
-        activityFactor = 1.375;
-      }
-    }
-
-    let calorieGoal = bmr * activityFactor;
-
-    // Коррекция по цели + соотношение КБЖУ
-    let proteinRatio = 0.30;
-    let fatRatio = 0.25;
-    let carbsRatio = 0.45;
-
-    if (userData?.goal) {
-      const gl = userData.goal.toLowerCase();
-      if (gl.includes('снижен') || gl.includes('похуд') || gl.includes('weight loss') || gl.includes('loss')) {
-        calorieGoal *= 0.8;
-        // Похудение: больше белка, меньше углеводов
-        proteinRatio = 0.35;
-        fatRatio = 0.30;
-        carbsRatio = 0.35;
-      } else if (gl.includes('набор') || gl.includes('muscle') || gl.includes('gain')) {
-        calorieGoal *= 1.15;
-        // Набор массы: больше углеводов, меньше жиров
-        proteinRatio = 0.30;
-        fatRatio = 0.20;
-        carbsRatio = 0.50;
-      }
-      // Поддержание: стандартное соотношение (30/25/45) уже установлено
-    }
-
-    calorieGoal = Math.round(calorieGoal);
-
-    return {
-      calories: calorieGoal,
-      protein: Math.round((calorieGoal * proteinRatio) / 4),
-      fat: Math.round((calorieGoal * fatRatio) / 9),
-      carbs: Math.round((calorieGoal * carbsRatio) / 4)
-    };
-  };
-
-  const dailyGoals = calculateDailyGoals();
+  const dailyGoals = calculateDailyGoals(userData);
 
   return (
     <div className="space-y-6">

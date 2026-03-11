@@ -13,6 +13,15 @@ export default function ProfileCard({
   getDisplayWeight,
   getDisplayHeight
 }) {
+  const getGenderLabel = () => {
+    const g = (userData.gender || '').toLowerCase();
+    if (g === 'male' || g.includes('муж')) return t('Мужской', 'Male');
+    if (g === 'female' || g.includes('жен')) return t('Женский', 'Female');
+    return null;
+  };
+
+  const genderLabel = getGenderLabel();
+
   return (
     <div className={`${theme.cardBg} p-6 rounded-xl shadow`}>
       <div className="flex items-start justify-between mb-4">
@@ -61,6 +70,7 @@ export default function ProfileCard({
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
         {[
+          { label: t("Пол", "Gender"), value: genderLabel },
           { label: t("Возраст", "Age"), value: userData.age },
           { label: t("Вес", "Weight"), value: getDisplayWeight() },
           { label: t("Рост", "Height"), value: getDisplayHeight() },

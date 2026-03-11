@@ -4,96 +4,55 @@ import { RECIPES_DATABASE } from "../../recipesData";
 import { ALLERGEN_CATEGORIES_EN, ALLERGEN_CATEGORIES_RU } from "../../utils/allergenCategories";
 
 const DEFAULT_ALLERGY_SUGGESTIONS_RU = [
-  "Молоко",
-  "Яйца",
-  "Орехи",
-  "Арахис",
-  "Пшеница",
-  "Глютен",
-  "Соя",
-  "Рыба",
-  "Морепродукты",
-  "Кунжут"
+  "Молоко", "Яйца", "Орехи", "Арахис", "Пшеница",
+  "Глютен", "Соя", "Рыба", "Морепродукты", "Кунжут"
 ];
 
 const DEFAULT_ALLERGY_SUGGESTIONS_EN = [
-  "Milk",
-  "Eggs",
-  "Tree nuts",
-  "Peanuts",
-  "Wheat",
-  "Gluten",
-  "Soy",
-  "Fish",
-  "Shellfish",
-  "Sesame"
+  "Milk", "Eggs", "Tree nuts", "Peanuts", "Wheat",
+  "Gluten", "Soy", "Fish", "Shellfish", "Sesame"
 ];
 
 const splitAllergyTokens = (value) =>
-  (value || "")
-    .split(/[;,]+/)
-    .map(s => s.trim())
-    .filter(Boolean);
+  (value || "").split(/[;,]+/).map(s => s.trim()).filter(Boolean);
 
 const buildAllergyValue = (tokens) => tokens.join(", ");
 
-// Нормализация названия ингредиента для подсказок аллергенов
-// Цель: убрать скобки, "по вкусу", "по желанию", "для ..." и т.п.
 const normalizeIngredientName = (name) => {
   if (!name) return "";
   let s = name.toString();
-
-  // 1) Удаляем всё в круглых/квадратных скобках
-  s = s.replace(/\([^)]*\)/g, " ");
-  s = s.replace(/\[[^\]]*\]/g, " ");
-
-  // 2) Убираем частые служебные фразы
+  s = s.replace(/\([^)]*\)/g, " ").replace(/\[[^\]]*\]/g, " ");
   s = s
     .replace(/\bпо\s+вкусу\b/gi, " ")
     .replace(/\bпо\s+желанию\b/gi, " ")
     .replace(/\bдля\s+[а-яё\s-]+\b/gi, " ")
     .replace(/\bили\b/gi, " ");
-
-  // 3) Чистим лишние символы
-  s = s.replace(/[—–-]/g, " ");
-  s = s.replace(/[.]/g, " ");
-  s = s.replace(/\s+/g, " ").trim();
-
-  // 4) Простая капитализация (чтобы выглядело аккуратно)
+  s = s.replace(/[—–-]/g, " ").replace(/[.]/g, " ").replace(/\s+/g, " ").trim();
   if (!s) return "";
   return s.charAt(0).toUpperCase() + s.slice(1);
 };
 
 const splitByCommaList = (text) => {
   if (!text) return [];
-  return text
-    .split(",")
-    .map(x => x.trim())
-    .filter(Boolean);
+  return text.split(",").map(x => x.trim()).filter(Boolean);
 };
 
 const collectIngredientNames = (recipes) => {
   const names = new Set();
-
   (recipes || []).forEach(r => {
     const pushFrom = (ings) => {
       (ings || []).forEach(ing => {
         const raw = (typeof ing === "object" ? ing.name : ing) || "";
-
-        // Если строка вида "черника, малина, клубника" — добавляем все элементы
         const parts = raw.includes(",") ? splitByCommaList(raw) : [raw];
-
         parts.forEach(p => {
           const normalized = normalizeIngredientName(p);
           if (normalized) names.add(normalized);
         });
       });
     };
-
     pushFrom(r.ingredients);
     (r.variants || []).forEach(v => pushFrom(v.ingredients));
   });
-
   return Array.from(names).sort((a, b) => a.localeCompare(b, "ru"));
 };
 
@@ -130,12 +89,6 @@ export default function ProfileEditForm({
 
   const suggestions = useMemo(() => {
     const defaults = language === "ru" ? DEFAULT_ALLERGY_SUGGESTIONS_RU : DEFAULT_ALLERGY_SUGGESTIONS_EN;
-
-    // Объединяем:
-    // - категории аллергенов (например "Ягоды")
-    // - дефолты (например "Молоко")
-    // - ингредиенты из рецептов (например "Лимон")
-    // Убираем дубли.
     const merged = new Set([...(allergenCategoryNames || []), ...(defaults || []), ...(recipeIngredientSuggestions || [])]);
     return Array.from(merged);
   }, [language, recipeIngredientSuggestions, allergenCategoryNames]);
@@ -144,7 +97,6 @@ export default function ProfileEditForm({
 
   const currentQuery = useMemo(() => {
     const raw = (allergyInput || "").trim();
-    // Ищем после последней запятой/точки с запятой
     const idxComma = raw.lastIndexOf(",");
     const idxSemi = raw.lastIndexOf(";");
     const idx = Math.max(idxComma, idxSemi);
@@ -153,15 +105,9 @@ export default function ProfileEditForm({
 
   const filteredSuggestions = useMemo(() => {
     const q = currentQuery.toLowerCase();
-
-    // Если пользователь ничего не вводит — показываем категории + топ-дефолты,
-    // чтобы не вываливать сотни ингредиентов.
     const defaults = language === "ru" ? DEFAULT_ALLERGY_SUGGESTIONS_RU : DEFAULT_ALLERGY_SUGGESTIONS_EN;
     const top = [...(allergenCategoryNames || []), ...(defaults || [])];
-
     const base = q ? suggestions.filter(s => s.toLowerCase().includes(q)) : top;
-
-    // Не показываем то, что уже добавлено
     const existing = new Set(allergyTokens.map(x => x.toLowerCase()));
     return base.filter(s => !existing.has(s.toLowerCase())).slice(0, 14);
   }, [currentQuery, suggestions, allergyTokens, language, allergenCategoryNames]);
@@ -200,7 +146,7 @@ export default function ProfileEditForm({
             />
           </div>
 
-          {/* Основные поля */}
+          {/* Имя */}
           <div>
             <label className={`block ${fontSize.body} font-semibold mb-2`}>{t("Имя", "Name")} *</label>
             <input
@@ -212,6 +158,7 @@ export default function ProfileEditForm({
             />
           </div>
 
+          {/* Email */}
           <div>
             <label className={`block ${fontSize.body} font-semibold mb-2`}>{t("Email", "Email")}</label>
             <input
@@ -222,6 +169,21 @@ export default function ProfileEditForm({
             />
           </div>
 
+          {/* Пол */}
+          <div>
+            <label className={`block ${fontSize.body} font-semibold mb-2`}>{t("Пол", "Gender")}</label>
+            <select
+              name="gender"
+              defaultValue={userData?.gender || ""}
+              className={`w-full p-3 ${theme.input} ${fontSize.body} rounded-xl`}
+            >
+              <option value="">{t("Не указан", "Not specified")}</option>
+              <option value="female">{t("Женский", "Female")}</option>
+              <option value="male">{t("Мужской", "Male")}</option>
+            </select>
+          </div>
+
+          {/* Возраст, вес, рост */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className={`block ${fontSize.body} font-semibold mb-2`}>{t("Возраст", "Age")}</label>
@@ -266,6 +228,7 @@ export default function ProfileEditForm({
             </div>
           </div>
 
+          {/* Цель */}
           <div>
             <label className={`block ${fontSize.body} font-semibold mb-2`}>{t("Цель", "Goal")}</label>
             <select
@@ -280,6 +243,7 @@ export default function ProfileEditForm({
             </select>
           </div>
 
+          {/* Образ жизни */}
           <div>
             <label className={`block ${fontSize.body} font-semibold mb-2`}>{t("Образ жизни", "Lifestyle")}</label>
             <select
@@ -294,6 +258,7 @@ export default function ProfileEditForm({
             </select>
           </div>
 
+          {/* Аллергии */}
           <div className="relative">
             <label className={`block ${fontSize.body} font-semibold mb-2`}>{t("Аллергии", "Allergies")}</label>
             <input
@@ -305,10 +270,7 @@ export default function ProfileEditForm({
                 setShowAllergySuggestions(true);
               }}
               onFocus={() => setShowAllergySuggestions(true)}
-              onBlur={() => {
-                // Даём кликнуть по подсказке
-                setTimeout(() => setShowAllergySuggestions(false), 120);
-              }}
+              onBlur={() => setTimeout(() => setShowAllergySuggestions(false), 120)}
               placeholder={t(
                 "Начните вводить (категории и продукты, можно через запятую)",
                 "Start typing (categories & ingredients, comma separated)"
