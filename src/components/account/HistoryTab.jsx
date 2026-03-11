@@ -34,7 +34,7 @@ export default function HistoryTab({
   removeMealFromHistory,
   userData
 }) {
-  // Формула Миффлина - Сан Жеора
+  // Формула Миффлина - Сан Жеора + КБЖУ по цели
   const calculateDailyGoals = () => {
     const weight = parseFloat(userData?.weight);
     const height = parseFloat(userData?.height);
@@ -44,15 +44,11 @@ export default function HistoryTab({
       return { calories: 2000, protein: 150, fat: 70, carbs: 250 };
     }
 
-    // BMR по формуле Миффлина — Сан Жеора
-    // Мужчины: 10*вес + 6.25*рост - 5*возраст + 5
-    // Женщины: 10*вес + 6.25*рост - 5*возраст - 161
-    // Если пол не указан — используем среднее (женская формула как более распространённый случай)
     const genderLower = (userData?.gender || '').toLowerCase();
     const isMale = genderLower.includes('муж') || genderLower.includes('male') || genderLower.includes('м');
 
-    const h = height || 170; // fallback рост 170 см
-    const a = age || 25;     // fallback возраст 25 лет
+    const h = height || 170;
+    const a = age || 25;
 
     let bmr;
     if (isMale) {
@@ -62,7 +58,7 @@ export default function HistoryTab({
     }
 
     // Коэффициент активности (TDEE)
-    let activityFactor = 1.2; // по умолчанию — сидячий
+    let activityFactor = 1.2;
     if (userData?.lifestyle) {
       const lf = userData.lifestyle.toLowerCase();
       if (lf.includes('умеренн') || lf.includes('moderate')) {
@@ -78,24 +74,36 @@ export default function HistoryTab({
 
     let calorieGoal = bmr * activityFactor;
 
-    // Коррекция по цели
+    // Коррекция по цели + соотношение КБЖУ
+    let proteinRatio = 0.30;
+    let fatRatio = 0.25;
+    let carbsRatio = 0.45;
+
     if (userData?.goal) {
       const gl = userData.goal.toLowerCase();
       if (gl.includes('снижен') || gl.includes('похуд') || gl.includes('weight loss') || gl.includes('loss')) {
-        calorieGoal *= 0.8; // дефицит 20%
+        calorieGoal *= 0.8;
+        // Похудение: больше белка, меньше углеводов
+        proteinRatio = 0.35;
+        fatRatio = 0.30;
+        carbsRatio = 0.35;
       } else if (gl.includes('набор') || gl.includes('muscle') || gl.includes('gain')) {
-        calorieGoal *= 1.15; // профицит 15%
+        calorieGoal *= 1.15;
+        // Набор массы: больше углеводов, меньше жиров
+        proteinRatio = 0.30;
+        fatRatio = 0.20;
+        carbsRatio = 0.50;
       }
+      // Поддержание: стандартное соотношение (30/25/45) уже установлено
     }
 
     calorieGoal = Math.round(calorieGoal);
 
-    // Расчёт макронутриентов: 30% белки, 25% жиры, 45% углеводы
     return {
       calories: calorieGoal,
-      protein: Math.round((calorieGoal * 0.3) / 4),
-      fat: Math.round((calorieGoal * 0.25) / 9),
-      carbs: Math.round((calorieGoal * 0.45) / 4)
+      protein: Math.round((calorieGoal * proteinRatio) / 4),
+      fat: Math.round((calorieGoal * fatRatio) / 9),
+      carbs: Math.round((calorieGoal * carbsRatio) / 4)
     };
   };
 
@@ -103,7 +111,6 @@ export default function HistoryTab({
 
   return (
     <div className="space-y-6">
-      {/* Анимированная панель питания */}
       {(() => {
         const stats = calculatePeriodStats();
         const nutrition = calculatePeriodNutrition ? calculatePeriodNutrition() : null;
@@ -149,7 +156,6 @@ export default function HistoryTab({
           </button>
         </div>
 
-        {/* Переключатель периодов */}
         <div className="flex gap-2 mb-4 flex-wrap">
           {['day', 'week', 'month'].map(period => (
             <button
@@ -167,7 +173,6 @@ export default function HistoryTab({
           ))}
         </div>
 
-        {/* Навигатор по датам */}
         <div className={`mb-6 p-4 ${theme.border} border rounded-xl`}>
           {viewPeriod === "day" && (
             <div className="space-y-3">
@@ -191,7 +196,6 @@ export default function HistoryTab({
                   {t("Завтра", "Tomorrow")} →
                 </button>
               </div>
-              
               <div className={`text-center ${fontSize.cardTitle} font-bold ${theme.headerText}`}>
                 {getPeriodDisplayText()}
               </div>
@@ -206,13 +210,11 @@ export default function HistoryTab({
               >
                 <FaChevronLeft size={20} />
               </button>
-              
               <div className="text-center flex-1">
                 <div className={`${fontSize.cardTitle} font-bold ${theme.headerText}`}>
                   {getPeriodDisplayText()}
                 </div>
               </div>
-              
               <button
                 onClick={() => setSelectedDate(addWeeks(selectedDate, 1))}
                 className={`p-2 rounded-lg ${theme.accent} ${theme.accentHover} text-white`}
@@ -231,11 +233,9 @@ export default function HistoryTab({
                 >
                   <FaChevronLeft size={20} />
                 </button>
-                
                 <div className={`${fontSize.cardTitle} font-bold ${theme.headerText}`}>
                   {getPeriodDisplayText()}
                 </div>
-                
                 <button
                   onClick={() => setSelectedDate(addMonths(selectedDate, 1))}
                   className={`p-2 rounded-lg ${theme.accent} ${theme.accentHover} text-white`}
@@ -243,7 +243,6 @@ export default function HistoryTab({
                   <FaChevronRight size={20} />
                 </button>
               </div>
-              
               <div className="flex gap-2 justify-center">
                 <select
                   value={new Date(selectedDate).getMonth()}
@@ -257,7 +256,6 @@ export default function HistoryTab({
                     <option key={idx} value={idx}>{month}</option>
                   ))}
                 </select>
-                
                 <select
                   value={new Date(selectedDate).getFullYear()}
                   onChange={(e) => {
@@ -275,11 +273,9 @@ export default function HistoryTab({
           )}
         </div>
 
-        {/* Статистика за период (только для недели/месяца) */}
         {viewPeriod !== 'day' && !selectedWeekDay && (() => {
           const stats = calculatePeriodStats();
           const nutrition = calculatePeriodNutrition ? calculatePeriodNutrition() : null;
-          
           return (
             <div className={`grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6 p-4 ${theme.border} border rounded-xl`}>
               <div>
@@ -314,7 +310,6 @@ export default function HistoryTab({
           );
         })()}
 
-        {/* Отображение в зависимости от периода */}
         {viewPeriod === "week" && !selectedWeekDay ? (
           (() => {
             const weekDays = getWeekDays(selectedDate);
@@ -330,7 +325,6 @@ export default function HistoryTab({
                   const dayOfWeek = date.getDay();
                   const dayName = WEEKDAY_NAMES[dayOfWeek];
                   const dayShort = WEEKDAY_SHORT[dayOfWeek];
-                  
                   return (
                     <div
                       key={dayKey}
@@ -338,12 +332,8 @@ export default function HistoryTab({
                       className={`p-4 ${theme.border} border rounded-xl cursor-pointer hover:shadow-lg transition flex items-center justify-between`}
                     >
                       <div className="flex-1">
-                        <div className={`${fontSize.body} font-semibold`}>
-                          {dayName} ({dayShort})
-                        </div>
-                        <div className={`${fontSize.small} ${theme.textSecondary}`}>
-                          {formatDate(dayKey, language)}
-                        </div>
+                        <div className={`${fontSize.body} font-semibold`}>{dayName} ({dayShort})</div>
+                        <div className={`${fontSize.small} ${theme.textSecondary}`}>{formatDate(dayKey, language)}</div>
                       </div>
                       <div className="text-right mr-4">
                         <div className={`${fontSize.small} ${theme.textSecondary}`}>{t("Приемов:", "Meals:")} {dayMeals.length}</div>
@@ -358,10 +348,10 @@ export default function HistoryTab({
           })()
         ) : (
           (() => {
-            const filteredHistory = selectedWeekDay 
+            const filteredHistory = selectedWeekDay
               ? getMealsForDay(selectedWeekDay)
               : getFilteredHistory();
-            
+
             if (filteredHistory.length === 0) {
               return (
                 <p className={`${theme.textSecondary} ${fontSize.body} text-center py-8`}>
@@ -396,7 +386,6 @@ export default function HistoryTab({
                   {MEAL_CATEGORIES.map(cat => {
                     const meals = groupedByCategory[cat];
                     if (meals.length === 0) return null;
-
                     return (
                       <div key={cat} className={`p-4 ${theme.border} border rounded-xl`}>
                         <h4 className={`${fontSize.cardTitle} font-semibold mb-3 ${theme.headerText}`}>
@@ -406,7 +395,6 @@ export default function HistoryTab({
                           {meals.map(entry => {
                             let displayTitle = entry.recipe.title;
                             let displayCalories = entry.recipe.caloriesPerServing || entry.recipe.calories || 0;
-
                             if (entry.variantKey && entry.recipe.variants) {
                               const variant = entry.recipe.variants.find(v => v.key === entry.variantKey);
                               if (variant) {
@@ -415,7 +403,6 @@ export default function HistoryTab({
                                 displayTitle = `${entry.recipe.title} (${variantLabel})`;
                               }
                             }
-
                             return (
                               <div key={entry.id} className={`flex items-center justify-between p-3 ${theme.cardBg} rounded-lg`}>
                                 <div className="flex-1">
