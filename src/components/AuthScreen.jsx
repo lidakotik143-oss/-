@@ -1,102 +1,196 @@
 import React, { useState } from 'react';
-import { FaUtensils, FaUser, FaLock, FaEye, FaEyeSlash } from 'react-icons/fa';
+import { FaEye, FaEyeSlash, FaLeaf } from 'react-icons/fa';
 
-export default function AuthScreen({ theme, fontSize, language, onLogin, onGoRegister }) {
-  const t = (ru, en) => (language === 'ru' ? ru : en);
-  const [login, setLogin] = useState('');
-  const [password, setPassword] = useState('');
+export default function AuthScreen({ onLogin, onRegister, theme, fontSize, language }) {
+  const [mode, setMode] = useState('choice'); // 'choice' | 'login' | 'register'
+  const [loginForm, setLoginForm] = useState({ login: '', password: '' });
+  const [registerForm, setRegisterForm] = useState({ login: '', password: '', confirmPassword: '' });
   const [showPass, setShowPass] = useState(false);
   const [error, setError] = useState('');
 
-  const handleSubmit = (e) => {
+  const t = (ru, en) => language === 'ru' ? ru : en;
+
+  const handleLogin = (e) => {
     e.preventDefault();
-    if (!login.trim() || !password.trim()) {
-      setError(t('Заполните логин и пароль', 'Enter login and password'));
+    setError('');
+    const result = onLogin(loginForm.login.trim(), loginForm.password);
+    if (!result.ok) setError(result.message);
+  };
+
+  const handleRegister = (e) => {
+    e.preventDefault();
+    setError('');
+    if (registerForm.password !== registerForm.confirmPassword) {
+      setError(t('Пароли не совпадают', 'Passwords do not match'));
       return;
     }
-    const result = onLogin(login.trim(), password);
-    if (!result) {
-      setError(t('Неверный логин или пароль', 'Invalid login or password'));
+    if (registerForm.login.trim().length < 3) {
+      setError(t('Логин должен быть не менее 3 символов', 'Login must be at least 3 characters'));
+      return;
     }
+    if (registerForm.password.length < 4) {
+      setError(t('Пароль должен быть не менее 4 символов', 'Password must be at least 4 characters'));
+      return;
+    }
+    const result = onRegister(registerForm.login.trim(), registerForm.password);
+    if (!result.ok) setError(result.message);
   };
 
   return (
-    <div className="min-h-[70vh] flex items-center justify-center">
-      <div className={`${theme.cardBg} rounded-2xl shadow-xl p-8 w-full max-w-md`}>
+    <div className="min-h-screen bg-[#FEFAE0] flex items-center justify-center p-6">
+      <div className="w-full max-w-md">
         {/* Лого */}
         <div className="text-center mb-8">
-          <div className={`w-16 h-16 rounded-2xl ${theme.accent} flex items-center justify-center mx-auto mb-3`}>
-            <FaUtensils className="text-white w-8 h-8" />
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-[#606C38] mb-4">
+            <FaLeaf className="text-white text-3xl" />
           </div>
-          <h1 className={`${fontSize.heading} font-bold ${theme.headerText}`}>Cookify</h1>
-          <p className={`${theme.textSecondary} ${fontSize.small} mt-1`}>
-            {t('Ваш персональный помощник по питанию', 'Your personal nutrition assistant')}
-          </p>
+          <h1 className="text-4xl font-bold text-[#283618]">Cookify</h1>
+          <p className="text-[#606C38] mt-1 text-sm">{t('Персонализированное питание', 'Personalized Nutrition')}</p>
         </div>
 
-        <h2 className={`${fontSize.subheading} font-semibold ${theme.text} mb-6 text-center`}>
-          {t('Вход в аккаунт', 'Sign In')}
-        </h2>
+        <div className="bg-white rounded-2xl shadow-lg p-8">
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className={`${fontSize.small} ${theme.textSecondary} block mb-1`}>
-              {t('Логин', 'Login')}
-            </label>
-            <div className="relative">
-              <FaUser className={`absolute left-3 top-1/2 -translate-y-1/2 ${theme.textSecondary}`} />
-              <input
-                type="text"
-                value={login}
-                onChange={e => { setLogin(e.target.value); setError(''); }}
-                placeholder={t('Ваш логин', 'Your login')}
-                className={`w-full pl-10 pr-4 py-3 rounded-xl border ${theme.input} ${fontSize.body} outline-none focus:ring-2`}
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className={`${fontSize.small} ${theme.textSecondary} block mb-1`}>
-              {t('Пароль', 'Password')}
-            </label>
-            <div className="relative">
-              <FaLock className={`absolute left-3 top-1/2 -translate-y-1/2 ${theme.textSecondary}`} />
-              <input
-                type={showPass ? 'text' : 'password'}
-                value={password}
-                onChange={e => { setPassword(e.target.value); setError(''); }}
-                placeholder={t('Ваш пароль', 'Your password')}
-                className={`w-full pl-10 pr-10 py-3 rounded-xl border ${theme.input} ${fontSize.body} outline-none focus:ring-2`}
-              />
-              <button type="button" onClick={() => setShowPass(p => !p)}
-                className={`absolute right-3 top-1/2 -translate-y-1/2 ${theme.textSecondary}`}>
-                {showPass ? <FaEyeSlash /> : <FaEye />}
+          {/* Выбор: войти или зарегистрироваться */}
+          {mode === 'choice' && (
+            <div className="space-y-4">
+              <h2 className="text-xl font-semibold text-[#283618] text-center mb-6">
+                {t('Добро пожаловать!', 'Welcome!')}
+              </h2>
+              <button
+                onClick={() => { setMode('login'); setError(''); }}
+                className="w-full py-3 px-6 rounded-xl bg-[#606C38] hover:bg-[#283618] text-white font-semibold text-base transition"
+              >
+                {t('Войти в аккаунт', 'Sign In')}
+              </button>
+              <button
+                onClick={() => { setMode('register'); setError(''); }}
+                className="w-full py-3 px-6 rounded-xl border-2 border-[#606C38] text-[#606C38] hover:bg-[#FEFAE0] font-semibold text-base transition"
+              >
+                {t('Зарегистрироваться', 'Create Account')}
               </button>
             </div>
-          </div>
-
-          {error && (
-            <p className={`text-red-500 ${fontSize.small} text-center`}>{error}</p>
           )}
 
-          <button
-            type="submit"
-            className={`w-full py-3 rounded-xl ${theme.accent} ${theme.accentHover} text-white font-semibold ${fontSize.body} transition`}
-          >
-            {t('Войти', 'Sign In')}
-          </button>
-        </form>
+          {/* Форма входа */}
+          {mode === 'login' && (
+            <form onSubmit={handleLogin} className="space-y-4">
+              <h2 className="text-xl font-semibold text-[#283618] text-center mb-6">
+                {t('Вход в аккаунт', 'Sign In')}
+              </h2>
 
-        <div className="mt-6 text-center">
-          <p className={`${theme.textSecondary} ${fontSize.small}`}>
-            {t('Ещё нет аккаунта?', 'No account yet?')}
-          </p>
-          <button
-            onClick={onGoRegister}
-            className={`mt-2 ${fontSize.body} font-semibold ${theme.accentText} hover:underline transition`}
-          >
-            {t('Зарегистрироваться', 'Register')}
-          </button>
+              <div>
+                <label className="block text-sm font-medium text-[#606C38] mb-1">{t('Логин', 'Login')}</label>
+                <input
+                  type="text"
+                  required
+                  value={loginForm.login}
+                  onChange={e => setLoginForm(p => ({ ...p, login: e.target.value }))}
+                  placeholder={t('Введите логин', 'Enter login')}
+                  className="w-full px-4 py-2.5 rounded-xl border border-[#DDA15E] bg-white text-[#283618] placeholder-[#606C38] placeholder-opacity-50 focus:outline-none focus:ring-2 focus:ring-[#606C38]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-[#606C38] mb-1">{t('Пароль', 'Password')}</label>
+                <div className="relative">
+                  <input
+                    type={showPass ? 'text' : 'password'}
+                    required
+                    value={loginForm.password}
+                    onChange={e => setLoginForm(p => ({ ...p, password: e.target.value }))}
+                    placeholder={t('Введите пароль', 'Enter password')}
+                    className="w-full px-4 py-2.5 pr-10 rounded-xl border border-[#DDA15E] bg-white text-[#283618] placeholder-[#606C38] placeholder-opacity-50 focus:outline-none focus:ring-2 focus:ring-[#606C38]"
+                  />
+                  <button type="button" onClick={() => setShowPass(p => !p)} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#606C38]">
+                    {showPass ? <FaEyeSlash /> : <FaEye />}
+                  </button>
+                </div>
+              </div>
+
+              {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+
+              <button type="submit" className="w-full py-3 rounded-xl bg-[#606C38] hover:bg-[#283618] text-white font-semibold transition">
+                {t('Войти', 'Sign In')}
+              </button>
+
+              <p className="text-center text-sm text-[#606C38] mt-2">
+                {t('Нет аккаунта?', "Don't have an account?")}{' '}
+                <button type="button" onClick={() => { setMode('register'); setError(''); }} className="font-semibold underline">
+                  {t('Зарегистрироваться', 'Register')}
+                </button>
+              </p>
+              <button type="button" onClick={() => { setMode('choice'); setError(''); }} className="w-full text-center text-sm text-[#606C38] opacity-60 hover:opacity-100 transition mt-1">
+                ← {t('Назад', 'Back')}
+              </button>
+            </form>
+          )}
+
+          {/* Форма регистрации */}
+          {mode === 'register' && (
+            <form onSubmit={handleRegister} className="space-y-4">
+              <h2 className="text-xl font-semibold text-[#283618] text-center mb-6">
+                {t('Создать аккаунт', 'Create Account')}
+              </h2>
+
+              <div>
+                <label className="block text-sm font-medium text-[#606C38] mb-1">{t('Логин', 'Login')}</label>
+                <input
+                  type="text"
+                  required
+                  value={registerForm.login}
+                  onChange={e => setRegisterForm(p => ({ ...p, login: e.target.value }))}
+                  placeholder={t('Придумайте логин', 'Choose a login')}
+                  className="w-full px-4 py-2.5 rounded-xl border border-[#DDA15E] bg-white text-[#283618] placeholder-[#606C38] placeholder-opacity-50 focus:outline-none focus:ring-2 focus:ring-[#606C38]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-[#606C38] mb-1">{t('Пароль', 'Password')}</label>
+                <div className="relative">
+                  <input
+                    type={showPass ? 'text' : 'password'}
+                    required
+                    value={registerForm.password}
+                    onChange={e => setRegisterForm(p => ({ ...p, password: e.target.value }))}
+                    placeholder={t('Придумайте пароль (мин. 4 символа)', 'Choose password (min. 4 chars)')}
+                    className="w-full px-4 py-2.5 pr-10 rounded-xl border border-[#DDA15E] bg-white text-[#283618] placeholder-[#606C38] placeholder-opacity-50 focus:outline-none focus:ring-2 focus:ring-[#606C38]"
+                  />
+                  <button type="button" onClick={() => setShowPass(p => !p)} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#606C38]">
+                    {showPass ? <FaEyeSlash /> : <FaEye />}
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-[#606C38] mb-1">{t('Повторите пароль', 'Confirm Password')}</label>
+                <input
+                  type={showPass ? 'text' : 'password'}
+                  required
+                  value={registerForm.confirmPassword}
+                  onChange={e => setRegisterForm(p => ({ ...p, confirmPassword: e.target.value }))}
+                  placeholder={t('Повторите пароль', 'Repeat password')}
+                  className="w-full px-4 py-2.5 rounded-xl border border-[#DDA15E] bg-white text-[#283618] placeholder-[#606C38] placeholder-opacity-50 focus:outline-none focus:ring-2 focus:ring-[#606C38]"
+                />
+              </div>
+
+              {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+
+              <button type="submit" className="w-full py-3 rounded-xl bg-[#606C38] hover:bg-[#283618] text-white font-semibold transition">
+                {t('Зарегистрироваться', 'Register')}
+              </button>
+
+              <p className="text-center text-sm text-[#606C38] mt-2">
+                {t('Уже есть аккаунт?', 'Already have an account?')}{' '}
+                <button type="button" onClick={() => { setMode('login'); setError(''); }} className="font-semibold underline">
+                  {t('Войти', 'Sign In')}
+                </button>
+              </p>
+              <button type="button" onClick={() => { setMode('choice'); setError(''); }} className="w-full text-center text-sm text-[#606C38] opacity-60 hover:opacity-100 transition mt-1">
+                ← {t('Назад', 'Back')}
+              </button>
+            </form>
+          )}
+
         </div>
       </div>
     </div>
