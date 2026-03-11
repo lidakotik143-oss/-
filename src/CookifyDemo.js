@@ -1,5 +1,5 @@
 // =================== БЛОК 1: Импорты и примерные данные ===================
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { FaTimes, FaPlus, FaMinus } from "react-icons/fa";
 import { RECIPES_DATABASE } from './recipesData';
 
@@ -22,13 +22,11 @@ import SearchScreen from "./components/SearchScreen";
 import AccountScreen from "./components/AccountScreen";
 
 // 🔧 Временные точечные исправления некорректных типов блюд из базы рецептов
-// (в идеале это нужно поправить в самом recipesData)
 const RECIPE_TYPE_FIXES = {
   "паста карбонара": "обед",
   "куриные грудки с овощами": "ужин"
 };
 
-// Используем импортированную базу данных вместо примеров
 const SAMPLE_RECIPES = (RECIPES_DATABASE || []).map(r => {
   const key = (r.title || "").toString().toLowerCase().trim();
   return {
@@ -57,13 +55,11 @@ const WEEKDAY_SHORT_EN = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const MONTH_NAMES_RU = ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"];
 const MONTH_NAMES_EN = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
-// Константы конвертации
 const CM_TO_INCH = 0.393701;
 const KG_TO_LB = 2.20462;
 const INCH_TO_CM = 2.54;
 const LB_TO_KG = 0.453592;
 
-// Маппинг типов блюд
 const DISH_TYPE_LABELS = {
   "завтрак": { ru: "Завтрак", en: "Breakfast", color: "bg-[#F4A460]" },
   "обед": { ru: "Обед", en: "Lunch", color: "bg-[#8B7355]" },
@@ -91,7 +87,6 @@ const getTimeCategory = (minutes) => {
   return { category: "slow", emoji: "🕐", label_ru: "Не спеша", label_en: "Slow", color: "#EF4444" };
 };
 
-// 🔤 ИСПРАВЛЕННЫЙ СПИСОК ШРИФТОВ С ПРАВИЛЬНЫМИ TAILWIND КЛАССАМИ
 const FONTS = {
   inter: { name: "Inter", nameRu: "Inter", class: "font-sans" },
   roboto: { name: "Roboto", nameRu: "Roboto", class: "font-roboto" },
@@ -116,7 +111,6 @@ const THEMES = {
 const CUISINES_RU = ["американская", "вьетнамская", "греческая", "грузинская", "индийская", "испанская", "итальянская", "китайская", "корейская", "мексиканская", "русская", "средиземноморская", "тайская", "турецкая", "украинская", "французская", "японская"];
 const CUISINES_EN = ["American", "Chinese", "French", "Georgian", "Greek", "Indian", "Italian", "Japanese", "Korean", "Mediterranean", "Mexican", "Russian", "Spanish", "Thai", "Turkish", "Ukrainian", "Vietnamese"];
 
-// Утилиты для работы с датами
 const getDateKey = (date) => {
   const d = new Date(date);
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -137,9 +131,7 @@ const getMonthKey = (date) => {
 
 const formatDate = (dateStr, language) => {
   const d = new Date(dateStr);
-  if (language === "ru") {
-    return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
-  }
+  if (language === "ru") return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
   return d.toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' });
 };
 
@@ -148,7 +140,6 @@ const getWeekDays = (date) => {
   const day = d.getDay();
   const diff = d.getDate() - day + (day === 0 ? -6 : 1);
   const monday = new Date(d.setDate(diff));
-
   const days = [];
   for (let i = 0; i < 7; i++) {
     const current = new Date(monday);
@@ -162,7 +153,6 @@ const getWeekRange = (date, language) => {
   const weekDays = getWeekDays(date);
   const firstDay = new Date(weekDays[0]);
   const lastDay = new Date(weekDays[6]);
-
   if (language === "ru") {
     return `${firstDay.getDate()} ${MONTH_NAMES_RU[firstDay.getMonth()].toLowerCase().slice(0, 3)} — ${lastDay.getDate()} ${MONTH_NAMES_RU[lastDay.getMonth()].toLowerCase().slice(0, 3)} ${lastDay.getFullYear()}`;
   } else {
@@ -191,67 +181,29 @@ const setMonthYear = (dateStr, month, year) => {
   return getDateKey(d);
 };
 
-// Категоризация ингредиентов (умный анализатор)
 const categorizeIngredient = (ingredientName) => {
   const ing = (ingredientName || '').toLowerCase();
-  
-  // Овощи и фрукты
-  if (/(помидор|огурец|перец|лук|чеснок|морковь|капуста|картофель|баклажан|кабачок|тыква|свекла|редис|салат|шпинат|петрушка|укроп|базилик|кинза|руккола|авокадо|яблок|банан|апельсин|лимон|груша|персик|ягод|клубник|малин|черник|виноград|киви|манго|ананас|арбуз|дыня)/i.test(ing)) {
-    return "Овощи и фрукты";
-  }
-  
-  // Мясо и рыба
-  if (/(мясо|курица|говядина|свинина|баранина|индейка|утка|фарш|филе|рыба|лосось|тунец|форель|семга|треска|креветк|кальмар|мидии|краб)/i.test(ing)) {
-    return "Мясо и рыба";
-  }
-  
-  // Молочные продукты
-  if (/(молоко|сливки|сметана|йогурт|кефир|творог|сыр|масло сливочное|ряженка|простокваша)/i.test(ing)) {
-    return "Молочные продукты";
-  }
-  
-  // Зелень и приправы
-  if (/(соль|перец|специи|приправ|пряност|зелень|трав|орегано|тимьян|розмарин|паприка|куркума|карри|имбирь|корица|ваниль|мускатный|кориандр|тмин|анис|гвоздика|лавровый|майоран)/i.test(ing)) {
-    return "Зелень и приправы";
-  }
-  
-  // Крупы и макароны
-  if (/(рис|гречка|овсянка|пшено|перловка|манка|кукурузная крупа|киноа|булгур|макарон|паста|спагетти|лапша|вермишель)/i.test(ing)) {
-    return "Крупы и макароны";
-  }
-  
-  // По умолчанию
+  if (/(помидор|огурец|перец|лук|чеснок|морковь|капуста|картофель|баклажан|кабачок|тыква|свекла|редис|салат|шпинат|петрушка|укроп|базилик|кинза|руккола|авокадо|яблок|банан|апельсин|лимон|груша|персик|ягод|клубник|малин|черник|виноград|киви|манго|ананас|арбуз|дыня)/i.test(ing)) return "Овощи и фрукты";
+  if (/(мясо|курица|говядина|свинина|баранина|индейка|утка|фарш|филе|рыба|лосось|тунец|форель|семга|треска|креветк|кальмар|мидии|краб)/i.test(ing)) return "Мясо и рыба";
+  if (/(молоко|сливки|сметана|йогурт|кефир|творог|сыр|масло сливочное|ряженка|простокваша)/i.test(ing)) return "Молочные продукты";
+  if (/(соль|перец|специи|приправ|пряност|зелень|трав|орегано|тимьян|розмарин|паприка|куркума|карри|имбирь|корица|ваниль|мускатный|кориандр|тмин|анис|гвоздика|лавровый|майоран)/i.test(ing)) return "Зелень и приправы";
+  if (/(рис|гречка|овсянка|пшено|перловка|манка|кукурузная крупа|киноа|булгур|макарон|паста|спагетти|лапша|вермишель)/i.test(ing)) return "Крупы и макароны";
   return "Продукты";
 };
 
-// ✨ Кастомная модалка уведомлений (вместо alert)
 const NotificationModal = ({ isOpen, onClose, title, message, theme, fontSize, language }) => {
   if (!isOpen) return null;
-
   const btnText = language === "ru" ? "Закрыть" : "Close";
-
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" onClick={onClose}>
-      <div
-        className={`${theme.cardBg} ${theme.text} ${fontSize.body} rounded-2xl max-w-lg w-full p-6 shadow-2xl border-2 ${theme.border}`}
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div className={`${theme.cardBg} ${theme.text} ${fontSize.body} rounded-2xl max-w-lg w-full p-6 shadow-2xl border-2 ${theme.border}`} onClick={(e) => e.stopPropagation()}>
         <div className="flex items-start justify-between mb-4">
           <h3 className={`${fontSize.subheading} font-bold ${theme.headerText}`}>{title}</h3>
-          <button onClick={onClose} className={`${theme.textSecondary} hover:${theme.text} transition`}>
-            <FaTimes size={20} />
-          </button>
+          <button onClick={onClose} className={`${theme.textSecondary} hover:${theme.text} transition`}><FaTimes size={20} /></button>
         </div>
-
         <p className={`${fontSize.body} ${theme.text} mb-6`}>{message}</p>
-
         <div className="flex justify-end">
-          <button
-            onClick={onClose}
-            className={`px-6 py-3 rounded-xl ${theme.accent} ${theme.accentHover} text-white font-semibold transition ${fontSize.body}`}
-          >
-            {btnText}
-          </button>
+          <button onClick={onClose} className={`px-6 py-3 rounded-xl ${theme.accent} ${theme.accentHover} text-white font-semibold transition ${fontSize.body}`}>{btnText}</button>
         </div>
       </div>
     </div>
@@ -274,7 +226,6 @@ export default function CookifyDemo() {
 
   const [selectedRecipe, setSelectedRecipe] = useState(null);
   const [selectedRecipeVariantKey, setSelectedRecipeVariantKey] = useState(null);
-  
   const [currentServings, setCurrentServings] = useState(2);
   const [userSubstitutions, setUserSubstitutions] = useState({});
   const [openSubPicker, setOpenSubPicker] = useState(null);
@@ -302,7 +253,7 @@ export default function CookifyDemo() {
   const [showPlannerModal, setShowPlannerModal] = useState(false);
   const [plannerModalDate, setPlannerModalDate] = useState(null);
   const [plannerModalCategory, setPlannerModalCategory] = useState("breakfast");
-  
+
   const [shoppingList, setShoppingList] = useState([]);
   const [showVariantSelectionModal, setShowVariantSelectionModal] = useState(false);
   const [variantSelectionRecipe, setVariantSelectionRecipe] = useState(null);
@@ -323,11 +274,7 @@ export default function CookifyDemo() {
     const savedWeeklyPlan = localStorage.getItem("cookify_weeklyPlan");
     const savedShoppingList = localStorage.getItem("cookify_shoppingList");
 
-    if (savedUserData) {
-      const parsed = JSON.parse(savedUserData);
-      setUserData(parsed);
-      setRegistered(true);
-    }
+    if (savedUserData) { const parsed = JSON.parse(savedUserData); setUserData(parsed); setRegistered(true); }
     if (savedLanguage) setLanguage(savedLanguage);
     if (savedUnitSystem) setUnitSystem(savedUnitSystem);
     if (savedTheme) setCurrentTheme(savedTheme);
@@ -337,7 +284,6 @@ export default function CookifyDemo() {
     if (savedMealHistory) setMealHistory(JSON.parse(savedMealHistory));
     if (savedWeeklyPlan) setWeeklyPlan(JSON.parse(savedWeeklyPlan));
     if (savedShoppingList) setShoppingList(JSON.parse(savedShoppingList));
-
     setUserSubstitutions(loadUserSubstitutions());
   }, []);
 
@@ -352,20 +298,9 @@ export default function CookifyDemo() {
   useEffect(() => { localStorage.setItem("cookify_weeklyPlan", JSON.stringify(weeklyPlan)); }, [weeklyPlan]);
   useEffect(() => { localStorage.setItem("cookify_shoppingList", JSON.stringify(shoppingList)); }, [shoppingList]);
 
-  useEffect(() => {
-    if (language === "en") setUnitSystem("imperial");
-    else setUnitSystem("metric");
-  }, [language]);
-
-  useEffect(() => {
-    setOpenSubPicker(null);
-  }, [selectedRecipe, selectedRecipeVariantKey]);
-  
-  useEffect(() => {
-    if (selectedRecipe) {
-      setCurrentServings(selectedRecipe.servings ?? 2);
-    }
-  }, [selectedRecipe]);
+  useEffect(() => { if (language === "en") setUnitSystem("imperial"); else setUnitSystem("metric"); }, [language]);
+  useEffect(() => { setOpenSubPicker(null); }, [selectedRecipe, selectedRecipeVariantKey]);
+  useEffect(() => { if (selectedRecipe) setCurrentServings(selectedRecipe.servings ?? 2); }, [selectedRecipe]);
 
   const GOALS = language === "ru" ? GOAL_OPTIONS_RU : GOAL_OPTIONS_EN;
   const LIFESTYLE = language === "ru" ? LIFESTYLE_RU : LIFESTYLE_EN;
@@ -441,22 +376,12 @@ export default function CookifyDemo() {
   const handleStartEditProfile = () => { setIsEditingProfile(true); setShowRegisterForm(true); };
 
   const handleLogout = () => {
-    setUserData(null);
-    setRegistered(false);
-    setShowRegisterForm(false);
-    setIsEditingProfile(false);
+    setUserData(null); setRegistered(false); setShowRegisterForm(false); setIsEditingProfile(false);
     setMealPlan({ breakfast: [], lunch: [], snack: [], dinner: [] });
-    setMealHistory([]);
-    setWeeklyPlan({});
-    setShoppingList([]);
-    setUserSubstitutions({});
-
-    localStorage.removeItem("cookify_user");
-    localStorage.removeItem("cookify_mealPlan");
-    localStorage.removeItem("cookify_mealHistory");
-    localStorage.removeItem("cookify_weeklyPlan");
-    localStorage.removeItem("cookify_shoppingList");
-    localStorage.removeItem(SUBSTITUTIONS_STORAGE_KEY);
+    setMealHistory([]); setWeeklyPlan({}); setShoppingList([]); setUserSubstitutions({});
+    localStorage.removeItem("cookify_user"); localStorage.removeItem("cookify_mealPlan");
+    localStorage.removeItem("cookify_mealHistory"); localStorage.removeItem("cookify_weeklyPlan");
+    localStorage.removeItem("cookify_shoppingList"); localStorage.removeItem(SUBSTITUTIONS_STORAGE_KEY);
   };
 
   const toggleUnitSystem = () => { setUnitSystem(prev => prev === "metric" ? "imperial" : "metric"); };
@@ -473,15 +398,7 @@ export default function CookifyDemo() {
       setShowVariantSelectionModal(true);
       return;
     }
-
-    const newEntry = { 
-      id: Date.now(), 
-      date, 
-      category, 
-      recipe, 
-      variantKey,
-      timestamp: new Date().toISOString() 
-    };
+    const newEntry = { id: Date.now(), date, category, recipe, variantKey, timestamp: new Date().toISOString() };
     setMealHistory(prev => [...prev, newEntry]);
   };
 
@@ -503,51 +420,34 @@ export default function CookifyDemo() {
   const calculateDayCalories = (dateKey) => {
     const dayMeals = getMealsForDay(dateKey);
     return dayMeals.reduce((sum, entry) => {
-      // Определяем активный рецепт (вариант или основной)
       let activeRecipe = entry.recipe;
       if (entry.variantKey && entry.recipe.variants) {
         const variant = entry.recipe.variants.find(v => v.key === entry.variantKey);
-        if (variant) {
-          activeRecipe = variant;
-        }
+        if (variant) activeRecipe = variant;
       }
-
-      // Используем nutritionCalculator для точного расчёта
       const servings = entry.recipe.servings || 2;
       const nutritionInfo = calculateRecipeNutrition(activeRecipe.ingredients || [], servings);
-      
-      // Берём калории из расчёта или fallback на указанные в рецепте
       const calories = nutritionInfo.total.calories || (activeRecipe.caloriesPerServing || activeRecipe.calories || entry.recipe.caloriesPerServing || entry.recipe.calories || 0) * servings;
-      
       return sum + calories;
     }, 0);
   };
 
   const calculatePeriodNutrition = () => {
     const filtered = getFilteredHistory();
-    let totalCalories = 0;
-    let totalProtein = 0;
-    let totalFat = 0;
-    let totalCarbs = 0;
-
+    let totalCalories = 0, totalProtein = 0, totalFat = 0, totalCarbs = 0;
     filtered.forEach(entry => {
       let activeRecipe = entry.recipe;
       if (entry.variantKey && entry.recipe.variants) {
         const variant = entry.recipe.variants.find(v => v.key === entry.variantKey);
-        if (variant) {
-          activeRecipe = variant;
-        }
+        if (variant) activeRecipe = variant;
       }
-
       const servings = entry.recipe.servings || 2;
       const nutritionInfo = calculateRecipeNutrition(activeRecipe.ingredients || [], servings);
-      
       totalCalories += nutritionInfo.total.calories || (activeRecipe.caloriesPerServing || activeRecipe.calories || 0) * servings;
       totalProtein += nutritionInfo.total.protein || 0;
       totalFat += nutritionInfo.total.fat || 0;
       totalCarbs += nutritionInfo.total.carbs || 0;
     });
-
     return {
       totalCalories: Math.round(totalCalories),
       totalProtein: Math.round(totalProtein),
@@ -559,7 +459,6 @@ export default function CookifyDemo() {
   const calculatePeriodStats = () => {
     const filtered = getFilteredHistory();
     const { totalCalories } = calculatePeriodNutrition();
-    
     const getDaysInPeriod = () => {
       if (viewPeriod === "day") return 1;
       if (viewPeriod === "week") return 7;
@@ -572,10 +471,35 @@ export default function CookifyDemo() {
     return { totalMeals: filtered.length, totalCalories, avgCaloriesPerDay: viewPeriod === "day" ? totalCalories : Math.round(totalCalories / getDaysInPeriod()) };
   };
 
+  // Питание за сегодня (для главного экрана)
+  const todayNutrition = useMemo(() => {
+    const todayKey = getDateKey(new Date());
+    const todayMeals = mealHistory.filter(entry => getDateKey(new Date(entry.date)) === todayKey);
+    let totalCalories = 0, totalProtein = 0, totalFat = 0, totalCarbs = 0;
+    todayMeals.forEach(entry => {
+      let activeRecipe = entry.recipe;
+      if (entry.variantKey && entry.recipe.variants) {
+        const variant = entry.recipe.variants.find(v => v.key === entry.variantKey);
+        if (variant) activeRecipe = variant;
+      }
+      const servings = entry.recipe.servings || 2;
+      const nutritionInfo = calculateRecipeNutrition(activeRecipe.ingredients || [], servings);
+      totalCalories += nutritionInfo.total.calories || (activeRecipe.caloriesPerServing || activeRecipe.calories || 0) * servings;
+      totalProtein += nutritionInfo.total.protein || 0;
+      totalFat += nutritionInfo.total.fat || 0;
+      totalCarbs += nutritionInfo.total.carbs || 0;
+    });
+    return {
+      totalCalories: Math.round(totalCalories),
+      totalProtein: Math.round(totalProtein),
+      totalFat: Math.round(totalFat),
+      totalCarbs: Math.round(totalCarbs)
+    };
+  }, [mealHistory]);
+
   const addRecipeToPlanner = (dateKey, category, recipeIdOrRecipe, variantKey = null) => {
     const recipe = typeof recipeIdOrRecipe === 'object' ? recipeIdOrRecipe : SAMPLE_RECIPES.find(r => r.id === recipeIdOrRecipe);
     const recipeId = typeof recipeIdOrRecipe === 'object' ? recipeIdOrRecipe.id : recipeIdOrRecipe;
-
     if (recipe && recipe.variants && recipe.variants.length > 0 && !variantKey) {
       setVariantSelectionRecipe(recipe);
       setVariantSelectionCallback(() => (selectedVariantKey) => {
@@ -585,7 +509,6 @@ export default function CookifyDemo() {
       setShowVariantSelectionModal(true);
       return;
     }
-
     setWeeklyPlan(prev => {
       const dayPlan = prev[dateKey] || { breakfast: [], lunch: [], snack: [], dinner: [] };
       const planEntry = { recipeId, variantKey };
@@ -621,15 +544,12 @@ export default function CookifyDemo() {
     let total = 0;
     MEAL_CATEGORIES.forEach(cat => {
       const recipes = getPlannerRecipes(dateKey, cat);
-      recipes.forEach(r => { 
+      recipes.forEach(r => {
         if (r.selectedVariantKey && r.variants) {
           const variant = r.variants.find(v => v.key === r.selectedVariantKey);
-          if (variant) {
-            total += variant.caloriesPerServing || variant.calories || r.caloriesPerServing || r.calories || 0;
-            return;
-          }
+          if (variant) { total += variant.caloriesPerServing || variant.calories || r.caloriesPerServing || r.calories || 0; return; }
         }
-        total += r.caloriesPerServing || r.calories || 0; 
+        total += r.caloriesPerServing || r.calories || 0;
       });
     });
     return total;
@@ -638,31 +558,21 @@ export default function CookifyDemo() {
   const generateShoppingListFromPlanner = () => {
     const weekDays = getWeekDays(plannerWeekDate);
     const allIngredients = [];
-    
     weekDays.forEach(dateKey => {
       MEAL_CATEGORIES.forEach(cat => {
         const recipes = getPlannerRecipes(dateKey, cat);
         recipes.forEach(recipeWithVariant => {
           let ingredients = recipeWithVariant.ingredients || [];
-          
           if (recipeWithVariant.selectedVariantKey && recipeWithVariant.variants) {
             const variant = recipeWithVariant.variants.find(v => v.key === recipeWithVariant.selectedVariantKey);
-            if (variant && variant.ingredients) {
-              ingredients = variant.ingredients;
-            }
+            if (variant && variant.ingredients) ingredients = variant.ingredients;
           }
-
           const subsKey = getRecipeSubKey(recipeWithVariant.id, recipeWithVariant.selectedVariantKey || null);
           const recipeSubs = userSubstitutions?.[subsKey] || {};
-          
           ingredients.forEach(ing => {
             if (typeof ing === 'object' && ing.name) {
               const effectiveName = getEffectiveIngredientName(ing, recipeSubs);
-              allIngredients.push({
-                name: effectiveName,
-                quantity: ing.quantity || '',
-                unit: ing.unit || 'шт'
-              });
+              allIngredients.push({ name: effectiveName, quantity: ing.quantity || '', unit: ing.unit || 'шт' });
             } else if (typeof ing === 'string') {
               const parts = ing.split('—').map(s => s.trim());
               const name = parts[0] || ing;
@@ -676,57 +586,32 @@ export default function CookifyDemo() {
         });
       });
     });
-
     const uniqueIngredients = [];
     const seen = new Set();
-    
     allIngredients.forEach(ing => {
       const key = (ing.name || '').toLowerCase();
-      if (!seen.has(key)) {
-        seen.add(key);
-        uniqueIngredients.push(ing);
-      }
+      if (!seen.has(key)) { seen.add(key); uniqueIngredients.push(ing); }
     });
-    
     const newItems = uniqueIngredients.map(ing => ({
-      id: Date.now() + Math.random(),
-      name: ing.name,
-      quantity: ing.quantity,
-      baseQuantity: ing.quantity,
-      unit: ing.unit,
-      category: categorizeIngredient(ing.name),
-      checked: false,
-      isManual: false
+      id: Date.now() + Math.random(), name: ing.name, quantity: ing.quantity, baseQuantity: ing.quantity,
+      unit: ing.unit, category: categorizeIngredient(ing.name), checked: false, isManual: false
     }));
-
     setShoppingList(prev => {
       const existingNames = new Set(prev.map(item => item.name.toLowerCase()));
       const filtered = newItems.filter(item => !existingNames.has(item.name.toLowerCase()));
       return [...prev, ...filtered];
     });
-
     setNotificationTitle(language === "ru" ? "Готово" : "Done");
-    setNotificationMessage(
-      language === "ru"
-        ? `Добавлено ${newItems.length} продуктов из плана меню на неделю!`
-        : `Added ${newItems.length} items from your weekly meal plan!`
-    );
+    setNotificationMessage(language === "ru" ? `Добавлено ${newItems.length} продуктов из плана меню на неделю!` : `Added ${newItems.length} items from your weekly meal plan!`);
     setShowNotificationModal(true);
   };
 
   const getSortedRecipesForPlanner = (category) => {
-    const categoryTypeMap = {
-      breakfast: ["завтрак"],
-      lunch: ["обед"],
-      snack: ["перекус", "десерт"],
-      dinner: ["ужин"]
-    };
+    const categoryTypeMap = { breakfast: ["завтрак"], lunch: ["обед"], snack: ["перекус", "десерт"], dinner: ["ужин"] };
     const preferredTypes = categoryTypeMap[category] || [];
     return [...SAMPLE_RECIPES].sort((a, b) => {
-      const aType = normalize(a.type);
-      const bType = normalize(b.type);
-      const aMatch = preferredTypes.some(t => normalize(t) === aType);
-      const bMatch = preferredTypes.some(t => normalize(t) === bType);
+      const aMatch = preferredTypes.some(t => normalize(t) === normalize(a.type));
+      const bMatch = preferredTypes.some(t => normalize(t) === normalize(b.type));
       if (aMatch && !bMatch) return -1;
       if (!aMatch && bMatch) return 1;
       return 0;
@@ -734,16 +619,8 @@ export default function CookifyDemo() {
   };
 
   const filteredResults = SAMPLE_RECIPES.filter(r => {
-    const baseIngStr = (r.ingredients || []).map(ing => 
-      typeof ing === 'object' ? ing.name : ing
-    ).join(",").toLowerCase();
-    
-    const variantIngStrs = (r.variants || []).map(v => 
-      (v.ingredients || []).map(ing => 
-        typeof ing === 'object' ? ing.name : ing
-      ).join(",").toLowerCase()
-    );
-
+    const baseIngStr = (r.ingredients || []).map(ing => typeof ing === 'object' ? ing.name : ing).join(",").toLowerCase();
+    const variantIngStrs = (r.variants || []).map(v => (v.ingredients || []).map(ing => typeof ing === 'object' ? ing.name : ing).join(",").toLowerCase());
     let matchesSearch = true;
     if (searchMode === "name" && searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
@@ -753,7 +630,6 @@ export default function CookifyDemo() {
       const pools = [baseIngStr, ...variantIngStrs];
       matchesSearch = pools.some(pool => terms.every(term => pool.includes(term)));
     }
-
     let matchesExclude = true;
     if (excludeIngredients.trim()) {
       const exs = excludeIngredients.split(",").map(t => t.trim().toLowerCase()).filter(Boolean);
@@ -762,7 +638,6 @@ export default function CookifyDemo() {
         return exs.some(e => ingName.toLowerCase().includes(e));
       });
     }
-
     let matchesFilters = true;
     if (selectedFilters.type) matchesFilters = matchesFilters && normalize(r.type) === normalize(selectedFilters.type);
     if (selectedFilters.diet) matchesFilters = matchesFilters && normalize(r.diet).includes(normalize(selectedFilters.diet));
@@ -775,7 +650,6 @@ export default function CookifyDemo() {
       if (selectedFilters.timeRange === "medium") matchesFilters = matchesFilters && tVal > 15 && tVal <= 40;
       if (selectedFilters.timeRange === "long") matchesFilters = matchesFilters && tVal > 40;
     }
-
     return matchesSearch && matchesExclude && matchesFilters;
   });
 
@@ -815,17 +689,21 @@ export default function CookifyDemo() {
     <div className={`min-h-screen ${theme.bg} ${theme.text} ${font.class} ${fontSize.body} p-6 transition-all duration-500`}>
       <Header activeScreen={activeScreen} setActiveScreen={setActiveScreen} language={language} setLanguage={setLanguage} theme={theme} fontSize={fontSize} />
 
-      <NotificationModal
-        isOpen={showNotificationModal}
-        onClose={() => setShowNotificationModal(false)}
-        title={notificationTitle}
-        message={notificationMessage}
-        theme={theme}
-        fontSize={fontSize}
-        language={language}
-      />
+      <NotificationModal isOpen={showNotificationModal} onClose={() => setShowNotificationModal(false)} title={notificationTitle} message={notificationMessage} theme={theme} fontSize={fontSize} language={language} />
 
-      {activeScreen === "home" && <HomeScreen userData={userData} language={language} setLanguage={setLanguage} setActiveScreen={setActiveScreen} theme={theme} fontSize={fontSize} />}
+      {activeScreen === "home" && (
+        <HomeScreen
+          userData={userData}
+          language={language}
+          setLanguage={setLanguage}
+          setActiveScreen={setActiveScreen}
+          theme={theme}
+          fontSize={fontSize}
+          todayNutrition={todayNutrition}
+          setShowAddMealModal={setShowAddMealModal}
+          setAccountTab={setAccountTab}
+        />
+      )}
 
       {activeScreen === "search" && (
         <SearchScreen
@@ -843,23 +721,14 @@ export default function CookifyDemo() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" onClick={() => setShowVariantSelectionModal(false)}>
           <div className={`${theme.cardBg} ${fontSize.body} rounded-2xl max-w-md w-full p-6`} onClick={(e) => e.stopPropagation()}>
             <div className="flex items-start justify-between mb-4">
-              <h3 className={`${fontSize.cardTitle} font-bold ${theme.headerText}`}>
-                {t("Выберите вариант рецепта", "Choose recipe variant")}
-              </h3>
-              <button onClick={() => setShowVariantSelectionModal(false)} className={`${theme.textSecondary} hover:${theme.text} transition`}>
-                <FaTimes size={20} />
-              </button>
+              <h3 className={`${fontSize.cardTitle} font-bold ${theme.headerText}`}>{t("Выберите вариант рецепта", "Choose recipe variant")}</h3>
+              <button onClick={() => setShowVariantSelectionModal(false)} className={`${theme.textSecondary} hover:${theme.text} transition`}><FaTimes size={20} /></button>
             </div>
-            
             <p className={`${fontSize.small} ${theme.textSecondary} mb-4`}>{variantSelectionRecipe.title}</p>
-            
             <div className="space-y-2">
               {variantSelectionRecipe.variants.map(variant => (
-                <button
-                  key={variant.key}
-                  onClick={() => variantSelectionCallback && variantSelectionCallback(variant.key)}
-                  className={`w-full p-3 rounded-lg ${theme.accent} ${theme.accentHover} text-white transition ${fontSize.body}`}
-                >
+                <button key={variant.key} onClick={() => variantSelectionCallback && variantSelectionCallback(variant.key)}
+                  className={`w-full p-3 rounded-lg ${theme.accent} ${theme.accentHover} text-white transition ${fontSize.body}`}>
                   {language === "ru" ? (variant.labelRu || variant.key) : (variant.labelEn || variant.key)}
                 </button>
               ))}
@@ -873,21 +742,16 @@ export default function CookifyDemo() {
         const variants = Array.isArray(selectedRecipe.variants) ? selectedRecipe.variants : [];
         const activeVariant = variants.length ? (variants.find(v => v.key === selectedRecipeVariantKey) || variants[0]) : null;
         const activeRecipe = activeVariant || selectedRecipe;
-
         const subsKey = getRecipeSubKey(selectedRecipe.id, activeVariant?.key || null);
         const recipeSubs = userSubstitutions?.[subsKey] || {};
-        
         const recipeTime = activeVariant?.time ?? selectedRecipe.time;
         const recipeCalories = activeVariant?.caloriesPerServing ?? activeVariant?.calories ?? selectedRecipe.caloriesPerServing ?? selectedRecipe.calories;
-        
         const timeInfo = getTimeCategory(recipeTime);
         const timeMinutes = parseInt(recipeTime, 10);
         const progressPercentage = Math.min((timeMinutes / 120) * 100, 100);
         const baseServings = selectedRecipe.servings ?? 2;
         const closeModal = () => { setSelectedRecipe(null); setSelectedRecipeVariantKey(null); };
-
         const servingsMultiplier = currentServings / baseServings;
-
         const nutritionInfo = calculateRecipeNutrition(activeRecipe.ingredients || [], baseServings);
         const totalKcal = Math.round((nutritionInfo.total.calories || recipeCalories * baseServings || 0) * servingsMultiplier);
         const totalProtein = Math.round((nutritionInfo.total.protein || 0) * servingsMultiplier);
@@ -898,28 +762,15 @@ export default function CookifyDemo() {
           setUserSubstitutions(prev => {
             const all = { ...(prev || {}) };
             const curRecipeSubs = { ...(all[subsKey] || {}) };
-
-            if (!value) {
-              delete curRecipeSubs[subId];
-            } else {
-              curRecipeSubs[subId] = value;
-            }
-
-            if (Object.keys(curRecipeSubs).length === 0) {
-              delete all[subsKey];
-            } else {
-              all[subsKey] = curRecipeSubs;
-            }
-
+            if (!value) { delete curRecipeSubs[subId]; } else { curRecipeSubs[subId] = value; }
+            if (Object.keys(curRecipeSubs).length === 0) { delete all[subsKey]; } else { all[subsKey] = curRecipeSubs; }
             saveUserSubstitutions(all);
             return all;
           });
         };
 
-        const toggleSubPicker = (subId) => {
-          setOpenSubPicker(prev => (prev === subId ? null : subId));
-        };
-        
+        const toggleSubPicker = (subId) => { setOpenSubPicker(prev => (prev === subId ? null : subId)); };
+
         const scaleIngredientQuantity = (quantity) => {
           if (!quantity) return '';
           const num = parseFloat(quantity.toString().replace(',', '.'));
@@ -964,50 +815,22 @@ export default function CookifyDemo() {
                   <div className="text-right">
                     <div className={`${fontSize.tiny} ${theme.textSecondary} mb-1`}>{t("Всего", "Total")}</div>
                     <div className={`${fontSize.body} font-bold ${theme.accentText}`}>{totalKcal} {t("ккал", "kcal")}</div>
-                    
                     <div className="flex items-center justify-end gap-2 mt-2">
-                      <button
-                        onClick={() => setCurrentServings(Math.max(1, currentServings - 1))}
-                        className={`w-6 h-6 flex items-center justify-center rounded-full ${theme.accent} text-white hover:opacity-80 transition`}
-                        disabled={currentServings <= 1}
-                      >
-                        <FaMinus size={10} />
-                      </button>
-                      <span className={`${fontSize.small} font-semibold ${theme.text} min-w-[60px] text-center`}>
-                        {currentServings} {t(currentServings === 1 ? "порция" : "порции", currentServings === 1 ? "serving" : "servings")}
-                      </span>
-                      <button
-                        onClick={() => setCurrentServings(currentServings + 1)}
-                        className={`w-6 h-6 flex items-center justify-center rounded-full ${theme.accent} text-white hover:opacity-80 transition`}
-                      >
-                        <FaPlus size={10} />
-                      </button>
+                      <button onClick={() => setCurrentServings(Math.max(1, currentServings - 1))} className={`w-6 h-6 flex items-center justify-center rounded-full ${theme.accent} text-white hover:opacity-80 transition`} disabled={currentServings <= 1}><FaMinus size={10} /></button>
+                      <span className={`${fontSize.small} font-semibold ${theme.text} min-w-[60px] text-center`}>{currentServings} {t(currentServings === 1 ? "порция" : "порции", currentServings === 1 ? "serving" : "servings")}</span>
+                      <button onClick={() => setCurrentServings(currentServings + 1)} className={`w-6 h-6 flex items-center justify-center rounded-full ${theme.accent} text-white hover:opacity-80 transition`}><FaPlus size={10} /></button>
                     </div>
                   </div>
                 </div>
-                
                 <div className="grid grid-cols-3 gap-2 mb-3">
-                  <div className={`${theme.cardBg} rounded-lg p-2 text-center border ${theme.border}`}>
-                    <div className={`${fontSize.tiny} ${theme.textSecondary}`}>{t("Белки", "Protein")}</div>
-                    <div className={`${fontSize.small} font-bold ${theme.text}`}>{totalProtein}{t("г", "g")}</div>
-                  </div>
-                  <div className={`${theme.cardBg} rounded-lg p-2 text-center border ${theme.border}`}>
-                    <div className={`${fontSize.tiny} ${theme.textSecondary}`}>{t("Жиры", "Fat")}</div>
-                    <div className={`${fontSize.small} font-bold ${theme.text}`}>{totalFat}{t("г", "g")}</div>
-                  </div>
-                  <div className={`${theme.cardBg} rounded-lg p-2 text-center border ${theme.border}`}>
-                    <div className={`${fontSize.tiny} ${theme.textSecondary}`}>{t("Углеводы", "Carbs")}</div>
-                    <div className={`${fontSize.small} font-bold ${theme.text}`}>{totalCarbs}{t("г", "g")}</div>
-                  </div>
+                  <div className={`${theme.cardBg} rounded-lg p-2 text-center border ${theme.border}`}><div className={`${fontSize.tiny} ${theme.textSecondary}`}>{t("Белки", "Protein")}</div><div className={`${fontSize.small} font-bold ${theme.text}`}>{totalProtein}{t("г", "g")}</div></div>
+                  <div className={`${theme.cardBg} rounded-lg p-2 text-center border ${theme.border}`}><div className={`${fontSize.tiny} ${theme.textSecondary}`}>{t("Жиры", "Fat")}</div><div className={`${fontSize.small} font-bold ${theme.text}`}>{totalFat}{t("г", "g")}</div></div>
+                  <div className={`${theme.cardBg} rounded-lg p-2 text-center border ${theme.border}`}><div className={`${fontSize.tiny} ${theme.textSecondary}`}>{t("Углеводы", "Carbs")}</div><div className={`${fontSize.small} font-bold ${theme.text}`}>{totalCarbs}{t("г", "g")}</div></div>
                 </div>
-
                 <div className="w-full bg-gray-200 rounded-full h-2.5 mb-2">
                   <div className="h-2.5 rounded-full transition-all duration-500" style={{ width: `${progressPercentage}%`, backgroundColor: timeInfo.color }}></div>
                 </div>
-                <div className={`${fontSize.tiny} ${theme.textSecondary} text-center`}>
-                  {t(`${timeMinutes <= 15 ? 'Быстрое приготовление!' : timeMinutes <= 40 ? 'Умеренное время' : 'Требуется терпение'}`,
-                     `${timeMinutes <= 15 ? 'Quick cooking!' : timeMinutes <= 40 ? 'Moderate time' : 'Takes patience'}`)}
-                </div>
+                <div className={`${fontSize.tiny} ${theme.textSecondary} text-center`}>{t(`${timeMinutes <= 15 ? 'Быстрое приготовление!' : timeMinutes <= 40 ? 'Умеренное время' : 'Требуется терпение'}`, `${timeMinutes <= 15 ? 'Quick cooking!' : timeMinutes <= 40 ? 'Moderate time' : 'Takes patience'}`)}</div>
               </div>
 
               <div className={`${theme.textSecondary} ${fontSize.small} mb-4`}>{t("Сложность:", "Difficulty:")} {selectedRecipe.difficulty}</div>
@@ -1019,100 +842,50 @@ export default function CookifyDemo() {
                     const effectiveName = getEffectiveIngredientName(ing, recipeSubs);
                     const low = (effectiveName || "").toLowerCase();
                     const isAllergy = allergyList.some(a => a && low.includes(a));
-
                     const isObj = typeof ing === 'object';
                     const hasSubs = isObj && ing.subId && Array.isArray(ing.substitutes) && ing.substitutes.length > 0;
                     const currentChoice = isObj && ing.subId ? (recipeSubs?.[ing.subId] || "") : "";
                     const meta = isObj ? (ing.meta || "") : "";
-                    
                     const scaledQuantity = isObj && ing.quantity ? scaleIngredientQuantity(ing.quantity) : '';
                     const scaledUnit = isObj ? (ing.unit || '') : '';
-
-                    // 🔥 НОВОЕ: Применяем convertToGrams для автоформатирования
                     let displayText = '';
                     if (scaledQuantity && scaledUnit) {
                       const converted = convertToGrams(scaledQuantity, scaledUnit, effectiveName);
                       displayText = converted.displayText;
                     }
-
                     const canToggle = hasSubs && !isAllergy;
                     const isOpen = hasSubs && openSubPicker === ing.subId;
-
                     return (
                       <li key={i} className={isAllergy ? "text-red-600 font-semibold" : ""}>
                         <div className="flex items-start justify-between gap-2">
                           <div className="flex-1 text-left">
                             <div className="flex flex-wrap items-baseline gap-2">
                               <span>{effectiveName}</span>
-                              {meta && (
-                                <span className={`inline-flex items-center px-2 py-0.5 rounded-full bg-gray-200 text-gray-700 ${fontSize.tiny} font-medium`}>
-                                  {meta}
-                                </span>
-                              )}
-                              {displayText && (
-                                <span className={`${theme.textSecondary}`}>
-                                  — {displayText}
-                                </span>
-                              )}
+                              {meta && <span className={`inline-flex items-center px-2 py-0.5 rounded-full bg-gray-200 text-gray-700 ${fontSize.tiny} font-medium`}>{meta}</span>}
+                              {displayText && <span className={`${theme.textSecondary}`}>— {displayText}</span>}
                             </div>
                           </div>
-
                           {hasSubs && (
                             <div className="flex items-center gap-2">
-                              <button
-                                type="button"
-                                onClick={() => canToggle && toggleSubPicker(ing.subId)}
-                                disabled={!canToggle}
-                                className={
-                                  canToggle
-                                    ? `w-7 h-7 flex items-center justify-center rounded-full border ${theme.border} ${theme.cardBg} hover:opacity-80 transition`
-                                    : `w-7 h-7 flex items-center justify-center rounded-full border ${theme.border} opacity-40 cursor-not-allowed`
-                                }
-                                title={canToggle ? t("Показать варианты", "Show options") : t("Недоступно для аллергенов", "Unavailable for allergens")}
-                                aria-label={t("Показать варианты", "Show options")}
-                              >
+                              <button type="button" onClick={() => canToggle && toggleSubPicker(ing.subId)} disabled={!canToggle}
+                                className={canToggle ? `w-7 h-7 flex items-center justify-center rounded-full border ${theme.border} ${theme.cardBg} hover:opacity-80 transition` : `w-7 h-7 flex items-center justify-center rounded-full border ${theme.border} opacity-40 cursor-not-allowed`}
+                                title={canToggle ? t("Показать варианты", "Show options") : t("Недоступно для аллергенов", "Unavailable for allergens")}>
                                 <span className={`${fontSize.small} leading-none`}>{isOpen ? "▴" : "▾"}</span>
                               </button>
-
-                              <span className={`${fontSize.tiny} ${theme.textSecondary} mt-1 whitespace-nowrap`}>
-                                {currentChoice ? t("Заменено", "Replaced") : t("Можно заменить", "Replaceable")}
-                              </span>
+                              <span className={`${fontSize.tiny} ${theme.textSecondary} mt-1 whitespace-nowrap`}>{currentChoice ? t("Заменено", "Replaced") : t("Можно заменить", "Replaceable")}</span>
                             </div>
                           )}
                         </div>
-
                         {hasSubs && isOpen && (
                           <div className={`mt-2 ml-1 p-3 rounded-xl border ${theme.border} ${theme.cardBg}`}>
-                            <div className={`mb-2 ${fontSize.small} ${theme.textSecondary}`}>
-                              {t("Выберите замену:", "Choose a substitution:")}
-                            </div>
-
+                            <div className={`mb-2 ${fontSize.small} ${theme.textSecondary}`}>{t("Выберите замену:", "Choose a substitution:")}</div>
                             <div className="flex flex-wrap gap-2">
-                              <button
-                                type="button"
-                                onClick={() => { updateSubstitution(ing.subId, ""); setOpenSubPicker(null); }}
-                                className={`px-3 py-1 rounded-full border ${theme.border} ${fontSize.small} hover:opacity-80 transition`}
-                              >
-                                {t("Не заменять", "No substitution")}
-                              </button>
-
+                              <button type="button" onClick={() => { updateSubstitution(ing.subId, ""); setOpenSubPicker(null); }} className={`px-3 py-1 rounded-full border ${theme.border} ${fontSize.small} hover:opacity-80 transition`}>{t("Не заменять", "No substitution")}</button>
                               {ing.substitutes.map((opt) => (
-                                <button
-                                  key={opt}
-                                  type="button"
-                                  onClick={() => { updateSubstitution(ing.subId, opt); setOpenSubPicker(null); }}
-                                  className={`px-3 py-1 rounded-full ${theme.accent} ${theme.accentHover} text-white ${fontSize.small} transition`}
-                                >
-                                  {opt}
-                                </button>
+                                <button key={opt} type="button" onClick={() => { updateSubstitution(ing.subId, opt); setOpenSubPicker(null); }} className={`px-3 py-1 rounded-full ${theme.accent} ${theme.accentHover} text-white ${fontSize.small} transition`}>{opt}</button>
                               ))}
                             </div>
-
-                            {currentChoice && (
-                              <div className={`mt-2 ${fontSize.tiny} ${theme.textSecondary}`}>
-                                {t("Текущая замена:", "Current:")} {currentChoice}
-                              </div>
-                            )}
+                            {currentChoice && <div className={`mt-2 ${fontSize.tiny} ${theme.textSecondary}`}>{t("Текущая замена:", "Current:")} {currentChoice}</div>}
                           </div>
                         )}
                       </li>
@@ -1142,10 +915,7 @@ export default function CookifyDemo() {
                   <h4 className={`${fontSize.body} font-semibold mb-3`}>{t("Добавить в историю питания:", "Add to meal history:")}</h4>
                   <div className="flex gap-2 flex-wrap">
                     {MEAL_CATEGORIES.map(cat => (
-                      <button key={cat} onClick={() => { 
-                        addMealToHistory(selectedRecipe, cat, new Date().toISOString().split('T')[0], selectedRecipeVariantKey); 
-                        closeModal(); 
-                      }}
+                      <button key={cat} onClick={() => { addMealToHistory(selectedRecipe, cat, new Date().toISOString().split('T')[0], selectedRecipeVariantKey); closeModal(); }}
                         className={`px-3 py-1 rounded ${fontSize.small} ${theme.accent} ${theme.accentHover} text-white`}>{MEAL_LABELS[cat]}</button>
                     ))}
                   </div>
