@@ -20,6 +20,7 @@ import Header from "./components/Header";
 import HomeScreen from "./components/HomeScreen";
 import SearchScreen from "./components/SearchScreen";
 import AccountScreen from "./components/AccountScreen";
+import AddRecipeModal from "./components/AddRecipeModal";
 
 // 🔥 Firebase
 import { auth } from './firebase.js';
@@ -29,7 +30,8 @@ import {
   getMealHistory,
   saveMealHistory,
   getWeeklyPlan,
-  saveWeeklyPlan
+  saveWeeklyPlan,
+  getRecipes,
 } from './firebase.js';
 
 // 🔧 Временные точечные исправления некорректных типов блюд из базы рецептов
@@ -237,6 +239,10 @@ export default function CookifyDemo() {
   const [firebaseUser, setFirebaseUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
 
+  // 🔥 Рецепты из Firestore (пользовательские)
+  const [communityRecipes, setCommunityRecipes] = useState([]);
+  const [showAddRecipeModal, setShowAddRecipeModal] = useState(false);
+
   const [selectedRecipe, setSelectedRecipe] = useState(null);
   const [selectedRecipeVariantKey, setSelectedRecipeVariantKey] = useState(null);
   const [currentServings, setCurrentServings] = useState(2);
@@ -275,7 +281,40 @@ export default function CookifyDemo() {
   const [notificationTitle, setNotificationTitle] = useState("");
   const [notificationMessage, setNotificationMessage] = useState("");
 
-  // 🔥 ЭТАП 4: Firebase Auth слушатель
+  // 🔥 Загружаем рецепты сообщества из Firestore при старте
+  useEffect(() => {
+    getRecipes()
+      .then(recipes => setCommunityRecipes(recipes))
+      .catch(() => setCommunityRecipes([]));
+  }, []);
+
+  // Объединённый список рецептов: статичные + из Firestore
+  const allRecipes = useMemo(() => {
+    return [
+      ...SAMPLE_RECIPES,
+      ...communityRecipes.map(r => ({
+        ...r,
+        servings: r.servings ?? 2,
+        caloriesPerServing: r.caloriesPerServing ?? r.calories ?? 0,
+        variants: r.variants || []
+      }))
+    ];
+  }, [communityRecipes]);
+
+  // Обработчик кнопки «Добавить рецепт»
+  const handleAddRecipeClick = () => {
+    if (!firebaseUser) {
+      setNotificationTitle(language === 'ru' ? 'Нужен аккаунт' : 'Account required');
+      setNotificationMessage(language === 'ru'
+        ? 'Чтобы добавить рецепт, войдите в аккаунт или зарегистрируйтесь.'
+        : 'Please sign in or create an account to add a recipe.');
+      setShowNotificationModal(true);
+      return;
+    }
+    setShowAddRecipeModal(true);
+  };
+
+  // 🔥 Firebase Auth слушатель
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
@@ -292,7 +331,6 @@ export default function CookifyDemo() {
           setUserData({ email: user.email, uid: user.uid, login: user.email });
         }
 
-        // 🔥 ЭТАП 5: Загружаем историю питания и план меню из Firestore
         try {
           const [firestoreHistory, firestorePlan] = await Promise.all([
             getMealHistory(user.uid),
@@ -301,14 +339,12 @@ export default function CookifyDemo() {
           setMealHistory(firestoreHistory);
           setWeeklyPlan(firestorePlan);
         } catch (e) {
-          // Если Firestore недоступен — fallback на localStorage
           const savedMealHistory = localStorage.getItem(`cookify_mealHistory_${user.uid}`);
           const savedWeeklyPlan = localStorage.getItem(`cookify_weeklyPlan_${user.uid}`);
           if (savedMealHistory) setMealHistory(JSON.parse(savedMealHistory));
           if (savedWeeklyPlan) setWeeklyPlan(JSON.parse(savedWeeklyPlan));
         }
 
-        // Остальные настройки из localStorage
         const savedLanguage = localStorage.getItem("cookify_language");
         const savedUnitSystem = localStorage.getItem("cookify_unitSystem");
         const savedTheme = localStorage.getItem("cookify_theme");
@@ -349,20 +385,17 @@ export default function CookifyDemo() {
   useEffect(() => { localStorage.setItem("cookify_fontSize", currentFontSize); }, [currentFontSize]);
   useEffect(() => { localStorage.setItem("cookify_mealPlan", JSON.stringify(mealPlan)); }, [mealPlan]);
 
-  // 🔥 ЭТАП 5: Сохраняем историю питания в Firestore при каждом изменении
   useEffect(() => {
     if (!firebaseUser?.uid) return;
     const uid = firebaseUser.uid;
     const timeout = setTimeout(() => {
       saveMealHistory(uid, mealHistory).catch(() => {
-        // Fallback: дублируем в localStorage
         localStorage.setItem(`cookify_mealHistory_${uid}`, JSON.stringify(mealHistory));
       });
-    }, 800); // дебаунс 800ms чтобы не спамить Firestore при каждом нажатии
+    }, 800);
     return () => clearTimeout(timeout);
   }, [mealHistory, firebaseUser]);
 
-  // 🔥 ЭТАП 5: Сохраняем план меню в Firestore при каждом изменении
   useEffect(() => {
     if (!firebaseUser?.uid) return;
     const uid = firebaseUser.uid;
@@ -395,13 +428,15 @@ export default function CookifyDemo() {
 
   const normalize = (s) => (s || "").toString().toLowerCase();
   const TYPE_OPTIONS = Object.keys(DISH_TYPE_LABELS);
-  const DIET_OPTIONS = Array.from(new Set((SAMPLE_RECIPES || []).map(r => (r.diet || "").trim()).filter(Boolean)));
-  const DIFFICULTY_OPTIONS = Array.from(new Set((SAMPLE_RECIPES || []).map(r => (r.difficulty || "").trim()).filter(Boolean)));
-  const TAG_OPTIONS = Array.from(new Set((SAMPLE_RECIPES || []).flatMap(r => r.tags || []))).filter(Boolean);
+  const DIET_OPTIONS = Array.from(new Set((allRecipes || []).map(r => (r.diet || "").trim()).filter(Boolean)));
+  const DIFFICULTY_OPTIONS = Array.from(new Set((allRecipes || []).map(r => (r.difficulty || "").trim()).filter(Boolean)));
+  const TAG_OPTIONS = Array.from(new Set((allRecipes || []).flatMap(r => r.tags || []))).filter(Boolean);
 
   const theme = THEMES[currentTheme];
   const font = FONTS[currentFont];
   const fontSize = FONT_SIZES[currentFontSize];
+
+  const t = (ru, en) => language === "ru" ? ru : en;
 
   const convertWeight = (value, fromUnit) => {
     if (!value) return value;
@@ -465,7 +500,6 @@ export default function CookifyDemo() {
   const handleLogout = async () => {
     const uid = firebaseUser?.uid;
     const login = userData?.login;
-    // Финальное сохранение в Firestore перед выходом
     if (uid) {
       try {
         await Promise.all([
@@ -608,7 +642,7 @@ export default function CookifyDemo() {
   }, [mealHistory]);
 
   const addRecipeToPlanner = (dateKey, category, recipeIdOrRecipe, variantKey = null) => {
-    const recipe = typeof recipeIdOrRecipe === 'object' ? recipeIdOrRecipe : SAMPLE_RECIPES.find(r => r.id === recipeIdOrRecipe);
+    const recipe = typeof recipeIdOrRecipe === 'object' ? recipeIdOrRecipe : allRecipes.find(r => r.id === recipeIdOrRecipe);
     const recipeId = typeof recipeIdOrRecipe === 'object' ? recipeIdOrRecipe.id : recipeIdOrRecipe;
     if (recipe && recipe.variants && recipe.variants.length > 0 && !variantKey) {
       setVariantSelectionRecipe(recipe);
@@ -643,433 +677,186 @@ export default function CookifyDemo() {
     return entries.map(entry => {
       const recipeId = typeof entry === 'object' ? entry.recipeId : entry;
       const variantKey = typeof entry === 'object' ? entry.variantKey : null;
-      const recipe = SAMPLE_RECIPES.find(r => r.id === recipeId);
-      return recipe ? { ...recipe, selectedVariantKey: variantKey } : null;
+      const recipe = allRecipes.find(r => r.id == recipeId);
+      return recipe ? { ...recipe, _variantKey: variantKey } : null;
     }).filter(Boolean);
   };
 
-  const calculatePlannerDayCalories = (dateKey) => {
-    const dayPlan = weeklyPlan[dateKey];
-    if (!dayPlan) return 0;
-    let total = 0;
-    MEAL_CATEGORIES.forEach(cat => {
-      const recipes = getPlannerRecipes(dateKey, cat);
-      recipes.forEach(r => {
-        if (r.selectedVariantKey && r.variants) {
-          const variant = r.variants.find(v => v.key === r.selectedVariantKey);
-          if (variant) { total += variant.caloriesPerServing || variant.calories || r.caloriesPerServing || r.calories || 0; return; }
-        }
-        total += r.caloriesPerServing || r.calories || 0;
-      });
-    });
-    return total;
-  };
-
-  const generateShoppingListFromPlanner = () => {
-    const weekDays = getWeekDays(plannerWeekDate);
-    const allIngredients = [];
-    weekDays.forEach(dateKey => {
-      MEAL_CATEGORIES.forEach(cat => {
-        const recipes = getPlannerRecipes(dateKey, cat);
-        recipes.forEach(recipeWithVariant => {
-          let ingredients = recipeWithVariant.ingredients || [];
-          if (recipeWithVariant.selectedVariantKey && recipeWithVariant.variants) {
-            const variant = recipeWithVariant.variants.find(v => v.key === recipeWithVariant.selectedVariantKey);
-            if (variant && variant.ingredients) ingredients = variant.ingredients;
-          }
-          const subsKey = getRecipeSubKey(recipeWithVariant.id, recipeWithVariant.selectedVariantKey || null);
-          const recipeSubs = userSubstitutions?.[subsKey] || {};
-          ingredients.forEach(ing => {
-            if (typeof ing === 'object' && ing.name) {
-              const effectiveName = getEffectiveIngredientName(ing, recipeSubs);
-              allIngredients.push({ name: effectiveName, quantity: ing.quantity || '', unit: ing.unit || 'шт' });
-            } else if (typeof ing === 'string') {
-              const parts = ing.split('—').map(s => s.trim());
-              const name = parts[0] || ing;
-              const quantityStr = parts[1] || '';
-              const match = quantityStr.match(/(\d+(?:[.,]\d+)?)\s*([а-яА-Яa-zA-Z.\s]+)?/);
-              const quantity = match ? match[1].replace(',', '.') : '';
-              const unit = match && match[2] ? match[2].trim() : 'шт';
-              allIngredients.push({ name, quantity, unit });
-            }
-          });
-        });
-      });
-    });
-    const uniqueIngredients = [];
-    const seen = new Set();
-    allIngredients.forEach(ing => {
-      const key = (ing.name || '').toLowerCase();
-      if (!seen.has(key)) { seen.add(key); uniqueIngredients.push(ing); }
-    });
-    const newItems = uniqueIngredients.map(ing => ({
-      id: Date.now() + Math.random(), name: ing.name, quantity: ing.quantity, baseQuantity: ing.quantity,
-      unit: ing.unit, category: categorizeIngredient(ing.name), checked: false, isManual: false
-    }));
-    setShoppingList(prev => {
-      const existingNames = new Set(prev.map(item => item.name.toLowerCase()));
-      const filtered = newItems.filter(item => !existingNames.has(item.name.toLowerCase()));
-      return [...prev, ...filtered];
-    });
-    setNotificationTitle(language === "ru" ? "Готово" : "Done");
-    setNotificationMessage(language === "ru" ? `Добавлено ${newItems.length} продуктов из плана меню на неделю!` : `Added ${newItems.length} items from your weekly meal plan!`);
-    setShowNotificationModal(true);
-  };
-
-  const getSortedRecipesForPlanner = (category) => {
-    const categoryTypeMap = { breakfast: ["завтрак"], lunch: ["обед"], snack: ["перекус", "десерт"], dinner: ["ужин"] };
-    const preferredTypes = categoryTypeMap[category] || [];
-    return [...SAMPLE_RECIPES].sort((a, b) => {
-      const aMatch = preferredTypes.some(t => normalize(t) === normalize(a.type));
-      const bMatch = preferredTypes.some(t => normalize(t) === normalize(b.type));
-      if (aMatch && !bMatch) return -1;
-      if (!aMatch && bMatch) return 1;
-      return 0;
-    });
-  };
-
-  const filteredResults = SAMPLE_RECIPES.filter(r => {
-    const baseIngStr = (r.ingredients || []).map(ing => typeof ing === 'object' ? ing.name : ing).join(",").toLowerCase();
-    const variantIngStrs = (r.variants || []).map(v => (v.ingredients || []).map(ing => typeof ing === 'object' ? ing.name : ing).join(",").toLowerCase());
-    let matchesSearch = true;
-    if (searchMode === "name" && searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      matchesSearch = r.title.toLowerCase().includes(q) || (r.tags || []).some(t => t.toLowerCase().includes(q));
-    } else if (searchMode === "ingredients" && searchQuery.trim()) {
-      const terms = searchQuery.split(",").map(t => t.trim().toLowerCase()).filter(Boolean);
-      const pools = [baseIngStr, ...variantIngStrs];
-      matchesSearch = pools.some(pool => terms.every(term => pool.includes(term)));
-    }
-    let matchesExclude = true;
-    if (excludeIngredients.trim()) {
-      const exs = excludeIngredients.split(",").map(t => t.trim().toLowerCase()).filter(Boolean);
-      matchesExclude = !(r.ingredients || []).some(ing => {
-        const ingName = typeof ing === 'object' ? ing.name : ing;
-        return exs.some(e => ingName.toLowerCase().includes(e));
-      });
-    }
-    let matchesFilters = true;
-    if (selectedFilters.type) matchesFilters = matchesFilters && normalize(r.type) === normalize(selectedFilters.type);
-    if (selectedFilters.diet) matchesFilters = matchesFilters && normalize(r.diet).includes(normalize(selectedFilters.diet));
-    if (selectedFilters.cuisine) matchesFilters = matchesFilters && normalize(r.cuisine) === normalize(selectedFilters.cuisine);
-    if (selectedFilters.difficulty) matchesFilters = matchesFilters && normalize(r.difficulty) === normalize(selectedFilters.difficulty);
-    if (selectedFilters.tag) matchesFilters = matchesFilters && (r.tags || []).map(t => t.toLowerCase().includes(selectedFilters.tag.toLowerCase()));
-    if (selectedFilters.timeRange) {
-      const tVal = parseInt(r.time || "0", 10);
-      if (selectedFilters.timeRange === "short") matchesFilters = matchesFilters && tVal <= 15;
-      if (selectedFilters.timeRange === "medium") matchesFilters = matchesFilters && tVal > 15 && tVal <= 40;
-      if (selectedFilters.timeRange === "long") matchesFilters = matchesFilters && tVal > 40;
-    }
-    return matchesSearch && matchesExclude && matchesFilters;
-  });
-
-  const getAllergyList = () => {
-    if (!userData?.allergies) return [];
-    return userData.allergies.toLowerCase().split(/[;,]+/).map(s => s.trim()).filter(Boolean);
-  };
-  const allergyList = getAllergyList();
-
-  const t = (ru, en) => (language === "ru" ? ru : en);
-
   const getDishTypeInfo = (type) => {
-    const normalized = normalize(type);
-    const dishInfo = DISH_TYPE_LABELS[normalized];
-    return { label: dishInfo?.[language] || type, color: dishInfo?.color || "bg-gray-500" };
+    const key = normalize(type || "");
+    const info = DISH_TYPE_LABELS[key];
+    if (!info) return { label: type || "", color: "bg-gray-400" };
+    return { label: language === "ru" ? info.ru : info.en, color: info.color };
   };
 
-  const getPeriodDisplayText = () => {
-    const d = new Date(selectedDate);
-    if (viewPeriod === "day") {
-      const today = new Date();
-      const yesterday = new Date(today); yesterday.setDate(yesterday.getDate() - 1);
-      const tomorrow = new Date(today); tomorrow.setDate(tomorrow.getDate() + 1);
-      if (getDateKey(d) === getDateKey(today)) return t("Сегодня", "Today");
-      if (getDateKey(d) === getDateKey(yesterday)) return t("Вчера", "Yesterday");
-      if (getDateKey(d) === getDateKey(tomorrow)) return t("Завтра", "Tomorrow");
-      return formatDate(selectedDate, language);
-    } else if (viewPeriod === "week") {
-      return getWeekRange(selectedDate, language);
-    } else if (viewPeriod === "month") {
-      return `${MONTH_NAMES[d.getMonth()]} ${d.getFullYear()}`;
+  const allergyList = (userData?.allergies || "").toLowerCase().split(",").map(s => s.trim()).filter(Boolean);
+
+  const filteredResults = useMemo(() => {
+    let results = allRecipes;
+    const query = normalize(searchQuery);
+    const exclude = excludeIngredients.toLowerCase().split(",").map(s => s.trim()).filter(Boolean);
+
+    if (searchMode === "name") {
+      if (query) {
+        results = results.filter(r =>
+          normalize(r.title).includes(query) ||
+          (r.tags || []).some(tag => normalize(tag).includes(query)) ||
+          normalize(r.cuisine || "").includes(query) ||
+          normalize(r.type || "").includes(query)
+        );
+      }
+    } else {
+      if (query) {
+        const queryIngredients = query.split(",").map(s => s.trim()).filter(Boolean);
+        results = results.filter(r =>
+          queryIngredients.every(qi =>
+            (r.ingredients || []).some(ing => {
+              const name = typeof ing === 'object' ? ing.name : ing;
+              return normalize(name).includes(qi);
+            })
+          )
+        );
+      }
     }
-    return formatDate(selectedDate, language);
-  };
+
+    if (exclude.length > 0) {
+      results = results.filter(r =>
+        !(r.ingredients || []).some(ing => {
+          const name = typeof ing === 'object' ? ing.name : ing;
+          return exclude.some(e => normalize(name).includes(e));
+        })
+      );
+    }
+
+    if (selectedFilters.type) results = results.filter(r => normalize(r.type) === normalize(selectedFilters.type));
+    if (selectedFilters.diet) results = results.filter(r => normalize(r.diet) === normalize(selectedFilters.diet));
+    if (selectedFilters.cuisine) results = results.filter(r => normalize(r.cuisine) === normalize(selectedFilters.cuisine));
+    if (selectedFilters.difficulty) results = results.filter(r => normalize(r.difficulty) === normalize(selectedFilters.difficulty));
+    if (selectedFilters.tag) results = results.filter(r => (r.tags || []).some(tag => normalize(tag) === normalize(selectedFilters.tag)));
+    if (selectedFilters.timeRange) {
+      results = results.filter(r => {
+        const time = parseInt(r.time, 10);
+        if (selectedFilters.timeRange === "short") return time <= 15;
+        if (selectedFilters.timeRange === "medium") return time > 15 && time <= 40;
+        if (selectedFilters.timeRange === "long") return time > 40;
+        return true;
+      });
+    }
+
+    return results;
+  }, [allRecipes, searchQuery, searchMode, excludeIngredients, selectedFilters]);
 
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#FEFAE0]">
-        <div className="text-[#606C38] text-xl font-semibold">🍳 Загрузка Cookify...</div>
+      <div className={`min-h-screen ${THEMES.olive.bg} flex items-center justify-center`}>
+        <div className="text-[#606C38] text-xl">Загрузка...</div>
       </div>
     );
   }
 
+  const commonProps = {
+    t,
+    language, setLanguage,
+    unitSystem, setUnitSystem, toggleUnitSystem,
+    theme, font, fontSize,
+    currentTheme, setCurrentTheme,
+    currentFont, setCurrentFont,
+    currentFontSize, setCurrentFontSize,
+    showCustomization, setShowCustomization,
+    registered, setRegistered,
+    userData, setUserData,
+    firebaseUser,
+    showRegisterForm, setShowRegisterForm,
+    isEditingProfile, setIsEditingProfile,
+    handleRegister, handleStartEditProfile, handleLogout,
+    handleAvatarUpload,
+    getDisplayWeight, getDisplayHeight,
+    selectedRecipe, setSelectedRecipe,
+    selectedRecipeVariantKey, setSelectedRecipeVariantKey,
+    currentServings, setCurrentServings,
+    userSubstitutions, setUserSubstitutions,
+    openSubPicker, setOpenSubPicker,
+    getRecipeSubKey, getEffectiveIngredientName, saveUserSubstitutions,
+    searchMode, setSearchMode,
+    searchQuery, setSearchQuery,
+    excludeIngredients, setExcludeIngredients,
+    showFilters, setShowFilters,
+    selectedFilters, setSelectedFilters,
+    TYPE_OPTIONS, DIET_OPTIONS, DIFFICULTY_OPTIONS, TAG_OPTIONS, CUISINE_OPTIONS,
+    DISH_TYPE_LABELS, DIET_LABELS, DIFFICULTY_LABELS,
+    normalize, getDishTypeInfo,
+    filteredResults, allergyList,
+    mealPlan, setMealPlan, addToMealPlan,
+    mealHistory, setMealHistory, addMealToHistory, removeMealFromHistory,
+    getFilteredHistory, getMealsForDay, calculateDayCalories,
+    calculatePeriodNutrition, calculatePeriodStats, todayNutrition,
+    viewPeriod, setViewPeriod,
+    selectedDate, setSelectedDate,
+    showAddMealModal, setShowAddMealModal,
+    addMealCategory, setAddMealCategory,
+    selectedWeekDay, setSelectedWeekDay,
+    accountTab, setAccountTab,
+    plannerWeekDate, setPlannerWeekDate,
+    weeklyPlan, setWeeklyPlan,
+    showPlannerModal, setShowPlannerModal,
+    plannerModalDate, setPlannerModalDate,
+    plannerModalCategory, setPlannerModalCategory,
+    addRecipeToPlanner, removeRecipeFromPlanner, getPlannerRecipes,
+    getWeekDays, getWeekRange, getDateKey, getWeekKey, getMonthKey, formatDate,
+    addDays, addWeeks, addMonths, setMonthYear,
+    MEAL_LABELS, WEEKDAY_NAMES, WEEKDAY_SHORT, MONTH_NAMES,
+    shoppingList, setShoppingList,
+    categorizeIngredient,
+    convertToGrams,
+    calculateRecipeNutrition,
+    PRODUCTS_BY_ID,
+    getTimeCategory,
+    showVariantSelectionModal, setShowVariantSelectionModal,
+    variantSelectionRecipe, setVariantSelectionRecipe,
+    variantSelectionCallback, setVariantSelectionCallback,
+    onAddRecipeClick: handleAddRecipeClick,
+    allRecipes,
+    GOALS, LIFESTYLE,
+  };
+
   return (
-    <div className={`min-h-screen ${theme.bg} ${theme.text} ${font.class} ${fontSize.body} p-6 transition-all duration-500`}>
-      <Header activeScreen={activeScreen} setActiveScreen={setActiveScreen} language={language} setLanguage={setLanguage} theme={theme} fontSize={fontSize} />
+    <div className={`min-h-screen ${theme.bg} ${theme.text} ${font.class} p-4`}>
+      <Header
+        activeScreen={activeScreen}
+        setActiveScreen={setActiveScreen}
+        language={language}
+        setLanguage={setLanguage}
+        theme={theme}
+        fontSize={fontSize}
+      />
 
-      <NotificationModal isOpen={showNotificationModal} onClose={() => setShowNotificationModal(false)} title={notificationTitle} message={notificationMessage} theme={theme} fontSize={fontSize} language={language} />
+      {activeScreen === "home" && <HomeScreen {...commonProps} setActiveScreen={setActiveScreen} SAMPLE_RECIPES={allRecipes} />}
+      {activeScreen === "search" && <SearchScreen {...commonProps} setActiveScreen={setActiveScreen} />}
+      {activeScreen === "account" && <AccountScreen {...commonProps} />}
 
-      {activeScreen === "home" && (
-        <HomeScreen
-          userData={userData}
-          language={language}
-          setLanguage={setLanguage}
-          setActiveScreen={setActiveScreen}
+      <NotificationModal
+        isOpen={showNotificationModal}
+        onClose={() => setShowNotificationModal(false)}
+        title={notificationTitle}
+        message={notificationMessage}
+        theme={theme}
+        fontSize={fontSize}
+        language={language}
+      />
+
+      {showAddRecipeModal && firebaseUser && (
+        <AddRecipeModal
           theme={theme}
           fontSize={fontSize}
-          todayNutrition={todayNutrition}
-          setShowAddMealModal={setShowAddMealModal}
-          setAccountTab={setAccountTab}
-        />
-      )}
-
-      {activeScreen === "search" && (
-        <SearchScreen
-          t={t} theme={theme} fontSize={fontSize} searchQuery={searchQuery} setSearchQuery={setSearchQuery} searchMode={searchMode} setSearchMode={setSearchMode}
-          excludeIngredients={excludeIngredients} setExcludeIngredients={setExcludeIngredients} showFilters={showFilters} setShowFilters={setShowFilters}
-          selectedFilters={selectedFilters} setSelectedFilters={setSelectedFilters} TYPE_OPTIONS={TYPE_OPTIONS} DIET_OPTIONS={DIET_OPTIONS}
-          DIFFICULTY_OPTIONS={DIFFICULTY_OPTIONS} TAG_OPTIONS={TAG_OPTIONS} CUISINE_OPTIONS={CUISINE_OPTIONS} DISH_TYPE_LABELS={DISH_TYPE_LABELS}
-          DIET_LABELS={DIET_LABELS} DIFFICULTY_LABELS={DIFFICULTY_LABELS} language={language} normalize={normalize} filteredResults={filteredResults}
-          getDishTypeInfo={getDishTypeInfo} allergyList={allergyList} setSelectedRecipe={setSelectedRecipe} setSelectedRecipeVariantKey={setSelectedRecipeVariantKey}
-          userSubstitutions={userSubstitutions}
-        />
-      )}
-
-      {showVariantSelectionModal && variantSelectionRecipe && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" onClick={() => setShowVariantSelectionModal(false)}>
-          <div className={`${theme.cardBg} ${fontSize.body} rounded-2xl max-w-md w-full p-6`} onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-start justify-between mb-4">
-              <h3 className={`${fontSize.cardTitle} font-bold ${theme.headerText}`}>{t("Выберите вариант рецепта", "Choose recipe variant")}</h3>
-              <button onClick={() => setShowVariantSelectionModal(false)} className={`${theme.textSecondary} hover:${theme.text} transition`}><FaTimes size={20} /></button>
-            </div>
-            <p className={`${fontSize.small} ${theme.textSecondary} mb-4`}>{variantSelectionRecipe.title}</p>
-            <div className="space-y-2">
-              {variantSelectionRecipe.variants.map(variant => (
-                <button key={variant.key} onClick={() => variantSelectionCallback && variantSelectionCallback(variant.key)}
-                  className={`w-full p-3 rounded-lg ${theme.accent} ${theme.accentHover} text-white transition ${fontSize.body}`}>
-                  {language === "ru" ? (variant.labelRu || variant.key) : (variant.labelEn || variant.key)}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {selectedRecipe && (() => {
-        const dishTypeInfo = getDishTypeInfo(selectedRecipe.type);
-        const variants = Array.isArray(selectedRecipe.variants) ? selectedRecipe.variants : [];
-        const activeVariant = variants.length ? (variants.find(v => v.key === selectedRecipeVariantKey) || variants[0]) : null;
-        const activeRecipe = activeVariant || selectedRecipe;
-        const subsKey = getRecipeSubKey(selectedRecipe.id, activeVariant?.key || null);
-        const recipeSubs = userSubstitutions?.[subsKey] || {};
-        const recipeTime = activeVariant?.time ?? selectedRecipe.time;
-        const recipeCalories = activeVariant?.caloriesPerServing ?? activeVariant?.calories ?? selectedRecipe.caloriesPerServing ?? selectedRecipe.calories;
-        const timeInfo = getTimeCategory(recipeTime);
-        const timeMinutes = parseInt(recipeTime, 10);
-        const progressPercentage = Math.min((timeMinutes / 120) * 100, 100);
-        const baseServings = selectedRecipe.servings ?? 2;
-        const closeModal = () => { setSelectedRecipe(null); setSelectedRecipeVariantKey(null); };
-        const servingsMultiplier = currentServings / baseServings;
-        const nutritionInfo = calculateRecipeNutrition(activeRecipe.ingredients || [], baseServings);
-        const totalKcal = Math.round((nutritionInfo.total.calories || recipeCalories * baseServings || 0) * servingsMultiplier);
-        const totalProtein = Math.round((nutritionInfo.total.protein || 0) * servingsMultiplier);
-        const totalFat = Math.round((nutritionInfo.total.fat || 0) * servingsMultiplier);
-        const totalCarbs = Math.round((nutritionInfo.total.carbs || 0) * servingsMultiplier);
-
-        const updateSubstitution = (subId, value) => {
-          setUserSubstitutions(prev => {
-            const all = { ...(prev || {}) };
-            const curRecipeSubs = { ...(all[subsKey] || {}) };
-            if (!value) { delete curRecipeSubs[subId]; } else { curRecipeSubs[subId] = value; }
-            if (Object.keys(curRecipeSubs).length === 0) { delete all[subsKey]; } else { all[subsKey] = curRecipeSubs; }
-            saveUserSubstitutions(all);
-            return all;
-          });
-        };
-
-        const toggleSubPicker = (subId) => { setOpenSubPicker(prev => (prev === subId ? null : subId)); };
-
-        const scaleIngredientQuantity = (quantity) => {
-          if (!quantity) return '';
-          const num = parseFloat(quantity.toString().replace(',', '.'));
-          if (isNaN(num)) return quantity;
-          const scaled = num * servingsMultiplier;
-          return scaled % 1 === 0 ? scaled.toString() : scaled.toFixed(1).replace('.', ',');
-        };
-
-        return (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" onClick={closeModal}>
-            <div className={`${theme.cardBg} ${fontSize.body} rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6`} onClick={(e) => e.stopPropagation()}>
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex-1">
-                  <h2 className={`${fontSize.subheading} font-bold ${theme.headerText}`}>{selectedRecipe.title}</h2>
-                  {selectedRecipe.type && <span className={`${dishTypeInfo.color} text-white px-3 py-1 rounded-full ${fontSize.tiny} font-semibold inline-block mt-2`}>{dishTypeInfo.label}</span>}
-                  {variants.length > 0 && (
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {variants.map(v => {
-                        const isActive = v.key === activeVariant?.key;
-                        return (
-                          <button key={v.key} onClick={() => setSelectedRecipeVariantKey(v.key)}
-                            className={`px-3 py-1 rounded-full ${fontSize.small} transition ${isActive ? `${theme.accent} text-white` : `${theme.cardBg} border ${theme.border}`}`}>
-                            {language === "ru" ? (v.labelRu || v.key) : (v.labelEn || v.key)}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-                <button onClick={closeModal} className={`${theme.textSecondary} hover:${theme.text} transition ml-4`}><FaTimes size={24} /></button>
-              </div>
-
-              <div className={`${theme.cardBg} border-2 rounded-xl p-4 mb-6 shadow-md`} style={{ borderColor: timeInfo.color }}>
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-3">
-                    <span className="text-4xl">{timeInfo.emoji}</span>
-                    <div>
-                      <div className={`${fontSize.body} font-bold`} style={{ color: timeInfo.color }}>{timeMinutes} {t("минут", "minutes")}</div>
-                      <div className={`${fontSize.small} ${theme.textSecondary}`}>{language === "ru" ? timeInfo.label_ru : timeInfo.label_en}</div>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className={`${fontSize.tiny} ${theme.textSecondary} mb-1`}>{t("Всего", "Total")}</div>
-                    <div className={`${fontSize.body} font-bold ${theme.accentText}`}>{totalKcal} {t("ккал", "kcal")}</div>
-                    <div className="flex items-center justify-end gap-2 mt-2">
-                      <button onClick={() => setCurrentServings(Math.max(1, currentServings - 1))} className={`w-6 h-6 flex items-center justify-center rounded-full ${theme.accent} text-white hover:opacity-80 transition`} disabled={currentServings <= 1}><FaMinus size={10} /></button>
-                      <span className={`${fontSize.small} font-semibold ${theme.text} min-w-[60px] text-center`}>{currentServings} {t(currentServings === 1 ? "порция" : "порции", currentServings === 1 ? "serving" : "servings")}</span>
-                      <button onClick={() => setCurrentServings(currentServings + 1)} className={`w-6 h-6 flex items-center justify-center rounded-full ${theme.accent} text-white hover:opacity-80 transition`}><FaPlus size={10} /></button>
-                    </div>
-                  </div>
-                </div>
-                <div className="grid grid-cols-3 gap-2 mb-3">
-                  <div className={`${theme.cardBg} rounded-lg p-2 text-center border ${theme.border}`}><div className={`${fontSize.tiny} ${theme.textSecondary}`}>{t("Белки", "Protein")}</div><div className={`${fontSize.small} font-bold ${theme.text}`}>{totalProtein}{t("г", "g")}</div></div>
-                  <div className={`${theme.cardBg} rounded-lg p-2 text-center border ${theme.border}`}><div className={`${fontSize.tiny} ${theme.textSecondary}`}>{t("Жиры", "Fat")}</div><div className={`${fontSize.small} font-bold ${theme.text}`}>{totalFat}{t("г", "g")}</div></div>
-                  <div className={`${theme.cardBg} rounded-lg p-2 text-center border ${theme.border}`}><div className={`${fontSize.tiny} ${theme.textSecondary}`}>{t("Углеводы", "Carbs")}</div><div className={`${fontSize.small} font-bold ${theme.text}`}>{totalCarbs}{t("г", "g")}</div></div>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2.5 mb-2">
-                  <div className="h-2.5 rounded-full transition-all duration-500" style={{ width: `${progressPercentage}%`, backgroundColor: timeInfo.color }}></div>
-                </div>
-                <div className={`${fontSize.tiny} ${theme.textSecondary} text-center`}>{t(`${timeMinutes <= 15 ? 'Быстрое приготовление!' : timeMinutes <= 40 ? 'Умеренное время' : 'Требуется терпение'}`, `${timeMinutes <= 15 ? 'Quick cooking!' : timeMinutes <= 40 ? 'Moderate time' : 'Takes patience'}`)}</div>
-              </div>
-
-              <div className={`${theme.textSecondary} ${fontSize.small} mb-4`}>{t("Сложность:", "Difficulty:")} {selectedRecipe.difficulty}</div>
-
-              <div className="mb-6">
-                <h3 className={`${fontSize.cardTitle} font-semibold mb-2 ${theme.headerText}`}>{t("Ингредиенты:", "Ingredients:")}</h3>
-                <ul className={`space-y-2 ${fontSize.body}`}>
-                  {(activeRecipe.ingredients || []).map((ing, i) => {
-                    const effectiveName = getEffectiveIngredientName(ing, recipeSubs);
-                    const low = (effectiveName || "").toLowerCase();
-                    const isAllergy = allergyList.some(a => a && low.includes(a));
-                    const isObj = typeof ing === 'object';
-                    const hasSubs = isObj && ing.subId && Array.isArray(ing.substitutes) && ing.substitutes.length > 0;
-                    const currentChoice = isObj && ing.subId ? (recipeSubs?.[ing.subId] || "") : "";
-                    const meta = isObj ? (ing.meta || "") : "";
-                    const scaledQuantity = isObj && ing.quantity ? scaleIngredientQuantity(ing.quantity) : '';
-                    const scaledUnit = isObj ? (ing.unit || '') : '';
-                    let displayText = '';
-                    if (scaledQuantity && scaledUnit) {
-                      const converted = convertToGrams(scaledQuantity, scaledUnit, effectiveName);
-                      displayText = converted.displayText;
-                    }
-                    const canToggle = hasSubs && !isAllergy;
-                    const isOpen = hasSubs && openSubPicker === ing.subId;
-                    return (
-                      <li key={i} className={isAllergy ? "text-red-600 font-semibold" : ""}>
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="flex-1 text-left">
-                            <div className="flex flex-wrap items-baseline gap-2">
-                              <span>{effectiveName}</span>
-                              {meta && <span className={`inline-flex items-center px-2 py-0.5 rounded-full bg-gray-200 text-gray-700 ${fontSize.tiny} font-medium`}>{meta}</span>}
-                              {displayText && <span className={`${theme.textSecondary}`}>— {displayText}</span>}
-                            </div>
-                          </div>
-                          {hasSubs && (
-                            <div className="flex items-center gap-2">
-                              <button type="button" onClick={() => canToggle && toggleSubPicker(ing.subId)} disabled={!canToggle}
-                                className={canToggle ? `w-7 h-7 flex items-center justify-center rounded-full border ${theme.border} ${theme.cardBg} hover:opacity-80 transition` : `w-7 h-7 flex items-center justify-center rounded-full border ${theme.border} opacity-40 cursor-not-allowed`}
-                                title={canToggle ? t("Показать варианты", "Show options") : t("Недоступно для аллергенов", "Unavailable for allergens")}>
-                                <span className={`${fontSize.small} leading-none`}>{isOpen ? "▴" : "▾"}</span>
-                              </button>
-                              <span className={`${fontSize.tiny} ${theme.textSecondary} mt-1 whitespace-nowrap`}>{currentChoice ? t("Заменено", "Replaced") : t("Можно заменить", "Replaceable")}</span>
-                            </div>
-                          )}
-                        </div>
-                        {hasSubs && isOpen && (
-                          <div className={`mt-2 ml-1 p-3 rounded-xl border ${theme.border} ${theme.cardBg}`}>
-                            <div className={`mb-2 ${fontSize.small} ${theme.textSecondary}`}>{t("Выберите замену:", "Choose a substitution:")}</div>
-                            <div className="flex flex-wrap gap-2">
-                              <button type="button" onClick={() => { updateSubstitution(ing.subId, ""); setOpenSubPicker(null); }} className={`px-3 py-1 rounded-full border ${theme.border} ${fontSize.small} hover:opacity-80 transition`}>{t("Не заменять", "No substitution")}</button>
-                              {ing.substitutes.map((opt) => (
-                                <button key={opt} type="button" onClick={() => { updateSubstitution(ing.subId, opt); setOpenSubPicker(null); }} className={`px-3 py-1 rounded-full ${theme.accent} ${theme.accentHover} text-white ${fontSize.small} transition`}>{opt}</button>
-                              ))}
-                            </div>
-                            {currentChoice && <div className={`mt-2 ${fontSize.tiny} ${theme.textSecondary}`}>{t("Текущая замена:", "Current:")} {currentChoice}</div>}
-                          </div>
-                        )}
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
-
-              <div>
-                <h3 className={`${fontSize.cardTitle} font-semibold mb-3 ${theme.headerText}`}>{t("Как готовить:", "How to cook:")}</h3>
-                <ol className={`space-y-3 ${fontSize.body}`}>
-                  {(activeRecipe.instructions || []).map((step, i) => (
-                    <li key={i} className="flex gap-3">
-                      <span className={`${theme.accent} text-white rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0 ${fontSize.small} font-bold`}>{i + 1}</span>
-                      <span>{step}</span>
-                    </li>
-                  ))}
-                </ol>
-              </div>
-
-              <div className="mt-6 flex gap-2 flex-wrap">
-                {(selectedRecipe.tags || []).map((tag, i) => <span key={i} className={`px-3 py-1 ${theme.accent} text-white rounded-full ${fontSize.small}`}>{tag}</span>)}
-              </div>
-
-              {registered && (
-                <div className="mt-6 border-t pt-4">
-                  <h4 className={`${fontSize.body} font-semibold mb-3`}>{t("Добавить в историю питания:", "Add to meal history:")}</h4>
-                  <div className="flex gap-2 flex-wrap">
-                    {MEAL_CATEGORIES.map(cat => (
-                      <button key={cat} onClick={() => { addMealToHistory(selectedRecipe, cat, new Date().toISOString().split('T')[0], selectedRecipeVariantKey); closeModal(); }}
-                        className={`px-3 py-1 rounded ${fontSize.small} ${theme.accent} ${theme.accentHover} text-white`}>{MEAL_LABELS[cat]}</button>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        );
-      })()}
-
-      {activeScreen === "account" && (
-        <AccountScreen
-          t={t} theme={theme} fontSize={fontSize} language={language} registered={registered} userData={userData} unitSystem={unitSystem}
-          currentTheme={currentTheme} currentFont={currentFont} currentFontSize={currentFontSize} showCustomization={showCustomization}
-          setShowCustomization={setShowCustomization} showRegisterForm={showRegisterForm} setShowRegisterForm={setShowRegisterForm}
-          isEditingProfile={isEditingProfile} setIsEditingProfile={setIsEditingProfile} GOALS={GOALS} LIFESTYLE={LIFESTYLE}
-          accountTab={accountTab} setAccountTab={setAccountTab} viewPeriod={viewPeriod} setViewPeriod={setViewPeriod}
-          selectedDate={selectedDate} setSelectedDate={setSelectedDate} selectedWeekDay={selectedWeekDay} setSelectedWeekDay={setSelectedWeekDay}
-          MONTH_NAMES={MONTH_NAMES} WEEKDAY_NAMES={WEEKDAY_NAMES} WEEKDAY_SHORT={WEEKDAY_SHORT} MEAL_CATEGORIES={MEAL_CATEGORIES} MEAL_LABELS={MEAL_LABELS}
-          SAMPLE_RECIPES={SAMPLE_RECIPES} getFilteredHistory={getFilteredHistory} getMealsForDay={getMealsForDay} calculateDayCalories={calculateDayCalories}
-          calculatePeriodStats={calculatePeriodStats} calculatePeriodNutrition={calculatePeriodNutrition} getWeekDays={getWeekDays} getWeekRange={getWeekRange} formatDate={formatDate}
-          getPeriodDisplayText={getPeriodDisplayText} addDays={addDays} addWeeks={addWeeks} addMonths={addMonths} setMonthYear={setMonthYear}
-          plannerWeekDate={plannerWeekDate} setPlannerWeekDate={setPlannerWeekDate} weeklyPlan={weeklyPlan} getPlannerRecipes={getPlannerRecipes}
-          calculatePlannerDayCalories={calculatePlannerDayCalories} showAddMealModal={showAddMealModal} setShowAddMealModal={setShowAddMealModal}
-          addMealCategory={addMealCategory} setAddMealCategory={setAddMealCategory} showPlannerModal={showPlannerModal} setShowPlannerModal={setShowPlannerModal}
-          plannerModalDate={plannerModalDate} setPlannerModalDate={setPlannerModalDate} plannerModalCategory={plannerModalCategory}
-          setPlannerModalCategory={setPlannerModalCategory} getSortedRecipesForPlanner={getSortedRecipesForPlanner} handleStartEditProfile={handleStartEditProfile}
-          handleLogout={handleLogout} toggleUnitSystem={toggleUnitSystem} handleRegister={handleRegister} handleAvatarUpload={handleAvatarUpload}
-          setCurrentTheme={setCurrentTheme} setCurrentFont={setCurrentFont} setCurrentFontSize={setCurrentFontSize} getDisplayWeight={getDisplayWeight}
-          getDisplayHeight={getDisplayHeight} removeMealFromHistory={removeMealFromHistory} addMealToHistory={addMealToHistory}
-          addRecipeToPlanner={addRecipeToPlanner} removeRecipeFromPlanner={removeRecipeFromPlanner} setSelectedRecipe={setSelectedRecipe}
-          setSelectedRecipeVariantKey={setSelectedRecipeVariantKey} DISH_TYPE_LABELS={DISH_TYPE_LABELS} normalize={normalize} THEMES={THEMES}
-          FONTS={FONTS} FONT_SIZES={FONT_SIZES} convertWeight={convertWeight} convertHeight={convertHeight}
-          shoppingList={shoppingList} setShoppingList={setShoppingList} generateShoppingListFromPlanner={generateShoppingListFromPlanner}
-          setUserData={setUserData} setRegistered={setRegistered} setMealHistory={setMealHistory}
-          setWeeklyPlan={setWeeklyPlan}
+          language={language}
+          firebaseUser={firebaseUser}
+          onClose={() => setShowAddRecipeModal(false)}
+          onAdded={() => {
+            // Перезагружаем рецепты сообщества после добавления
+            getRecipes()
+              .then(recipes => setCommunityRecipes(recipes))
+              .catch(() => {});
+          }}
         />
       )}
     </div>
