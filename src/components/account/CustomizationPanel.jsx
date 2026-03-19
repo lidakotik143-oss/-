@@ -6,6 +6,7 @@ export default function CustomizationPanel({
   theme,
   fontSize,
   language,
+  setLanguage,
   showCustomization,
   setShowCustomization,
   currentTheme,
@@ -27,6 +28,29 @@ export default function CustomizationPanel({
 
       {showCustomization && (
         <div className="mt-4 space-y-6">
+          {/* Язык */}
+          <div className="text-center">
+            <label className={`block ${fontSize.body} font-semibold mb-3`}>{t("Язык", "Language")}</label>
+            <div className="flex gap-2 justify-center">
+              <button
+                onClick={() => setLanguage('ru')}
+                className={`px-6 py-3 rounded-xl ${fontSize.small} font-semibold transition ${
+                  language === 'ru' ? `${theme.accent} text-white shadow-lg` : `${theme.border} border hover:shadow`
+                }`}
+              >
+                Русский
+              </button>
+              <button
+                onClick={() => setLanguage('en')}
+                className={`px-6 py-3 rounded-xl ${fontSize.small} font-semibold transition ${
+                  language === 'en' ? `${theme.accent} text-white shadow-lg` : `${theme.border} border hover:shadow`
+                }`}
+              >
+                English
+              </button>
+            </div>
+          </div>
+
           {/* Тема */}
           <div className="text-center">
             <label className={`block ${fontSize.body} font-semibold mb-3`}>{t("Цветовая тема", "Color Theme")}</label>
