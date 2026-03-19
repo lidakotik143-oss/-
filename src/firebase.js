@@ -16,7 +16,7 @@ const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 
-// ─── РЕЦЕПТЫ (общие для всех) ───────────────────────────────────────────────
+// ─── РЕЦЕПТЫ (общие для всех) ──────────────────────────────────────────────
 
 export async function getRecipes() {
   const q = query(collection(db, 'recipes'), orderBy('createdAt', 'desc'));
@@ -40,7 +40,7 @@ export async function deleteRecipe(recipeId, userId) {
   return await deleteDoc(ref);
 }
 
-// ─── ПРОФИЛЬ ПОЛЬЗОВАТЕЛЯ (личный) ──────────────────────────────────────────
+// ─── ПРОФИЛЬ ПОЛЬЗОВАТЕЛЯ (личный) ─────────────────────────────────────────
 
 export async function getUserProfile(uid) {
   const snap = await getDoc(doc(db, 'users', uid));
@@ -51,7 +51,37 @@ export async function setUserProfile(uid, data) {
   return await setDoc(doc(db, 'users', uid), data, { merge: true });
 }
 
-// ─── ТРЕКЕР ВОДЫ (личный) ────────────────────────────────────────────────────
+// ─── ИСТОРИЯ ПИТАНИЯ (личная) ─────────────────────────────────────────────────
+// Хранится в Firestore: users/{uid}/mealHistory (один документ — весь массив)
+
+export async function getMealHistory(uid) {
+  const snap = await getDoc(doc(db, 'users', uid, 'data', 'mealHistory'));
+  return snap.exists() ? (snap.data().entries || []) : [];
+}
+
+export async function saveMealHistory(uid, entries) {
+  return await setDoc(
+    doc(db, 'users', uid, 'data', 'mealHistory'),
+    { entries, updatedAt: new Date().toISOString() }
+  );
+}
+
+// ─── ПЛАН МЕНЮ НА НЕДЕЛЮ (личный) ─────────────────────────────────────────
+// Хранится в Firestore: users/{uid}/data/weeklyPlan
+
+export async function getWeeklyPlan(uid) {
+  const snap = await getDoc(doc(db, 'users', uid, 'data', 'weeklyPlan'));
+  return snap.exists() ? (snap.data().plan || {}) : {};
+}
+
+export async function saveWeeklyPlan(uid, plan) {
+  return await setDoc(
+    doc(db, 'users', uid, 'data', 'weeklyPlan'),
+    { plan, updatedAt: new Date().toISOString() }
+  );
+}
+
+// ─── ТРЕКЕР ВОДЫ (личный) ──────────────────────────────────────────────────
 
 export async function getWaterLog(uid, date) {
   const snap = await getDoc(doc(db, 'users', uid, 'waterLog', date));
@@ -62,7 +92,7 @@ export async function setWaterLog(uid, date, amount) {
   return await setDoc(doc(db, 'users', uid, 'waterLog', date), { amount });
 }
 
-// ─── ИЗБРАННОЕ (личное) ──────────────────────────────────────────────────────
+// ─── ИЗБРАННОЕ (личное) ─────────────────────────────────────────────────────
 
 export async function getFavorites(uid) {
   const snap = await getDoc(doc(db, 'users', uid));
