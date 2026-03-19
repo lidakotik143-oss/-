@@ -46,14 +46,6 @@ export default function Header({
               </span>
             </button>
           ))}
-
-          {/* Переключатель языка */}
-          <button
-            onClick={() => setLanguage(l => l === 'ru' ? 'en' : 'ru')}
-            className={`ml-1 sm:ml-2 px-2 py-1.5 rounded-lg ${theme.cardBg} ${theme.text} shadow-sm hover:opacity-80 transition text-xs sm:${fontSize.small} font-semibold border ${theme.border}`}
-          >
-            {language === 'ru' ? 'EN' : 'RU'}
-          </button>
         </nav>
       </div>
     </header>
