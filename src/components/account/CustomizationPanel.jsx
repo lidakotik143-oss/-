@@ -10,12 +10,9 @@ export default function CustomizationPanel({
   setShowCustomization,
   currentTheme,
   setCurrentTheme,
-  currentFont,
-  setCurrentFont,
   currentFontSize,
   setCurrentFontSize,
   THEMES,
-  FONTS,
   FONT_SIZES
 }) {
   return (
@@ -42,22 +39,6 @@ export default function CustomizationPanel({
                 >
                   <div className={`${THEMES[key].preview} h-12 rounded mb-2`}></div>
                   <div className={`${fontSize.small} text-center`}>{THEMES[key][language === "ru" ? "name" : "nameEn"]}</div>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Шрифт */}
-          <div className="text-center">
-            <label className={`block ${fontSize.body} font-semibold mb-3`}>{t("Шрифт", "Font")}</label>
-            <div className="flex gap-2 justify-center flex-wrap">
-              {Object.keys(FONTS).map(key => (
-                <button
-                  key={key}
-                  onClick={() => setCurrentFont(key)}
-                  className={`px-6 py-3 rounded-xl ${fontSize.small} transition ${currentFont === key ? `${theme.accent} text-white shadow-lg` : `${theme.border} border hover:shadow`}`}
-                >
-                  {FONTS[key][language === "ru" ? "nameRu" : "name"]}
                 </button>
               ))}
             </div>
