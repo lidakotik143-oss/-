@@ -24,7 +24,13 @@ import AccountScreen from "./components/AccountScreen";
 // 🔥 Firebase
 import { auth } from './firebase.js';
 import { onAuthStateChanged } from 'firebase/auth';
-import { getUserProfile } from './firebase.js';
+import {
+  getUserProfile,
+  getMealHistory,
+  saveMealHistory,
+  getWeeklyPlan,
+  saveWeeklyPlan
+} from './firebase.js';
 
 // 🔧 Временные точечные исправления некорректных типов блюд из базы рецептов
 const RECIPE_TYPE_FIXES = {
@@ -270,34 +276,45 @@ export default function CookifyDemo() {
   const [notificationMessage, setNotificationMessage] = useState("");
 
   // 🔥 ЭТАП 4: Firebase Auth слушатель
-  // Автоматически определяет, залогинен пользователь или нет
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        // Пользователь залогинен через Firebase
         setFirebaseUser(user);
         setRegistered(true);
-        // Пробуем загрузить профиль из Firestore
         try {
           const profile = await getUserProfile(user.uid);
           if (profile) {
             setUserData({ ...profile, email: user.email, uid: user.uid });
           } else {
-            // Профиль ещё не создан — ставим базовые данные из Firebase Auth
             setUserData({ email: user.email, uid: user.uid, login: user.email });
           }
         } catch (e) {
           setUserData({ email: user.email, uid: user.uid, login: user.email });
         }
-        // Загружаем остальные настройки из localStorage
+
+        // 🔥 ЭТАП 5: Загружаем историю питания и план меню из Firestore
+        try {
+          const [firestoreHistory, firestorePlan] = await Promise.all([
+            getMealHistory(user.uid),
+            getWeeklyPlan(user.uid)
+          ]);
+          setMealHistory(firestoreHistory);
+          setWeeklyPlan(firestorePlan);
+        } catch (e) {
+          // Если Firestore недоступен — fallback на localStorage
+          const savedMealHistory = localStorage.getItem(`cookify_mealHistory_${user.uid}`);
+          const savedWeeklyPlan = localStorage.getItem(`cookify_weeklyPlan_${user.uid}`);
+          if (savedMealHistory) setMealHistory(JSON.parse(savedMealHistory));
+          if (savedWeeklyPlan) setWeeklyPlan(JSON.parse(savedWeeklyPlan));
+        }
+
+        // Остальные настройки из localStorage
         const savedLanguage = localStorage.getItem("cookify_language");
         const savedUnitSystem = localStorage.getItem("cookify_unitSystem");
         const savedTheme = localStorage.getItem("cookify_theme");
         const savedFont = localStorage.getItem("cookify_font");
         const savedFontSize = localStorage.getItem("cookify_fontSize");
         const savedMealPlan = localStorage.getItem("cookify_mealPlan");
-        const savedMealHistory = localStorage.getItem(`cookify_mealHistory_${user.uid}`);
-        const savedWeeklyPlan = localStorage.getItem(`cookify_weeklyPlan_${user.uid}`);
         const savedShoppingList = localStorage.getItem(`cookify_shoppingList_${user.uid}`);
         if (savedLanguage) setLanguage(savedLanguage);
         if (savedUnitSystem) setUnitSystem(savedUnitSystem);
@@ -305,16 +322,12 @@ export default function CookifyDemo() {
         if (savedFont) setCurrentFont(savedFont);
         if (savedFontSize) setCurrentFontSize(savedFontSize);
         if (savedMealPlan) setMealPlan(JSON.parse(savedMealPlan));
-        if (savedMealHistory) setMealHistory(JSON.parse(savedMealHistory));
-        if (savedWeeklyPlan) setWeeklyPlan(JSON.parse(savedWeeklyPlan));
         if (savedShoppingList) setShoppingList(JSON.parse(savedShoppingList));
         setUserSubstitutions(loadUserSubstitutions());
       } else {
-        // Пользователь НЕ залогинен
         setFirebaseUser(null);
         setRegistered(false);
         setUserData(null);
-        // Загружаем только настройки внешнего вида
         const savedLanguage = localStorage.getItem("cookify_language");
         const savedTheme = localStorage.getItem("cookify_theme");
         const savedFont = localStorage.getItem("cookify_font");
@@ -326,7 +339,6 @@ export default function CookifyDemo() {
       }
       setAuthLoading(false);
     });
-    // Отписываемся при размонтировании компонента
     return () => unsubscribe();
   }, []);
 
@@ -336,16 +348,32 @@ export default function CookifyDemo() {
   useEffect(() => { localStorage.setItem("cookify_font", currentFont); }, [currentFont]);
   useEffect(() => { localStorage.setItem("cookify_fontSize", currentFontSize); }, [currentFontSize]);
   useEffect(() => { localStorage.setItem("cookify_mealPlan", JSON.stringify(mealPlan)); }, [mealPlan]);
+
+  // 🔥 ЭТАП 5: Сохраняем историю питания в Firestore при каждом изменении
   useEffect(() => {
-    if (firebaseUser?.uid) {
-      localStorage.setItem(`cookify_mealHistory_${firebaseUser.uid}`, JSON.stringify(mealHistory));
-    }
+    if (!firebaseUser?.uid) return;
+    const uid = firebaseUser.uid;
+    const timeout = setTimeout(() => {
+      saveMealHistory(uid, mealHistory).catch(() => {
+        // Fallback: дублируем в localStorage
+        localStorage.setItem(`cookify_mealHistory_${uid}`, JSON.stringify(mealHistory));
+      });
+    }, 800); // дебаунс 800ms чтобы не спамить Firestore при каждом нажатии
+    return () => clearTimeout(timeout);
   }, [mealHistory, firebaseUser]);
+
+  // 🔥 ЭТАП 5: Сохраняем план меню в Firestore при каждом изменении
   useEffect(() => {
-    if (firebaseUser?.uid) {
-      localStorage.setItem(`cookify_weeklyPlan_${firebaseUser.uid}`, JSON.stringify(weeklyPlan));
-    }
+    if (!firebaseUser?.uid) return;
+    const uid = firebaseUser.uid;
+    const timeout = setTimeout(() => {
+      saveWeeklyPlan(uid, weeklyPlan).catch(() => {
+        localStorage.setItem(`cookify_weeklyPlan_${uid}`, JSON.stringify(weeklyPlan));
+      });
+    }, 800);
+    return () => clearTimeout(timeout);
   }, [weeklyPlan, firebaseUser]);
+
   useEffect(() => {
     if (firebaseUser?.uid) {
       localStorage.setItem(`cookify_shoppingList_${firebaseUser.uid}`, JSON.stringify(shoppingList));
@@ -437,9 +465,17 @@ export default function CookifyDemo() {
   const handleLogout = async () => {
     const uid = firebaseUser?.uid;
     const login = userData?.login;
+    // Финальное сохранение в Firestore перед выходом
     if (uid) {
-      localStorage.setItem(`cookify_mealHistory_${uid}`, JSON.stringify(mealHistory));
-      localStorage.setItem(`cookify_weeklyPlan_${uid}`, JSON.stringify(weeklyPlan));
+      try {
+        await Promise.all([
+          saveMealHistory(uid, mealHistory),
+          saveWeeklyPlan(uid, weeklyPlan)
+        ]);
+      } catch (e) {
+        localStorage.setItem(`cookify_mealHistory_${uid}`, JSON.stringify(mealHistory));
+        localStorage.setItem(`cookify_weeklyPlan_${uid}`, JSON.stringify(weeklyPlan));
+      }
       localStorage.setItem(`cookify_shoppingList_${uid}`, JSON.stringify(shoppingList));
     }
     if (login) {
@@ -449,7 +485,6 @@ export default function CookifyDemo() {
       const waterGoal = localStorage.getItem('cookify_waterGoal');
       if (waterGoal) localStorage.setItem(`cookify_waterGoal_${login}`, waterGoal);
     }
-    // 🔥 Выходим из Firebase Auth
     try { await auth.signOut(); } catch (e) { console.error(e); }
     setUserData(null); setFirebaseUser(null); setRegistered(false); setShowRegisterForm(false); setIsEditingProfile(false);
     setMealPlan({ breakfast: [], lunch: [], snack: [], dinner: [] });
@@ -760,7 +795,6 @@ export default function CookifyDemo() {
     return formatDate(selectedDate, language);
   };
 
-  // Пока Firebase проверяет сессию — показываем загрузку
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#FEFAE0]">
