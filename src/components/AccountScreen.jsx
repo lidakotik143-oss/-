@@ -1,5 +1,8 @@
 import React, { useState } from "react";
 import { FaCalendarAlt, FaUtensils, FaShoppingCart, FaTint, FaEye, FaEyeSlash, FaLeaf } from "react-icons/fa";
+import { auth } from '../firebase.js';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
+import { setUserProfile } from '../firebase.js';
 import ProfileCard from "./account/ProfileCard";
 import ProfileEditForm from "./account/ProfileEditForm";
 import CustomizationPanel from "./account/CustomizationPanel";
@@ -10,56 +13,59 @@ import PlannerTab from "./account/PlannerTab";
 import ShoppingListTab from "./account/ShoppingListTab";
 import WaterTracker from "./WaterTracker";
 
-function AuthPanel({ t, theme, fontSize, language, onAuthSuccess }) {
+function FirebaseAuthPanel({ t, theme, fontSize, language }) {
   const [mode, setMode] = useState('choice');
-  const [login, setLogin] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPass, setShowPass] = useState(false);
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const getAccounts = () => {
-    try { return JSON.parse(localStorage.getItem('cookify_accounts') || '[]'); } catch { return []; }
+  const getErrorMessage = (code) => {
+    const errors = {
+      'auth/email-already-in-use': t('Такой email уже зарегистрирован', 'This email is already registered'),
+      'auth/invalid-email': t('Неверный формат email', 'Invalid email format'),
+      'auth/weak-password': t('Пароль должен быть не менее 6 символов', 'Password must be at least 6 characters'),
+      'auth/user-not-found': t('Пользователь с таким email не найден', 'No user found with this email'),
+      'auth/wrong-password': t('Неверный пароль', 'Wrong password'),
+      'auth/invalid-credential': t('Неверный email или пароль', 'Invalid email or password'),
+      'auth/too-many-requests': t('Слишком много попыток. Попробуйте позже', 'Too many attempts. Try again later'),
+    };
+    return errors[code] || t('Произошла ошибка. Попробуйте ещё раз', 'An error occurred. Please try again');
   };
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
-    const accounts = getAccounts();
-    const acc = accounts.find(a => a.login === login.trim() && a.password === password);
-    if (!acc) { setError(t('Неверный логин или пароль', 'Wrong login or password')); return; }
-    // Загружаем все данные аккаунта из localStorage
-    const savedKey = `cookify_userdata_${acc.login}`;
-    const savedProfile = localStorage.getItem(savedKey);
-    const profileData = savedProfile ? JSON.parse(savedProfile) : { name: acc.name || acc.login, login: acc.login };
-    localStorage.setItem('cookify_user', JSON.stringify(profileData));
-    // Загружаем историю, план, покупки для этого аккаунта
-    const history = localStorage.getItem(`cookify_mealHistory_${acc.login}`);
-    const weeklyPlan = localStorage.getItem(`cookify_weeklyPlan_${acc.login}`);
-    const shoppingList = localStorage.getItem(`cookify_shoppingList_${acc.login}`);
-    if (history) localStorage.setItem('cookify_mealHistory', history);
-    if (weeklyPlan) localStorage.setItem('cookify_weeklyPlan', weeklyPlan);
-    if (shoppingList) localStorage.setItem('cookify_shoppingList', shoppingList);
-    onAuthSuccess(profileData);
+    setLoading(true);
+    try {
+      await signInWithEmailAndPassword(auth, email.trim(), password);
+    } catch (err) {
+      setError(getErrorMessage(err.code));
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleReg = (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
     setError('');
-    if (login.trim().length < 3) { setError(t('Логин мин. 3 символа', 'Login min 3 chars')); return; }
-    if (password.length < 4) { setError(t('Пароль мин. 4 символа', 'Password min 4 chars')); return; }
     if (password !== confirmPassword) { setError(t('Пароли не совпадают', 'Passwords do not match')); return; }
-    const accounts = getAccounts();
-    if (accounts.some(a => a.login === login.trim())) { setError(t('Логин уже занят', 'Login already taken')); return; }
-    const newUser = { login: login.trim(), password, name: login.trim() };
-    localStorage.setItem('cookify_accounts', JSON.stringify([...accounts, newUser]));
-    const profileData = { name: newUser.name, login: newUser.login };
-    localStorage.setItem('cookify_user', JSON.stringify(profileData));
-    onAuthSuccess(profileData);
+    if (password.length < 6) { setError(t('Пароль мин. 6 символов', 'Password min 6 characters')); return; }
+    setLoading(true);
+    try {
+      const cred = await createUserWithEmailAndPassword(auth, email.trim(), password);
+      await setUserProfile(cred.user.uid, { email: cred.user.email, login: cred.user.email, createdAt: new Date().toISOString() });
+    } catch (err) {
+      setError(getErrorMessage(err.code));
+    } finally {
+      setLoading(false);
+    }
   };
 
   const inputCls = `w-full px-4 py-2.5 rounded-xl border ${theme.border} ${theme.input} focus:outline-none focus:ring-2 focus:ring-[#606C38] ${fontSize.body}`;
-  const btnPrimary = `w-full py-3 rounded-xl ${theme.accent} ${theme.accentHover} text-white font-semibold transition ${fontSize.body}`;
+  const btnPrimary = `w-full py-3 rounded-xl ${theme.accent} ${theme.accentHover} text-white font-semibold transition ${fontSize.body} ${loading ? 'opacity-60 cursor-not-allowed' : ''}`;
   const btnOutline = `w-full py-3 rounded-xl border-2 ${theme.border} ${theme.text} font-semibold transition hover:opacity-80 ${fontSize.body}`;
 
   return (
@@ -71,7 +77,7 @@ function AuthPanel({ t, theme, fontSize, language, onAuthSuccess }) {
         <h2 className={`${fontSize.subheading} font-bold ${theme.headerText}`}>
           {mode === 'choice' ? t('Мой аккаунт', 'My Account')
             : mode === 'login' ? t('Вход в аккаунт', 'Sign In')
-            : t('Регистрация', 'Register')}
+            : t('Регистрация', 'Create Account')}
         </h2>
       </div>
 
@@ -85,8 +91,8 @@ function AuthPanel({ t, theme, fontSize, language, onAuthSuccess }) {
       {mode === 'login' && (
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
-            <label className={`block ${fontSize.small} font-medium ${theme.textSecondary} mb-1`}>{t('Логин', 'Login')}</label>
-            <input type="text" required value={login} onChange={e => setLogin(e.target.value)} placeholder={t('Введите логин', 'Enter login')} className={inputCls} />
+            <label className={`block ${fontSize.small} font-medium ${theme.textSecondary} mb-1`}>Email</label>
+            <input type="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="example@mail.com" className={inputCls} />
           </div>
           <div>
             <label className={`block ${fontSize.small} font-medium ${theme.textSecondary} mb-1`}>{t('Пароль', 'Password')}</label>
@@ -96,7 +102,7 @@ function AuthPanel({ t, theme, fontSize, language, onAuthSuccess }) {
             </div>
           </div>
           {error && <p className="text-red-500 text-sm text-center">{error}</p>}
-          <button type="submit" className={btnPrimary}>{t('Войти', 'Sign In')}</button>
+          <button type="submit" disabled={loading} className={btnPrimary}>{loading ? t('Вход...', 'Signing in...') : t('Войти', 'Sign In')}</button>
           <p className={`text-center ${fontSize.small} ${theme.textSecondary}`}>
             {t('Нет аккаунта?', "Don't have an account?")}{' '}
             <button type="button" onClick={() => { setMode('register'); setError(''); }} className="font-semibold underline">{t('Зарегистрироваться', 'Register')}</button>
@@ -106,15 +112,15 @@ function AuthPanel({ t, theme, fontSize, language, onAuthSuccess }) {
       )}
 
       {mode === 'register' && (
-        <form onSubmit={handleReg} className="space-y-4">
+        <form onSubmit={handleRegister} className="space-y-4">
           <div>
-            <label className={`block ${fontSize.small} font-medium ${theme.textSecondary} mb-1`}>{t('Логин', 'Login')}</label>
-            <input type="text" required value={login} onChange={e => setLogin(e.target.value)} placeholder={t('Придумайте логин', 'Choose a login')} className={inputCls} />
+            <label className={`block ${fontSize.small} font-medium ${theme.textSecondary} mb-1`}>Email</label>
+            <input type="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="example@mail.com" className={inputCls} />
           </div>
           <div>
             <label className={`block ${fontSize.small} font-medium ${theme.textSecondary} mb-1`}>{t('Пароль', 'Password')}</label>
             <div className="relative">
-              <input type={showPass ? 'text' : 'password'} required value={password} onChange={e => setPassword(e.target.value)} placeholder={t('Мин. 4 символа', 'Min 4 chars')} className={`${inputCls} pr-10`} />
+              <input type={showPass ? 'text' : 'password'} required value={password} onChange={e => setPassword(e.target.value)} placeholder={t('Мин. 6 символов', 'Min 6 characters')} className={`${inputCls} pr-10`} />
               <button type="button" onClick={() => setShowPass(p => !p)} className={`absolute right-3 top-1/2 -translate-y-1/2 ${theme.textSecondary}`}>{showPass ? <FaEyeSlash /> : <FaEye />}</button>
             </div>
           </div>
@@ -123,7 +129,7 @@ function AuthPanel({ t, theme, fontSize, language, onAuthSuccess }) {
             <input type={showPass ? 'text' : 'password'} required value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder={t('Повторите пароль', 'Repeat password')} className={inputCls} />
           </div>
           {error && <p className="text-red-500 text-sm text-center">{error}</p>}
-          <button type="submit" className={btnPrimary}>{t('Зарегистрироваться', 'Register')}</button>
+          <button type="submit" disabled={loading} className={btnPrimary}>{loading ? t('Регистрация...', 'Registering...') : t('Зарегистрироваться', 'Create Account')}</button>
           <p className={`text-center ${fontSize.small} ${theme.textSecondary}`}>
             {t('Уже есть аккаунт?', 'Already have an account?')}{' '}
             <button type="button" onClick={() => { setMode('login'); setError(''); }} className="font-semibold underline">{t('Войти', 'Sign In')}</button>
@@ -143,28 +149,10 @@ export default function AccountScreen(props) {
     setUserData, setRegistered, setMealHistory, setWeeklyPlan, setShoppingList
   } = props;
 
-  const handleAuthSuccess = (profileData) => {
-    // Обновляем React-стейт без reload
-    setUserData(profileData);
-    setRegistered(true);
-    // Загружаем данные пользователя из localStorage
-    try {
-      const history = localStorage.getItem('cookify_mealHistory');
-      const weekly = localStorage.getItem('cookify_weeklyPlan');
-      const shopping = localStorage.getItem('cookify_shoppingList');
-      if (history && setMealHistory) setMealHistory(JSON.parse(history));
-      if (weekly && setWeeklyPlan) setWeeklyPlan(JSON.parse(weekly));
-      if (shopping && setShoppingList) setShoppingList(JSON.parse(shopping));
-    } catch (err) { console.error(err); }
-  };
-
   return (
     <div className="max-w-5xl mx-auto space-y-6">
       {!registered ? (
-        <AuthPanel
-          t={t} theme={theme} fontSize={fontSize} language={language}
-          onAuthSuccess={handleAuthSuccess}
-        />
+        <FirebaseAuthPanel t={t} theme={theme} fontSize={fontSize} language={language} />
       ) : (
         <>
           <ProfileCard {...props} />
