@@ -22,6 +22,7 @@ import SearchScreen from "./components/SearchScreen";
 import AccountScreen from "./components/AccountScreen";
 import AddRecipeModal from "./components/AddRecipeModal";
 import NotificationModal from "./components/NotificationModal";
+import RecipeVariantModal from "./components/RecipeVariantModal";
 
 // 🌐 Context
 import { AppContext } from './context/AppContext';
@@ -635,25 +636,13 @@ export default function CookifyDemo() {
           theme={theme} fontSize={fontSize} language={language}
         />
 
-        {showVariantSelectionModal && variantSelectionRecipe && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" onClick={() => setShowVariantSelectionModal(false)}>
-            <div className={`${theme.cardBg} ${fontSize.body} rounded-2xl max-w-md w-full p-6`} onClick={(e) => e.stopPropagation()}>
-              <div className="flex items-start justify-between mb-4">
-                <h3 className={`${fontSize.cardTitle} font-bold ${theme.headerText}`}>{t("Выберите вариант рецепта", "Choose recipe variant")}</h3>
-                <button onClick={() => setShowVariantSelectionModal(false)} className={`${theme.textSecondary} hover:${theme.text} transition`}><FaTimes size={20} /></button>
-              </div>
-              <p className={`${fontSize.small} ${theme.textSecondary} mb-4`}>{variantSelectionRecipe.title}</p>
-              <div className="space-y-2">
-                {variantSelectionRecipe.variants.map(variant => (
-                  <button key={variant.key} onClick={() => variantSelectionCallback && variantSelectionCallback(variant.key)}
-                    className={`w-full p-3 rounded-lg ${theme.accent} ${theme.accentHover} text-white transition ${fontSize.body}`}>
-                    {language === "ru" ? (variant.labelRu || variant.key) : (variant.labelEn || variant.key)}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
+        <RecipeVariantModal
+          isOpen={showVariantSelectionModal}
+          onClose={() => setShowVariantSelectionModal(false)}
+          recipe={variantSelectionRecipe}
+          onSelect={variantSelectionCallback}
+          theme={theme} fontSize={fontSize} language={language}
+        />
 
         {selectedRecipe && (() => {
           const dishTypeInfo = getDishTypeInfo(selectedRecipe.type);
