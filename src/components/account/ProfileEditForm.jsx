@@ -77,7 +77,7 @@ export default function ProfileEditForm({ onClose }) {
   const currentQuery = useMemo(() => {
     const raw = (allergyInput || "").trim();
     const idxComma = raw.lastIndexOf(",");
-    const idxSemi = raw.lastIndexOf(";");
+    const idxSemi  = raw.lastIndexOf(";");
     const idx = Math.max(idxComma, idxSemi);
     return (idx >= 0 ? raw.slice(idx + 1) : raw).trim();
   }, [allergyInput]);
@@ -100,7 +100,7 @@ export default function ProfileEditForm({ onClose }) {
 
   const handleSubmitWithValidation = (e) => {
     if (!isEditingProfile) {
-      const pass = e.target.password?.value || '';
+      const pass  = e.target.password?.value  || '';
       const pass2 = e.target.password2?.value || '';
       if (pass !== pass2) { e.preventDefault(); setPassError(t('Пароли не совпадают', 'Passwords do not match')); return; }
       if (pass.length < 4) { e.preventDefault(); setPassError(t('Пароль должен быть не менее 4 символов', 'Password must be at least 4 characters')); return; }
@@ -108,6 +108,9 @@ export default function ProfileEditForm({ onClose }) {
     setPassError('');
     handleRegister(e);
   };
+
+  const inputCls = `w-full p-3 ${theme.input} ${fontSize.body} rounded-xl`;
+  const labelCls = `block ${fontSize.body} font-semibold mb-2`;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
@@ -119,28 +122,32 @@ export default function ProfileEditForm({ onClose }) {
           <button onClick={onClose} className={`${theme.textSecondary} hover:${theme.text}`}><FaTimes size={24} /></button>
         </div>
         <form onSubmit={handleSubmitWithValidation} className="space-y-4">
+
+          {/* Аватар */}
           <div className="text-center">
             {userData?.avatarURL && (<img src={userData.avatarURL} alt="Avatar" className="w-24 h-24 rounded-full object-cover mx-auto mb-2" />)}
-            <label className={`block ${fontSize.body} font-semibold mb-2`}>{t("Фото профиля", "Profile Photo")}</label>
+            <label className={labelCls}>{t("Фото профиля", "Profile Photo")}</label>
             <input type="file" accept="image/*" onChange={handleAvatarUpload} className={`w-full p-2 ${theme.input} ${fontSize.body} rounded-xl`} />
           </div>
+
+          {/* Логин / пароль */}
           {!isEditingProfile && (
             <div>
-              <label className={`block ${fontSize.body} font-semibold mb-2`}>{t("Логин", "Login")} *</label>
-              <input type="text" name="login" required defaultValue={userData?.login || ""} placeholder={t("Придумайте логин", "Choose a login")} className={`w-full p-3 ${theme.input} ${fontSize.body} rounded-xl`} />
+              <label className={labelCls}>{t("Логин", "Login")} *</label>
+              <input type="text" name="login" required defaultValue={userData?.login || ""} placeholder={t("Придумайте логин", "Choose a login")} className={inputCls} />
             </div>
           )}
           {!isEditingProfile && (
             <>
               <div>
-                <label className={`block ${fontSize.body} font-semibold mb-2`}>{t("Пароль", "Password")} *</label>
+                <label className={labelCls}>{t("Пароль", "Password")} *</label>
                 <div className="relative">
                   <input type={showPass ? 'text' : 'password'} name="password" required placeholder={t("Не менее 4 символов", "At least 4 characters")} onChange={() => setPassError('')} className={`w-full pr-10 p-3 ${theme.input} ${fontSize.body} rounded-xl`} />
                   <button type="button" onClick={() => setShowPass(p => !p)} className={`absolute right-3 top-1/2 -translate-y-1/2 ${theme.textSecondary}`}>{showPass ? <FaEyeSlash /> : <FaEye />}</button>
                 </div>
               </div>
               <div>
-                <label className={`block ${fontSize.body} font-semibold mb-2`}>{t("Повторите пароль", "Confirm password")} *</label>
+                <label className={labelCls}>{t("Повторите пароль", "Confirm password")} *</label>
                 <div className="relative">
                   <input type={showPass2 ? 'text' : 'password'} name="password2" required placeholder={t("Повторите пароль", "Repeat password")} onChange={() => setPassError('')} className={`w-full pr-10 p-3 ${theme.input} ${fontSize.body} rounded-xl`} />
                   <button type="button" onClick={() => setShowPass2(p => !p)} className={`absolute right-3 top-1/2 -translate-y-1/2 ${theme.textSecondary}`}>{showPass2 ? <FaEyeSlash /> : <FaEye />}</button>
@@ -149,58 +156,85 @@ export default function ProfileEditForm({ onClose }) {
               {passError && <p className={`text-red-500 ${fontSize.small}`}>{passError}</p>}
             </>
           )}
+
+          {/* Основная инфо */}
           <div>
-            <label className={`block ${fontSize.body} font-semibold mb-2`}>{t("Имя", "Name")} *</label>
-            <input type="text" name="name" required defaultValue={userData?.name || ""} className={`w-full p-3 ${theme.input} ${fontSize.body} rounded-xl`} />
+            <label className={labelCls}>{t("Имя", "Name")} *</label>
+            <input type="text" name="name" required defaultValue={userData?.name || ""} className={inputCls} />
           </div>
           <div>
-            <label className={`block ${fontSize.body} font-semibold mb-2`}>{t("Email", "Email")}</label>
-            <input type="email" name="email" defaultValue={userData?.email || ""} className={`w-full p-3 ${theme.input} ${fontSize.body} rounded-xl`} />
+            <label className={labelCls}>{t("Email", "Email")}</label>
+            <input type="email" name="email" defaultValue={userData?.email || ""} className={inputCls} />
           </div>
           <div>
-            <label className={`block ${fontSize.body} font-semibold mb-2`}>{t("Пол", "Gender")}</label>
-            <select name="gender" defaultValue={userData?.gender || ""} className={`w-full p-3 ${theme.input} ${fontSize.body} rounded-xl`}>
+            <label className={labelCls}>{t("Пол", "Gender")}</label>
+            <select name="gender" defaultValue={userData?.gender || ""} className={inputCls}>
               <option value="">{t("Не указан", "Not specified")}</option>
               <option value="female">{t("Женский", "Female")}</option>
               <option value="male">{t("Мужской", "Male")}</option>
             </select>
           </div>
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className={`block ${fontSize.body} font-semibold mb-2`}>{t("Возраст", "Age")}</label>
-              <input type="number" name="age" defaultValue={userData?.age || ""} className={`w-full p-3 ${theme.input} ${fontSize.body} rounded-xl`} />
+              <label className={labelCls}>{t("Возраст", "Age")}</label>
+              <input type="number" name="age" defaultValue={userData?.age || ""} className={inputCls} />
             </div>
             <div>
-              <label className={`block ${fontSize.body} font-semibold mb-2`}>{t("Вес", "Weight")} ({unitSystem === "metric" ? (language === "ru" ? "кг" : "kg") : "lb"})</label>
-              <input type="number" step="0.1" name="weight" defaultValue={userData?.weight ? (unitSystem === "metric" ? userData.weight : convertWeight(userData.weight, "metric")) : ""} className={`w-full p-3 ${theme.input} ${fontSize.body} rounded-xl`} />
+              <label className={labelCls}>{t("Вес", "Weight")} ({unitSystem === "metric" ? (language === "ru" ? "кг" : "kg") : "lb"})</label>
+              <input type="number" step="0.1" name="weight" defaultValue={userData?.weight ? (unitSystem === "metric" ? userData.weight : convertWeight(userData.weight, "metric")) : ""} className={inputCls} />
             </div>
             <div>
-              <label className={`block ${fontSize.body} font-semibold mb-2`}>{t("Рост", "Height")} ({unitSystem === "metric" ? (language === "ru" ? "см" : "cm") : "in"})</label>
-              <input type="number" step="0.1" name="height" defaultValue={userData?.height ? (unitSystem === "metric" ? userData.height : convertHeight(userData.height, "metric")) : ""} className={`w-full p-3 ${theme.input} ${fontSize.body} rounded-xl`} />
+              <label className={labelCls}>{t("Рост", "Height")} ({unitSystem === "metric" ? (language === "ru" ? "см" : "cm") : "in"})</label>
+              <input type="number" step="0.1" name="height" defaultValue={userData?.height ? (unitSystem === "metric" ? userData.height : convertHeight(userData.height, "metric")) : ""} className={inputCls} />
             </div>
           </div>
+
+          {/* Цель + образ жизни */}
           <div>
-            <label className={`block ${fontSize.body} font-semibold mb-2`}>{t("Цель", "Goal")}</label>
-            <select name="goal" defaultValue={userData?.goal || ""} className={`w-full p-3 ${theme.input} ${fontSize.body} rounded-xl`}>
+            <label className={labelCls}>{t("Цель", "Goal")}</label>
+            <select name="goal" defaultValue={userData?.goal || ""} className={inputCls}>
               <option value="">{t("Выберите цель", "Select goal")}</option>
               {GOALS.map((g, i) => <option key={i} value={g}>{g}</option>)}
             </select>
           </div>
           <div>
-            <label className={`block ${fontSize.body} font-semibold mb-2`}>{t("Образ жизни", "Lifestyle")}</label>
-            <select name="lifestyle" defaultValue={userData?.lifestyle || ""} className={`w-full p-3 ${theme.input} ${fontSize.body} rounded-xl`}>
+            <label className={labelCls}>{t("Образ жизни", "Lifestyle")}</label>
+            <select name="lifestyle" defaultValue={userData?.lifestyle || ""} className={inputCls}>
               <option value="">{t("Выберите образ жизни", "Select lifestyle")}</option>
               {LIFESTYLE.map((l, i) => <option key={i} value={l}>{l}</option>)}
             </select>
           </div>
+
+          {/* ✨ Норма ккал в день */}
+          <div className={`p-4 rounded-xl border-2 border-dashed ${theme.border}`}>
+            <label className={`${labelCls} flex items-center gap-2`}>
+              🎯 {t("Норма ккал в день", "Daily calorie goal")}
+            </label>
+            <input
+              type="number" min="500" max="6000" step="50"
+              name="calorieGoal"
+              defaultValue={userData?.calorieGoal || ""}
+              placeholder={t("Например: 2000", "E.g.: 2000")}
+              className={inputCls}
+            />
+            <p className={`mt-1.5 ${fontSize.tiny} ${theme.textSecondary}`}>
+              {t(
+                "Используется для расчёта дефицита/профицита калорий. Средняя норма: 1800–2200 для женщин, 2200–2800 для мужчин.",
+                "Used to calculate calorie deficit/surplus. Average: 1800–2200 for women, 2200–2800 for men."
+              )}
+            </p>
+          </div>
+
+          {/* Аллергии */}
           <div className="relative">
-            <label className={`block ${fontSize.body} font-semibold mb-2`}>{t("Аллергии", "Allergies")}</label>
+            <label className={labelCls}>{t("Аллергии", "Allergies")}</label>
             <input type="text" name="allergies" value={allergyInput}
               onChange={(e) => { setAllergyInput(e.target.value); setShowAllergySuggestions(true); }}
               onFocus={() => setShowAllergySuggestions(true)}
               onBlur={() => setTimeout(() => setShowAllergySuggestions(false), 120)}
               placeholder={t("Начните вводить (категории и продукты, можно через запятую)", "Start typing (categories & ingredients, comma separated)")}
-              className={`w-full p-3 ${theme.input} ${fontSize.body} rounded-xl`} autoComplete="off" />
+              className={inputCls} autoComplete="off" />
             {showAllergySuggestions && filteredSuggestions.length > 0 && (
               <div className={`absolute left-0 right-0 mt-2 rounded-xl border ${theme.border} ${theme.cardBg} shadow-lg overflow-hidden z-10 max-h-64 overflow-y-auto`}>
                 {filteredSuggestions.map((s) => {
@@ -221,6 +255,7 @@ export default function ProfileEditForm({ onClose }) {
               </div>
             )}
           </div>
+
           <button type="submit" className={`w-full px-6 py-3 rounded-xl ${fontSize.body} ${theme.accent} ${theme.accentHover} text-white font-semibold`}>
             {isEditingProfile ? t("Сохранить изменения", "Save Changes") : t("Зарегистрироваться", "Register")}
           </button>

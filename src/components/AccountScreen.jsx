@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { FaCalendarAlt, FaUtensils, FaShoppingCart, FaTint, FaEye, FaEyeSlash, FaLeaf, FaHeart, FaRegHeart } from "react-icons/fa";
+import { FaCalendarAlt, FaUtensils, FaShoppingCart, FaTint, FaHeart, FaRegHeart } from "react-icons/fa";
 import { auth } from '../firebase.js';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 import { setUserProfile } from '../firebase.js';
@@ -13,6 +13,7 @@ import HistoryTab from "./account/HistoryTab";
 import PlannerTab from "./account/PlannerTab";
 import ShoppingListTab from "./account/ShoppingListTab";
 import WaterTracker from "./WaterTracker";
+import CalorieBalanceWidget from "./account/CalorieBalanceWidget";
 
 const RECIPE_PLACEHOLDER = "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=120&h=80&fit=crop&auto=format";
 
@@ -39,58 +40,43 @@ function FirebaseAuthPanel({ t, theme, fontSize, language }) {
   };
 
   const handleLogin = async (e) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
-    try {
-      await signInWithEmailAndPassword(auth, email.trim(), password);
-    } catch (err) {
-      setError(getErrorMessage(err.code));
-    } finally {
-      setLoading(false);
-    }
+    e.preventDefault(); setError(''); setLoading(true);
+    try { await signInWithEmailAndPassword(auth, email.trim(), password); }
+    catch (err) { setError(getErrorMessage(err.code)); }
+    finally { setLoading(false); }
   };
 
   const handleRegister = async (e) => {
-    e.preventDefault();
-    setError('');
+    e.preventDefault(); setError('');
     if (password !== confirmPassword) { setError(t('Пароли не совпадают', 'Passwords do not match')); return; }
     if (password.length < 6) { setError(t('Пароль мин. 6 символов', 'Password min 6 characters')); return; }
     setLoading(true);
     try {
       const cred = await createUserWithEmailAndPassword(auth, email.trim(), password);
       await setUserProfile(cred.user.uid, { email: cred.user.email, login: cred.user.email, createdAt: new Date().toISOString() });
-    } catch (err) {
-      setError(getErrorMessage(err.code));
-    } finally {
-      setLoading(false);
-    }
+    } catch (err) { setError(getErrorMessage(err.code)); }
+    finally { setLoading(false); }
   };
 
-  const inputCls = `w-full px-4 py-2.5 rounded-xl border ${theme.border} ${theme.input} focus:outline-none focus:ring-2 focus:ring-[#606C38] ${fontSize.body}`;
+  const inputCls  = `w-full px-4 py-2.5 rounded-xl border ${theme.border} ${theme.input} focus:outline-none focus:ring-2 focus:ring-[#606C38] ${fontSize.body}`;
   const btnPrimary = `w-full py-3 rounded-xl ${theme.accent} ${theme.accentHover} text-white font-semibold transition ${fontSize.body} ${loading ? 'opacity-60 cursor-not-allowed' : ''}`;
   const btnOutline = `w-full py-3 rounded-xl border-2 ${theme.border} ${theme.text} font-semibold transition hover:opacity-80 ${fontSize.body}`;
 
   return (
     <div className={`${theme.cardBg} p-8 rounded-xl shadow max-w-md mx-auto`}>
       <div className="text-center mb-6">
-        <div className={`inline-flex items-center justify-center w-14 h-14 rounded-2xl ${theme.accent} mb-3`}>
-          <FaLeaf className="text-white text-2xl" />
-        </div>
         <h2 className={`${fontSize.subheading} font-bold ${theme.headerText}`}>
           {mode === 'choice' ? t('Мой аккаунт', 'My Account')
             : mode === 'login' ? t('Вход в аккаунт', 'Sign In')
             : t('Регистрация', 'Create Account')}
         </h2>
       </div>
-
       {mode === 'choice' && (
         <div className="space-y-3">
           <button onClick={() => { setMode('login'); setError(''); }} className={btnPrimary}>{t('Войти в аккаунт', 'Sign In')}</button>
           <button onClick={() => { setMode('register'); setError(''); }} className={btnOutline}>{t('Зарегистрироваться', 'Create Account')}</button>
         </div>
       )}
-
       {mode === 'login' && (
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
@@ -101,7 +87,6 @@ function FirebaseAuthPanel({ t, theme, fontSize, language }) {
             <label className={`block ${fontSize.small} font-medium ${theme.textSecondary} mb-1`}>{t('Пароль', 'Password')}</label>
             <div className="relative">
               <input type={showPass ? 'text' : 'password'} required value={password} onChange={e => setPassword(e.target.value)} placeholder={t('Введите пароль', 'Enter password')} className={`${inputCls} pr-10`} />
-              <button type="button" onClick={() => setShowPass(p => !p)} className={`absolute right-3 top-1/2 -translate-y-1/2 ${theme.textSecondary}`}>{showPass ? <FaEyeSlash /> : <FaEye />}</button>
             </div>
           </div>
           {error && <p className="text-red-500 text-sm text-center">{error}</p>}
@@ -113,7 +98,6 @@ function FirebaseAuthPanel({ t, theme, fontSize, language }) {
           <button type="button" onClick={() => { setMode('choice'); setError(''); }} className={`w-full text-center ${fontSize.small} ${theme.textSecondary} opacity-60 hover:opacity-100 transition`}>← {t('Назад', 'Back')}</button>
         </form>
       )}
-
       {mode === 'register' && (
         <form onSubmit={handleRegister} className="space-y-4">
           <div>
@@ -122,10 +106,7 @@ function FirebaseAuthPanel({ t, theme, fontSize, language }) {
           </div>
           <div>
             <label className={`block ${fontSize.small} font-medium ${theme.textSecondary} mb-1`}>{t('Пароль', 'Password')}</label>
-            <div className="relative">
-              <input type={showPass ? 'text' : 'password'} required value={password} onChange={e => setPassword(e.target.value)} placeholder={t('Мин. 6 символов', 'Min 6 characters')} className={`${inputCls} pr-10`} />
-              <button type="button" onClick={() => setShowPass(p => !p)} className={`absolute right-3 top-1/2 -translate-y-1/2 ${theme.textSecondary}`}>{showPass ? <FaEyeSlash /> : <FaEye />}</button>
-            </div>
+            <input type={showPass ? 'text' : 'password'} required value={password} onChange={e => setPassword(e.target.value)} placeholder={t('Мин. 6 символов', 'Min 6 characters')} className={inputCls} />
           </div>
           <div>
             <label className={`block ${fontSize.small} font-medium ${theme.textSecondary} mb-1`}>{t('Повторите пароль', 'Confirm Password')}</label>
@@ -133,10 +114,6 @@ function FirebaseAuthPanel({ t, theme, fontSize, language }) {
           </div>
           {error && <p className="text-red-500 text-sm text-center">{error}</p>}
           <button type="submit" disabled={loading} className={btnPrimary}>{loading ? t('Регистрация...', 'Registering...') : t('Зарегистрироваться', 'Create Account')}</button>
-          <p className={`text-center ${fontSize.small} ${theme.textSecondary}`}>
-            {t('Уже есть аккаунт?', 'Already have an account?')}{' '}
-            <button type="button" onClick={() => { setMode('login'); setError(''); }} className="font-semibold underline">{t('Войти', 'Sign In')}</button>
-          </p>
           <button type="button" onClick={() => { setMode('choice'); setError(''); }} className={`w-full text-center ${fontSize.small} ${theme.textSecondary} opacity-60 hover:opacity-100 transition`}>← {t('Назад', 'Back')}</button>
         </form>
       )}
@@ -144,7 +121,6 @@ function FirebaseAuthPanel({ t, theme, fontSize, language }) {
   );
 }
 
-// ⭐ FavoritesTab — читает данные напрямую из AppContext
 function FavoritesTab() {
   const {
     t, theme, fontSize, language,
@@ -163,9 +139,6 @@ function FavoritesTab() {
         <p className={`${fontSize.body} ${theme.textSecondary}`}>
           {t('Здесь будут ваши избранные рецепты', 'Your favourite recipes will appear here')}
         </p>
-        <p className={`${fontSize.small} ${theme.textSecondary} mt-1 opacity-60`}>
-          {t('Нажмите ♡ на карточке рецепта, чтобы добавить', 'Tap ♡ on any recipe card to save it')}
-        </p>
       </div>
     );
   }
@@ -183,47 +156,26 @@ function FavoritesTab() {
           const imgSrc = r.image || r.imageUrl || RECIPE_PLACEHOLDER;
           const fav = isFavorite(r.id);
           return (
-            <div
-              key={r.id}
+            <div key={r.id}
               onClick={() => { setSelectedRecipe(r); setSelectedRecipeVariantKey(r?.variants?.[0]?.key || null); }}
-              className={`p-4 ${theme.border} border rounded-xl cursor-pointer hover:shadow-lg transition`}
-            >
+              className={`p-4 ${theme.border} border rounded-xl cursor-pointer hover:shadow-lg transition`}>
               <div className="flex items-start gap-4">
-                <img
-                  src={imgSrc}
-                  alt={r.title}
-                  className="w-20 h-16 object-cover rounded-xl flex-shrink-0 bg-gray-100"
-                  onError={(e) => { e.target.src = RECIPE_PLACEHOLDER; }}
-                />
+                <img src={imgSrc} alt={r.title} className="w-20 h-16 object-cover rounded-xl flex-shrink-0 bg-gray-100" onError={(e) => { e.target.src = RECIPE_PLACEHOLDER; }} />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1 min-w-0">
                       <h3 className={`${fontSize.cardTitle} font-bold`}>{r.title}</h3>
-                      <div className={`${fontSize.small} ${theme.textSecondary} mt-1`}>
-                        {r.time} {t('мин', 'min')} • {kcal} {t('ккал/порц.', 'kcal/srv')}
-                      </div>
+                      <div className={`${fontSize.small} ${theme.textSecondary} mt-1`}>{r.time} {t('мин', 'min')} • {kcal} {t('ккал/порц.', 'kcal/srv')}</div>
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
-                      {r.type && (
-                        <span className={`${dishTypeInfo.color} text-white px-3 py-1 rounded-full ${fontSize.tiny} font-semibold`}>
-                          {dishTypeInfo.label}
-                        </span>
-                      )}
-                      <button
-                        onClick={(e) => { e.stopPropagation(); toggleFav(r.id); }}
-                        className={`p-2 rounded-full transition hover:scale-110 ${
-                          fav ? 'text-red-500' : theme.textSecondary
-                        }`}
-                        title={t('Удалить из избранного', 'Remove from favorites')}
-                      >
+                      {r.type && <span className={`${dishTypeInfo.color} text-white px-3 py-1 rounded-full ${fontSize.tiny} font-semibold`}>{dishTypeInfo.label}</span>}
+                      <button onClick={(e) => { e.stopPropagation(); toggleFav(r.id); }} className={`p-2 rounded-full transition hover:scale-110 ${fav ? 'text-red-500' : theme.textSecondary}`}>
                         {fav ? <FaHeart size={16} /> : <FaRegHeart size={16} />}
                       </button>
                     </div>
                   </div>
                   <div className="mt-2 flex flex-wrap gap-2">
-                    {(r.tags || []).slice(0, 4).map((tag, i) => (
-                      <span key={i} className={`px-2 py-1 ${theme.accent} text-white rounded-full ${fontSize.tiny}`}>{tag}</span>
-                    ))}
+                    {(r.tags || []).slice(0, 4).map((tag, i) => (<span key={i} className={`px-2 py-1 ${theme.accent} text-white rounded-full ${fontSize.tiny}`}>{tag}</span>))}
                   </div>
                 </div>
               </div>
@@ -249,28 +201,34 @@ export default function AccountScreen(props) {
       ) : (
         <>
           <ProfileCard {...props} />
+
+          {/* ✨ Виджет баланса калорий */}
+          <CalorieBalanceWidget />
+
+          {/* Вкладки */}
           <div className={`${theme.cardBg} p-3 rounded-xl shadow flex gap-2 overflow-x-auto`}>
-            <button onClick={() => setAccountTab("history")} className={`flex-1 min-w-fit px-4 py-2 rounded-xl ${fontSize.small} transition flex items-center justify-center gap-2 ${accountTab === "history" ? `${theme.accent} text-white` : `${theme.border} border`}`}>
-              <FaCalendarAlt /> {t("История питания", "Meal history")}
-            </button>
-            <button onClick={() => setAccountTab("planner")} className={`flex-1 min-w-fit px-4 py-2 rounded-xl ${fontSize.small} transition flex items-center justify-center gap-2 ${accountTab === "planner" ? `${theme.accent} text-white` : `${theme.border} border`}`}>
-              <FaUtensils /> {t("План меню", "Menu plan")}
-            </button>
-            <button onClick={() => setAccountTab("shopping")} className={`flex-1 min-w-fit px-4 py-2 rounded-xl ${fontSize.small} transition flex items-center justify-center gap-2 ${accountTab === "shopping" ? `${theme.accent} text-white` : `${theme.border} border`}`}>
-              <FaShoppingCart /> {t("Покупки", "Shopping")}
-            </button>
-            <button onClick={() => setAccountTab("favorites")} className={`flex-1 min-w-fit px-4 py-2 rounded-xl ${fontSize.small} transition flex items-center justify-center gap-2 ${accountTab === "favorites" ? `${theme.accent} text-white` : `${theme.border} border`}`}>
-              <FaHeart /> {t("Избранное", "Favorites")}
-            </button>
-            <button onClick={() => setAccountTab("water")} className={`flex-1 min-w-fit px-4 py-2 rounded-xl ${fontSize.small} transition flex items-center justify-center gap-2 ${accountTab === "water" ? `${theme.accent} text-white` : `${theme.border} border`}`}>
-              <FaTint /> {t("Вода", "Water")}
-            </button>
+            {[
+              { id: "history",   icon: <FaCalendarAlt />, label: t("История питания", "Meal history") },
+              { id: "planner",   icon: <FaUtensils />,    label: t("План меню", "Menu plan") },
+              { id: "shopping",  icon: <FaShoppingCart />,label: t("Покупки", "Shopping") },
+              { id: "favorites", icon: <FaHeart />,       label: t("Избранное", "Favorites") },
+              { id: "water",     icon: <FaTint />,        label: t("Вода", "Water") },
+            ].map(tab => (
+              <button key={tab.id} onClick={() => setAccountTab(tab.id)}
+                className={`flex-1 min-w-fit px-4 py-2 rounded-xl ${fontSize.small} transition flex items-center justify-center gap-2 ${
+                  accountTab === tab.id ? `${theme.accent} text-white` : `${theme.border} border`
+                }`}>
+                {tab.icon} {tab.label}
+              </button>
+            ))}
           </div>
+
           {accountTab === "history"   && <HistoryTab {...props} />}
           {accountTab === "planner"   && <PlannerTab {...props} />}
           {accountTab === "shopping"  && <ShoppingListTab {...props} />}
           {accountTab === "favorites" && <FavoritesTab />}
-          {accountTab === "water" && <WaterTracker theme={theme} fontSize={fontSize} language={language} userData={userData} />}
+          {accountTab === "water"     && <WaterTracker theme={theme} fontSize={fontSize} language={language} userData={userData} />}
+
           <CustomizationPanel {...props} />
         </>
       )}
@@ -278,8 +236,8 @@ export default function AccountScreen(props) {
       {showRegisterForm && (
         <ProfileEditForm {...props} onClose={() => { setShowRegisterForm(false); setIsEditingProfile(false); }} />
       )}
-      {showAddMealModal && <AddMealModal {...props} onClose={() => setShowAddMealModal(false)} />}
-      {showPlannerModal && <PlannerModal {...props} onClose={() => setShowPlannerModal(false)} />}
+      {showAddMealModal  && <AddMealModal  {...props} onClose={() => setShowAddMealModal(false)} />}
+      {showPlannerModal  && <PlannerModal  {...props} onClose={() => setShowPlannerModal(false)} />}
     </div>
   );
 }
