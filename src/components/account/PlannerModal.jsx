@@ -1,19 +1,15 @@
 import React from "react";
 import { FaTimes, FaPlus } from "react-icons/fa";
+import { useApp } from "../../context/AppContext";
 
-export default function PlannerModal({
-  t,
-  theme,
-  fontSize,
-  language,
-  MEAL_LABELS,
-  plannerModalDate,
-  plannerModalCategory,
-  formatDate,
-  getSortedRecipesForPlanner,
-  addRecipeToPlanner,
-  onClose
-}) {
+export default function PlannerModal({ onClose }) {
+  const {
+    t, theme, fontSize, language,
+    MEAL_LABELS,
+    plannerModalDate, plannerModalCategory,
+    formatDate, getSortedRecipesForPlanner, addRecipeToPlanner
+  } = useApp();
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" onClick={onClose}>
       <div className={`${theme.cardBg} rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto p-6`} onClick={(e) => e.stopPropagation()}>

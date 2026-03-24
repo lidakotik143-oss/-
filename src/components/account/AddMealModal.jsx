@@ -1,18 +1,16 @@
 import React from "react";
 import { FaTimes, FaPlus } from "react-icons/fa";
+import { useApp } from "../../context/AppContext";
 
-export default function AddMealModal({
-  t,
-  theme,
-  fontSize,
-  MEAL_CATEGORIES,
-  MEAL_LABELS,
-  SAMPLE_RECIPES,
-  addMealCategory,
-  setAddMealCategory,
-  addMealToHistory,
-  onClose
-}) {
+export default function AddMealModal({ onClose }) {
+  const {
+    t, theme, fontSize,
+    MEAL_CATEGORIES, MEAL_LABELS,
+    allRecipes,
+    addMealCategory, setAddMealCategory,
+    addMealToHistory
+  } = useApp();
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" onClick={onClose}>
       <div className={`${theme.cardBg} rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto p-6`} onClick={(e) => e.stopPropagation()}>
@@ -23,7 +21,6 @@ export default function AddMealModal({
           </button>
         </div>
 
-        {/* Выбор категории */}
         <div className="mb-4">
           <label className={`block ${fontSize.body} font-semibold mb-2`}>{t("Тип приема пищи:", "Meal type:")}</label>
           <div className="flex gap-2 flex-wrap">
@@ -39,11 +36,10 @@ export default function AddMealModal({
           </div>
         </div>
 
-        {/* Список рецептов для выбора */}
         <div>
           <h3 className={`${fontSize.cardTitle} font-semibold mb-3`}>{t("Выберите рецепт:", "Select recipe:")}</h3>
           <div className="grid gap-2 max-h-96 overflow-y-auto">
-            {SAMPLE_RECIPES.map(r => (
+            {allRecipes.map(r => (
               <div
                 key={r.id}
                 className={`p-3 ${theme.border} border rounded-lg hover:shadow-lg transition flex items-center justify-between`}
@@ -55,10 +51,7 @@ export default function AddMealModal({
                   </div>
                 </div>
                 <button
-                  onClick={() => {
-                    addMealToHistory(r, addMealCategory);
-                    onClose();
-                  }}
+                  onClick={() => { addMealToHistory(r, addMealCategory); onClose(); }}
                   className={`ml-3 px-4 py-2 rounded-xl ${fontSize.small} ${theme.accent} ${theme.accentHover} text-white flex items-center gap-2 flex-shrink-0`}
                 >
                   <FaPlus />

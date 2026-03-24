@@ -1,28 +1,19 @@
 import React from "react";
 import { FaUtensils, FaChevronLeft, FaChevronRight, FaPlus, FaTimes } from "react-icons/fa";
+import { useApp } from "../../context/AppContext";
 
-export default function PlannerTab({
-  t,
-  theme,
-  fontSize,
-  language,
-  WEEKDAY_SHORT,
-  MEAL_CATEGORIES,
-  MEAL_LABELS,
-  plannerWeekDate,
-  setPlannerWeekDate,
-  getWeekDays,
-  getWeekRange,
-  addWeeks,
-  getPlannerRecipes,
-  calculatePlannerDayCalories,
-  removeRecipeFromPlanner,
-  setSelectedRecipe,
-  setSelectedRecipeVariantKey,
-  setPlannerModalDate,
-  setPlannerModalCategory,
-  setShowPlannerModal
-}) {
+export default function PlannerTab() {
+  const {
+    t, theme, fontSize, language,
+    WEEKDAY_SHORT, MEAL_CATEGORIES, MEAL_LABELS,
+    plannerWeekDate, setPlannerWeekDate,
+    getWeekDays, getWeekRange, addWeeks,
+    getPlannerRecipes, calculatePlannerDayCalories,
+    removeRecipeFromPlanner,
+    setSelectedRecipe, setSelectedRecipeVariantKey,
+    setPlannerModalDate, setPlannerModalCategory, setShowPlannerModal
+  } = useApp();
+
   return (
     <div className={`${theme.cardBg} p-6 rounded-xl shadow`}>
       <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
@@ -53,7 +44,6 @@ export default function PlannerTab({
 
       {(() => {
         const weekDays = getWeekDays(plannerWeekDate);
-
         return (
           <div className="overflow-x-auto">
             <table className={`w-full border-collapse ${fontSize.small}`}>
@@ -90,12 +80,9 @@ export default function PlannerTab({
                         <td key={`${dayKey}-${cat}`} className="p-2 align-top min-w-[200px]">
                           <div className="space-y-2">
                             {recipes.map((r, index) => {
-                              // 🔥 ИСПРАВЛЕНО: Учитываем данные варианта
                               let displayTime = r.time;
                               let displayCalories = r.caloriesPerServing || r.calories || 0;
                               let displayTitle = r.title;
-
-                              // Если выбран вариант, используем его данные
                               if (r.selectedVariantKey && r.variants) {
                                 const variant = r.variants.find(v => v.key === r.selectedVariantKey);
                                 if (variant) {
@@ -105,7 +92,6 @@ export default function PlannerTab({
                                   displayTitle = `${r.title} (${variantLabel})`;
                                 }
                               }
-
                               return (
                                 <div key={`${r.id}-${index}`} className={`flex items-center justify-between gap-2 p-2 rounded-lg ${theme.border} border`}>
                                   <button
@@ -128,7 +114,6 @@ export default function PlannerTab({
                                 </div>
                               );
                             })}
-
                             <button
                               onClick={() => {
                                 setPlannerModalDate(dayKey);

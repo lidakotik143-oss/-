@@ -1,21 +1,16 @@
 import React from "react";
 import { FaChevronUp, FaChevronDown } from "react-icons/fa";
+import { useApp } from "../../context/AppContext";
 
-export default function CustomizationPanel({
-  t,
-  theme,
-  fontSize,
-  language,
-  setLanguage,
-  showCustomization,
-  setShowCustomization,
-  currentTheme,
-  setCurrentTheme,
-  currentFontSize,
-  setCurrentFontSize,
-  THEMES,
-  FONT_SIZES
-}) {
+export default function CustomizationPanel() {
+  const {
+    t, theme, fontSize, language, setLanguage,
+    showCustomization, setShowCustomization,
+    currentTheme, setCurrentTheme,
+    currentFontSize, setCurrentFontSize,
+    THEMES, FONT_SIZES
+  } = useApp();
+
   return (
     <div className={`${theme.cardBg} p-6 rounded-xl shadow`}>
       <button
@@ -28,7 +23,6 @@ export default function CustomizationPanel({
 
       {showCustomization && (
         <div className="mt-4 space-y-6">
-          {/* Язык */}
           <div className="text-center">
             <label className={`block ${fontSize.body} font-semibold mb-3`}>{t("Язык", "Language")}</label>
             <div className="flex gap-2 justify-center">
@@ -51,7 +45,6 @@ export default function CustomizationPanel({
             </div>
           </div>
 
-          {/* Тема */}
           <div className="text-center">
             <label className={`block ${fontSize.body} font-semibold mb-3`}>{t("Цветовая тема", "Color Theme")}</label>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3 max-w-2xl mx-auto">
@@ -68,7 +61,6 @@ export default function CustomizationPanel({
             </div>
           </div>
 
-          {/* Размер текста */}
           <div className="text-center">
             <label className={`block ${fontSize.body} font-semibold mb-3`}>{t("Размер текста", "Text Size")}</label>
             <div className="flex gap-2 justify-center flex-wrap">

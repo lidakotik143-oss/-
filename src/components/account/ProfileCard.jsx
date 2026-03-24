@@ -1,18 +1,15 @@
 import React from "react";
 import { FaUser, FaExchangeAlt } from "react-icons/fa";
+import { useApp } from "../../context/AppContext";
 
-export default function ProfileCard({
-  t,
-  theme,
-  fontSize,
-  userData,
-  unitSystem,
-  handleStartEditProfile,
-  handleLogout,
-  toggleUnitSystem,
-  getDisplayWeight,
-  getDisplayHeight
-}) {
+export default function ProfileCard() {
+  const {
+    t, theme, fontSize,
+    userData, unitSystem,
+    handleStartEditProfile, handleLogout, toggleUnitSystem,
+    getDisplayWeight, getDisplayHeight
+  } = useApp();
+
   const getGenderLabel = () => {
     const g = (userData.gender || '').toLowerCase();
     if (g === 'male' || g.includes('муж')) return t('Мужской', 'Male');
@@ -54,7 +51,6 @@ export default function ProfileCard({
         </div>
       </div>
 
-      {/* Переключатель единиц измерения */}
       <div className="mb-4 flex items-center justify-end gap-2">
         <span className={`${fontSize.small} ${theme.textSecondary}`}>
           {unitSystem === "metric" ? t("Метрическая", "Metric") : t("Имперская", "Imperial")}
