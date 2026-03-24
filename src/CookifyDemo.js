@@ -28,13 +28,11 @@ import { AppContext } from './context/AppContext';
 // ✅ Кастомные хуки
 import { useAuth } from './hooks/useAuth';
 import { useMealPlan } from './hooks/useMealPlan';
+import { useWeeklyPlanner } from './hooks/useWeeklyPlanner';
 
-// 🔥 Firebase (только то, что осталось в Demo)
+// 🔥 Firebase
 import { auth } from './firebase.js';
-import {
-  saveWeeklyPlan,
-  getRecipes,
-} from './firebase.js';
+import { getRecipes } from './firebase.js';
 
 // 🔧 Временные точечные исправления некорректных типов блюд из базы рецептов
 const RECIPE_TYPE_FIXES = {
@@ -84,9 +82,9 @@ const DISH_TYPE_LABELS = {
 };
 
 const DIET_LABELS = {
-  "веган":             { ru: "Веган",             en: "Vegan"        },
-  "вегетарианское":   { ru: "Вегетарианское",    en: "Vegetarian"   },
-  "низкокалорийное":  { ru: "Низкокалорийное",   en: "Low calorie"  }
+  "веган":            { ru: "Веган",            en: "Vegan"       },
+  "вегетарианское":   { ru: "Вегетарианское",    en: "Vegetarian"  },
+  "низкокалорийное":  { ru: "Низкокалорийное",   en: "Low calorie" }
 };
 
 const DIFFICULTY_LABELS = {
@@ -118,9 +116,9 @@ const FONT_SIZES = {
 };
 
 const THEMES = {
-  olive:  { name: "Оливковая", nameEn: "Olive",  bg: "bg-[#FEFAE0]", cardBg: "bg-white",       text: "text-[#283618]",  textSecondary: "text-[#606C38]", border: "border-[#DDA15E]", input: "bg-white border-[#DDA15E] text-[#283618] placeholder-[#606C38]",          headerText: "text-[#606C38]",  accentText: "text-[#BC6C25]", accent: "bg-[#606C38]",  accentHover: "hover:bg-[#283618]", preview: "bg-gradient-to-br from-[#FEFAE0] via-[#DDA15E] to-[#606C38]" },
-  sage:   { name: "Шалфейная", nameEn: "Sage",   bg: "bg-[#F0EAD2]", cardBg: "bg-[#DDE5B6]",  text: "text-[#6C584C]",  textSecondary: "text-[#A98467]",  border: "border-[#A98467]",  input: "bg-[#F0EAD2] border-[#DDE5B6] text-[#6C584C] placeholder-[#A98467]",    headerText: "text-[#6C584C]",  accentText: "text-[#A98467]",  accent: "bg-[#A98467]",  accentHover: "hover:bg-[#6C584C]",  preview: "bg-gradient-to-br from-[#F0EAD2] via-[#DDE5B6] to-[#A98467]" },
-  forest: { name: "Лесная",    nameEn: "Forest", bg: "bg-[#172815]", cardBg: "bg-[#3E5622]",  text: "text-[#EDEEC9]",  textSecondary: "text-[#95B46A]",  border: "border-[#709255]",  input: "bg-[#3E5622] border-[#709255] text-[#EDEEC9] placeholder-[#95B46A]",    headerText: "text-[#95B46A]",  accentText: "text-[#83781B]", accent: "bg-[#709255]",  accentHover: "hover:bg-[#95B46A]",  preview: "bg-gradient-to-br from-[#172815] via-[#3E5622] to-[#709255]" }
+  olive:  { name: "Оливковая", nameEn: "Olive",  bg: "bg-[#FEFAE0]", cardBg: "bg-white",      text: "text-[#283618]", textSecondary: "text-[#606C38]", border: "border-[#DDA15E]", input: "bg-white border-[#DDA15E] text-[#283618] placeholder-[#606C38]",       headerText: "text-[#606C38]", accentText: "text-[#BC6C25]", accent: "bg-[#606C38]", accentHover: "hover:bg-[#283618]", preview: "bg-gradient-to-br from-[#FEFAE0] via-[#DDA15E] to-[#606C38]" },
+  sage:   { name: "Шалфейная", nameEn: "Sage",   bg: "bg-[#F0EAD2]", cardBg: "bg-[#DDE5B6]", text: "text-[#6C584C]", textSecondary: "text-[#A98467]",  border: "border-[#A98467]",  input: "bg-[#F0EAD2] border-[#DDE5B6] text-[#6C584C] placeholder-[#A98467]",   headerText: "text-[#6C584C]", accentText: "text-[#A98467]",  accent: "bg-[#A98467]", accentHover: "hover:bg-[#6C584C]",  preview: "bg-gradient-to-br from-[#F0EAD2] via-[#DDE5B6] to-[#A98467]" },
+  forest: { name: "Лесная",    nameEn: "Forest", bg: "bg-[#172815]", cardBg: "bg-[#3E5622]", text: "text-[#EDEEC9]", textSecondary: "text-[#95B46A]",  border: "border-[#709255]",  input: "bg-[#3E5622] border-[#709255] text-[#EDEEC9] placeholder-[#95B46A]",   headerText: "text-[#95B46A]", accentText: "text-[#83781B]", accent: "bg-[#709255]", accentHover: "hover:bg-[#95B46A]",  preview: "bg-gradient-to-br from-[#172815] via-[#3E5622] to-[#709255]" }
 };
 
 const CUISINES_RU = ["американская","вьетнамская","греческая","грузинская","индийская","испанская","итальянская","китайская","корейская","мексиканская","русская","средиземноморская","тайская","турецкая","украинская","французская","японская"];
@@ -180,7 +178,7 @@ const addDays = (dateStr, days) => {
   return getDateKey(d);
 };
 
-const addWeeks = (dateStr, weeks) => addDays(dateStr, weeks * 7);
+const addWeeks  = (dateStr, weeks)  => addDays(dateStr, weeks * 7);
 
 const addMonths = (dateStr, months) => {
   const d = new Date(dateStr);
@@ -236,7 +234,6 @@ export default function CookifyDemo() {
   const [showRegisterForm, setShowRegisterForm] = useState(false);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
 
-  // 🔥 Рецепты из Firestore (пользовательские)
   const [communityRecipes, setCommunityRecipes] = useState([]);
   const [showAddRecipeModal, setShowAddRecipeModal] = useState(false);
 
@@ -259,13 +256,7 @@ export default function CookifyDemo() {
   const [showAddMealModal, setShowAddMealModal] = useState(false);
   const [addMealCategory, setAddMealCategory] = useState("breakfast");
   const [selectedWeekDay, setSelectedWeekDay] = useState(null);
-
   const [accountTab, setAccountTab] = useState("history");
-  const [plannerWeekDate, setPlannerWeekDate] = useState(getDateKey(new Date()));
-  const [weeklyPlan, setWeeklyPlan] = useState({});
-  const [showPlannerModal, setShowPlannerModal] = useState(false);
-  const [plannerModalDate, setPlannerModalDate] = useState(null);
-  const [plannerModalCategory, setPlannerModalCategory] = useState("breakfast");
 
   const [shoppingList, setShoppingList] = useState([]);
   const [showVariantSelectionModal, setShowVariantSelectionModal] = useState(false);
@@ -275,7 +266,17 @@ export default function CookifyDemo() {
   const [notificationTitle, setNotificationTitle] = useState("");
   const [notificationMessage, setNotificationMessage] = useState("");
 
-  // ✅ useAuth — вся Firebase-логика авторизации
+  // Shared колбэк показа модалки вариантов
+  const openVariantModal = (recipe, onSelect) => {
+    setVariantSelectionRecipe(recipe);
+    setVariantSelectionCallback(() => (key) => {
+      onSelect(key);
+      setShowVariantSelectionModal(false);
+    });
+    setShowVariantSelectionModal(true);
+  };
+
+  // ✅ useAuth
   const {
     firebaseUser, setFirebaseUser,
     userData, setUserData,
@@ -286,22 +287,20 @@ export default function CookifyDemo() {
       setMealHistory(firestoreHistory);
       setWeeklyPlan(firestorePlan);
       setUserSubstitutions(substitutions);
-
-      const savedLanguage    = localStorage.getItem("cookify_language");
-      const savedUnitSystem  = localStorage.getItem("cookify_unitSystem");
-      const savedTheme       = localStorage.getItem("cookify_theme");
-      const savedFont        = localStorage.getItem("cookify_font");
-      const savedFontSize    = localStorage.getItem("cookify_fontSize");
-      const savedMealPlan    = localStorage.getItem("cookify_mealPlan");
-      const savedShoppingList = localStorage.getItem(`cookify_shoppingList_${user.uid}`);
-
-      if (savedLanguage)     setLanguage(savedLanguage);
-      if (savedUnitSystem)   setUnitSystem(savedUnitSystem);
-      if (savedTheme)        setCurrentTheme(savedTheme);
-      if (savedFont)         setCurrentFont(savedFont);
-      if (savedFontSize)     setCurrentFontSize(savedFontSize);
-      if (savedMealPlan)     setMealPlan(JSON.parse(savedMealPlan));
-      if (savedShoppingList) setShoppingList(JSON.parse(savedShoppingList));
+      const sl = localStorage.getItem(`cookify_shoppingList_${user.uid}`);
+      if (sl) setShoppingList(JSON.parse(sl));
+      const savedLanguage   = localStorage.getItem("cookify_language");
+      const savedUnitSystem = localStorage.getItem("cookify_unitSystem");
+      const savedTheme      = localStorage.getItem("cookify_theme");
+      const savedFont       = localStorage.getItem("cookify_font");
+      const savedFontSize   = localStorage.getItem("cookify_fontSize");
+      const savedMealPlan   = localStorage.getItem("cookify_mealPlan");
+      if (savedLanguage)   setLanguage(savedLanguage);
+      if (savedUnitSystem) setUnitSystem(savedUnitSystem);
+      if (savedTheme)      setCurrentTheme(savedTheme);
+      if (savedFont)       setCurrentFont(savedFont);
+      if (savedFontSize)   setCurrentFontSize(savedFontSize);
+      if (savedMealPlan)   setMealPlan(JSON.parse(savedMealPlan));
     },
     onLoggedOut: () => {
       const savedLanguage = localStorage.getItem("cookify_language");
@@ -315,7 +314,7 @@ export default function CookifyDemo() {
     },
   });
 
-  // ✅ useMealPlan — история питания + Firestore-синхронизация
+  // ✅ useMealPlan
   const {
     mealHistory, setMealHistory,
     addMealToHistory, removeMealFromHistory,
@@ -324,35 +323,36 @@ export default function CookifyDemo() {
     getFilteredHistory, getMealsForDay,
     calculateDayCalories, calculatePeriodNutrition,
     calculatePeriodStats, todayNutrition,
-  } = useMealPlan(firebaseUser, (recipe, onSelect) => {
-    // Колбэк показа модалки выбора варианта рецепта
-    setVariantSelectionRecipe(recipe);
-    setVariantSelectionCallback(() => (key) => {
-      onSelect(key);
-      setShowVariantSelectionModal(false);
-    });
-    setShowVariantSelectionModal(true);
-  });
+  } = useMealPlan(firebaseUser, openVariantModal);
+
+  // Объединённый список рецептов (нужен до useWeeklyPlanner)
+  const allRecipes = useMemo(() => [
+    ...SAMPLE_RECIPES,
+    ...communityRecipes.map(r => ({
+      ...r,
+      servings: r.servings ?? 2,
+      caloriesPerServing: r.caloriesPerServing ?? r.calories ?? 0,
+      variants: r.variants || []
+    }))
+  ], [communityRecipes]);
+
+  // ✅ useWeeklyPlanner
+  const {
+    weeklyPlan, setWeeklyPlan,
+    plannerWeekDate, setPlannerWeekDate,
+    showPlannerModal, setShowPlannerModal,
+    plannerModalDate, setPlannerModalDate,
+    plannerModalCategory, setPlannerModalCategory,
+    addRecipeToPlanner, removeRecipeFromPlanner,
+    getPlannerRecipes, calculatePlannerDayCalories,
+  } = useWeeklyPlanner(firebaseUser, allRecipes, openVariantModal);
 
   // 🔥 Загружаем рецепты сообщества из Firestore при старте
   useEffect(() => {
     getRecipes()
-      .then(recipes => setCommunityRecipes(recipes))
+      .then(r => setCommunityRecipes(r))
       .catch(() => setCommunityRecipes([]));
   }, []);
-
-  // Объединённый список рецептов: статичные + из Firestore
-  const allRecipes = useMemo(() => {
-    return [
-      ...SAMPLE_RECIPES,
-      ...communityRecipes.map(r => ({
-        ...r,
-        servings: r.servings ?? 2,
-        caloriesPerServing: r.caloriesPerServing ?? r.calories ?? 0,
-        variants: r.variants || []
-      }))
-    ];
-  }, [communityRecipes]);
 
   // Обработчик кнопки «Добавить рецепт»
   const handleAddRecipeClick = () => {
@@ -375,18 +375,6 @@ export default function CookifyDemo() {
   useEffect(() => { localStorage.setItem("cookify_fontSize",   currentFontSize); }, [currentFontSize]);
   useEffect(() => { localStorage.setItem("cookify_mealPlan",   JSON.stringify(mealPlan)); }, [mealPlan]);
 
-  // Автосохранение плана меню в Firestore (с дебаунсом 800ms)
-  useEffect(() => {
-    if (!firebaseUser?.uid) return;
-    const uid = firebaseUser.uid;
-    const timer = setTimeout(() => {
-      saveWeeklyPlan(uid, weeklyPlan).catch(() => {
-        localStorage.setItem(`cookify_weeklyPlan_${uid}`, JSON.stringify(weeklyPlan));
-      });
-    }, 800);
-    return () => clearTimeout(timer);
-  }, [weeklyPlan, firebaseUser]);
-
   // Сохранение списка покупок в localStorage
   useEffect(() => {
     if (firebaseUser?.uid) {
@@ -400,10 +388,10 @@ export default function CookifyDemo() {
 
   const GOALS     = language === "ru" ? GOAL_OPTIONS_RU : GOAL_OPTIONS_EN;
   const LIFESTYLE = language === "ru" ? LIFESTYLE_RU    : LIFESTYLE_EN;
-  const MEAL_LABELS    = language === "ru" ? MEAL_LABELS_RU    : MEAL_LABELS_EN;
-  const WEEKDAY_NAMES  = language === "ru" ? WEEKDAY_NAMES_RU  : WEEKDAY_NAMES_EN;
-  const WEEKDAY_SHORT  = language === "ru" ? WEEKDAY_SHORT_RU  : WEEKDAY_SHORT_EN;
-  const MONTH_NAMES    = language === "ru" ? MONTH_NAMES_RU    : MONTH_NAMES_EN;
+  const MEAL_LABELS   = language === "ru" ? MEAL_LABELS_RU   : MEAL_LABELS_EN;
+  const WEEKDAY_NAMES = language === "ru" ? WEEKDAY_NAMES_RU : WEEKDAY_NAMES_EN;
+  const WEEKDAY_SHORT = language === "ru" ? WEEKDAY_SHORT_RU : WEEKDAY_SHORT_EN;
+  const MONTH_NAMES   = language === "ru" ? MONTH_NAMES_RU   : MONTH_NAMES_EN;
 
   const CUISINE_OPTIONS = CUISINES_RU.map((ruName, idx) => ({ value: ruName, label: language === "ru" ? ruName : (CUISINES_EN[idx] || ruName) }));
 
@@ -416,7 +404,6 @@ export default function CookifyDemo() {
   const theme    = THEMES[currentTheme];
   const font     = FONTS[currentFont];
   const fontSize = FONT_SIZES[currentFontSize];
-
   const t = (ru, en) => language === "ru" ? ru : en;
 
   const convertWeight = (value, fromUnit) => {
@@ -485,7 +472,7 @@ export default function CookifyDemo() {
       try {
         await Promise.all([
           import('./firebase.js').then(m => m.saveMealHistory(uid, mealHistory)),
-          saveWeeklyPlan(uid, weeklyPlan)
+          import('./firebase.js').then(m => m.saveWeeklyPlan(uid, weeklyPlan)),
         ]);
       } catch {
         localStorage.setItem(`cookify_mealHistory_${uid}`, JSON.stringify(mealHistory));
@@ -498,7 +485,7 @@ export default function CookifyDemo() {
       const water     = localStorage.getItem('cookify_waterIntake');
       const waterGoal = localStorage.getItem('cookify_waterGoal');
       if (water)     localStorage.setItem(`cookify_waterIntake_${login}`, water);
-      if (waterGoal) localStorage.setItem(`cookify_waterGoal_${login}`,   waterGoal);
+      if (waterGoal) localStorage.setItem(`cookify_waterGoal_${login}`, waterGoal);
     }
     try { await auth.signOut(); } catch (e) { console.error(e); }
     setUserData(null); setFirebaseUser(null); setRegistered(false);
@@ -512,118 +499,7 @@ export default function CookifyDemo() {
   };
 
   const toggleUnitSystem = () => { setUnitSystem(prev => prev === "metric" ? "imperial" : "metric"); };
-
   const addToMealPlan = (recipe, category) => { setMealPlan(prev => ({ ...prev, [category]: [...prev[category], recipe] })); };
-
-  const addRecipeToPlanner = (dateKey, category, recipeIdOrRecipe, variantKey = null) => {
-    const recipe   = typeof recipeIdOrRecipe === 'object' ? recipeIdOrRecipe : allRecipes.find(r => r.id === recipeIdOrRecipe);
-    const recipeId = typeof recipeIdOrRecipe === 'object' ? recipeIdOrRecipe.id : recipeIdOrRecipe;
-    if (recipe && recipe.variants && recipe.variants.length > 0 && !variantKey) {
-      setVariantSelectionRecipe(recipe);
-      setVariantSelectionCallback(() => (selectedVariantKey) => {
-        addRecipeToPlanner(dateKey, category, recipeId, selectedVariantKey);
-        setShowVariantSelectionModal(false);
-      });
-      setShowVariantSelectionModal(true);
-      return;
-    }
-    setWeeklyPlan(prev => {
-      const dayPlan   = prev[dateKey] || { breakfast: [], lunch: [], snack: [], dinner: [] };
-      const planEntry = { recipeId, variantKey };
-      return { ...prev, [dateKey]: { ...dayPlan, [category]: [...(dayPlan[category] || []), planEntry] } };
-    });
-  };
-
-  const removeRecipeFromPlanner = (dateKey, category, index) => {
-    setWeeklyPlan(prev => {
-      const dayPlan = prev[dateKey];
-      if (!dayPlan) return prev;
-      const newCategoryItems = [...(dayPlan[category] || [])];
-      newCategoryItems.splice(index, 1);
-      return { ...prev, [dateKey]: { ...dayPlan, [category]: newCategoryItems } };
-    });
-  };
-
-  const getPlannerRecipes = (dateKey, category) => {
-    const dayPlan = weeklyPlan[dateKey];
-    if (!dayPlan) return [];
-    const entries = dayPlan[category] || [];
-    return entries.map(entry => {
-      const recipeId  = typeof entry === 'object' ? entry.recipeId  : entry;
-      const variantKey = typeof entry === 'object' ? entry.variantKey : null;
-      const recipe    = allRecipes.find(r => r.id == recipeId);
-      return recipe ? { ...recipe, selectedVariantKey: variantKey } : null;
-    }).filter(Boolean);
-  };
-
-  const calculatePlannerDayCalories = (dateKey) => {
-    const dayPlan = weeklyPlan[dateKey];
-    if (!dayPlan) return 0;
-    let total = 0;
-    MEAL_CATEGORIES.forEach(cat => {
-      getPlannerRecipes(dateKey, cat).forEach(r => {
-        if (r.selectedVariantKey && r.variants) {
-          const variant = r.variants.find(v => v.key === r.selectedVariantKey);
-          if (variant) { total += variant.caloriesPerServing || variant.calories || r.caloriesPerServing || r.calories || 0; return; }
-        }
-        total += r.caloriesPerServing || r.calories || 0;
-      });
-    });
-    return total;
-  };
-
-  const generateShoppingListFromPlanner = () => {
-    const weekDays = getWeekDays(plannerWeekDate);
-    const allIngredients = [];
-    weekDays.forEach(dateKey => {
-      MEAL_CATEGORIES.forEach(cat => {
-        getPlannerRecipes(dateKey, cat).forEach(recipeWithVariant => {
-          let ingredients = recipeWithVariant.ingredients || [];
-          if (recipeWithVariant.selectedVariantKey && recipeWithVariant.variants) {
-            const variant = recipeWithVariant.variants.find(v => v.key === recipeWithVariant.selectedVariantKey);
-            if (variant && variant.ingredients) ingredients = variant.ingredients;
-          }
-          const subsKey    = getRecipeSubKey(recipeWithVariant.id, recipeWithVariant.selectedVariantKey || null);
-          const recipeSubs = userSubstitutions?.[subsKey] || {};
-          ingredients.forEach(ing => {
-            if (typeof ing === 'object' && ing.name) {
-              const effectiveName = getEffectiveIngredientName(ing, recipeSubs);
-              allIngredients.push({ name: effectiveName, quantity: ing.quantity || '', unit: ing.unit || 'шт' });
-            } else if (typeof ing === 'string') {
-              const parts       = ing.split('—').map(s => s.trim());
-              const name        = parts[0] || ing;
-              const quantityStr = parts[1] || '';
-              const match       = quantityStr.match(/(\d+(?:[.,]\d+)?)\s*([а-яА-Яa-zA-Z.\s]+)?/);
-              const quantity    = match ? match[1].replace(',', '.') : '';
-              const unit        = match && match[2] ? match[2].trim() : 'шт';
-              allIngredients.push({ name, quantity, unit });
-            }
-          });
-        });
-      });
-    });
-    const seen = new Set();
-    const uniqueIngredients = allIngredients.filter(ing => {
-      const key = (ing.name || '').toLowerCase();
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    });
-    const newItems = uniqueIngredients.map(ing => ({
-      id: Date.now() + Math.random(), name: ing.name, quantity: ing.quantity,
-      baseQuantity: ing.quantity, unit: ing.unit,
-      category: categorizeIngredient(ing.name), checked: false, isManual: false
-    }));
-    setShoppingList(prev => {
-      const existingNames = new Set(prev.map(item => item.name.toLowerCase()));
-      return [...prev, ...newItems.filter(item => !existingNames.has(item.name.toLowerCase()))];
-    });
-    setNotificationTitle(language === "ru" ? "Готово" : "Done");
-    setNotificationMessage(language === "ru"
-      ? `Добавлено ${newItems.length} продуктов из плана меню на неделю!`
-      : `Added ${newItems.length} items from your weekly meal plan!`);
-    setShowNotificationModal(true);
-  };
 
   const getSortedRecipesForPlanner = (category) => {
     const categoryTypeMap = { breakfast: ["завтрак"], lunch: ["обед"], snack: ["перекус", "десерт"], dinner: ["ужин"] };
@@ -662,11 +538,62 @@ export default function CookifyDemo() {
 
   const allergyList = (userData?.allergies || "").toLowerCase().split(",").map(s => s.trim()).filter(Boolean);
 
+  const generateShoppingListFromPlanner = () => {
+    const weekDays = getWeekDays(plannerWeekDate);
+    const allIngredients = [];
+    weekDays.forEach(dateKey => {
+      MEAL_CATEGORIES.forEach(cat => {
+        getPlannerRecipes(dateKey, cat).forEach(recipeWithVariant => {
+          let ingredients = recipeWithVariant.ingredients || [];
+          if (recipeWithVariant.selectedVariantKey && recipeWithVariant.variants) {
+            const variant = recipeWithVariant.variants.find(v => v.key === recipeWithVariant.selectedVariantKey);
+            if (variant && variant.ingredients) ingredients = variant.ingredients;
+          }
+          const subsKey    = getRecipeSubKey(recipeWithVariant.id, recipeWithVariant.selectedVariantKey || null);
+          const recipeSubs = userSubstitutions?.[subsKey] || {};
+          ingredients.forEach(ing => {
+            if (typeof ing === 'object' && ing.name) {
+              const effectiveName = getEffectiveIngredientName(ing, recipeSubs);
+              allIngredients.push({ name: effectiveName, quantity: ing.quantity || '', unit: ing.unit || 'шт' });
+            } else if (typeof ing === 'string') {
+              const parts       = ing.split('—').map(s => s.trim());
+              const name        = parts[0] || ing;
+              const quantityStr = parts[1] || '';
+              const match       = quantityStr.match(/(\d+(?:[.,]\d+)?)\s*([а-яА-Яa-zA-Z.\s]+)?/);
+              const quantity    = match ? match[1].replace(',', '.') : '';
+              const unit        = match && match[2] ? match[2].trim() : 'шт';
+              allIngredients.push({ name, quantity, unit });
+            }
+          });
+        });
+      });
+    });
+    const seen = new Set();
+    const uniqueIngredients = allIngredients.filter(ing => {
+      const key = (ing.name || '').toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key); return true;
+    });
+    const newItems = uniqueIngredients.map(ing => ({
+      id: Date.now() + Math.random(), name: ing.name, quantity: ing.quantity,
+      baseQuantity: ing.quantity, unit: ing.unit,
+      category: categorizeIngredient(ing.name), checked: false, isManual: false
+    }));
+    setShoppingList(prev => {
+      const existingNames = new Set(prev.map(item => item.name.toLowerCase()));
+      return [...prev, ...newItems.filter(item => !existingNames.has(item.name.toLowerCase()))];
+    });
+    setNotificationTitle(language === "ru" ? "Готово" : "Done");
+    setNotificationMessage(language === "ru"
+      ? `Добавлено ${newItems.length} продуктов из плана меню на неделю!`
+      : `Added ${newItems.length} items from your weekly meal plan!`);
+    setShowNotificationModal(true);
+  };
+
   const filteredResults = useMemo(() => {
     let results = allRecipes;
     const query   = normalize(searchQuery);
     const exclude = excludeIngredients.toLowerCase().split(",").map(s => s.trim()).filter(Boolean);
-
     if (searchMode === "name") {
       if (query) results = results.filter(r =>
         normalize(r.title).includes(query) ||
@@ -687,7 +614,6 @@ export default function CookifyDemo() {
         );
       }
     }
-
     if (exclude.length > 0) {
       results = results.filter(r =>
         !(r.ingredients || []).some(ing => {
@@ -696,7 +622,6 @@ export default function CookifyDemo() {
         })
       );
     }
-
     if (selectedFilters.type)       results = results.filter(r => normalize(r.type)       === normalize(selectedFilters.type));
     if (selectedFilters.diet)       results = results.filter(r => normalize(r.diet)       === normalize(selectedFilters.diet));
     if (selectedFilters.cuisine)    results = results.filter(r => normalize(r.cuisine)    === normalize(selectedFilters.cuisine));
@@ -1049,7 +974,7 @@ export default function CookifyDemo() {
           <AddRecipeModal
             theme={theme} fontSize={fontSize} language={language} firebaseUser={firebaseUser}
             onClose={() => setShowAddRecipeModal(false)}
-            onAdded={() => { getRecipes().then(recipes => setCommunityRecipes(recipes)).catch(() => {}); }}
+            onAdded={() => { getRecipes().then(r => setCommunityRecipes(r)).catch(() => {}); }}
           />
         )}
       </div>
