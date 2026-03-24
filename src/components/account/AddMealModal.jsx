@@ -1,6 +1,7 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import { FaTimes, FaPlus, FaSearch, FaPencilAlt, FaAppleAlt } from "react-icons/fa";
 import { useApp } from "../../context/AppContext";
+import { PRODUCTS_BY_NAME } from "../../data/productsNutritionById";
 
 export default function AddMealModal({ onClose }) {
   const {
@@ -12,17 +13,71 @@ export default function AddMealModal({ onClose }) {
     onAddRecipeClick,
   } = useApp();
 
-  const [tab, setTab] = useState("recipe"); // "recipe" | "ingredient"
+  const [tab, setTab] = useState("recipe");
   const [query, setQuery] = useState("");
 
-  // Форма отдельного продукта
-  const [ingName, setIngName]       = useState("");
-  const [ingWeight, setIngWeight]   = useState("");
+  // Форма продукта
+  const [ingName, setIngName]         = useState("");
+  const [ingWeight, setIngWeight]     = useState("");
   const [ingCalories, setIngCalories] = useState("");
-  const [ingProtein, setIngProtein] = useState("");
-  const [ingFat, setIngFat]         = useState("");
-  const [ingCarbs, setIngCarbs]     = useState("");
-  const [ingError, setIngError]     = useState("");
+  const [ingProtein, setIngProtein]   = useState("");
+  const [ingFat, setIngFat]           = useState("");
+  const [ingCarbs, setIngCarbs]       = useState("");
+  const [ingError, setIngError]       = useState("");
+  const [suggestions, setSuggestions] = useState([]);
+  const [showSug, setShowSug]         = useState(false);
+  const [autoFilled, setAutoFilled]   = useState(false); // заполнено из базы?
+  const [dbProduct, setDbProduct]     = useState(null);  // ссылка на продукт из БД
+  const nameRef = useRef(null);
+
+  // Подсказки: ищем по PRODUCTS_BY_NAME
+  useEffect(() => {
+    const q = ingName.trim().toLowerCase();
+    if (!q || q.length < 2 || autoFilled) { setSuggestions([]); return; }
+    const matches = Object.keys(PRODUCTS_BY_NAME)
+      .filter(k => k.includes(q))
+      .slice(0, 8);
+    setSuggestions(matches);
+    setShowSug(matches.length > 0);
+  }, [ingName, autoFilled]);
+
+  // Пересчёт при изменении веса (если загружен продукт из БД)
+  useEffect(() => {
+    if (!dbProduct || !ingWeight) return;
+    const w = parseFloat(ingWeight);
+    if (isNaN(w) || w <= 0) return;
+    const factor = w / 100;
+    setIngCalories(Math.round(dbProduct.calories * factor).toString());
+    setIngProtein((Math.round(dbProduct.protein * factor * 10) / 10).toString());
+    setIngFat((Math.round(dbProduct.fat * factor * 10) / 10).toString());
+    setIngCarbs((Math.round(dbProduct.carbs * factor * 10) / 10).toString());
+  }, [ingWeight, dbProduct]);
+
+  const selectSuggestion = (name) => {
+    const prod = PRODUCTS_BY_NAME[name];
+    setIngName(prod.name || name);
+    setDbProduct(prod);
+    setAutoFilled(true);
+    setShowSug(false);
+    setSuggestions([]);
+    // Если вес уже введён — сразу заполнить КБЖУ
+    if (ingWeight) {
+      const w = parseFloat(ingWeight);
+      if (!isNaN(w) && w > 0) {
+        const factor = w / 100;
+        setIngCalories(Math.round(prod.calories * factor).toString());
+        setIngProtein((Math.round(prod.protein * factor * 10) / 10).toString());
+        setIngFat((Math.round(prod.fat * factor * 10) / 10).toString());
+        setIngCarbs((Math.round(prod.carbs * factor * 10) / 10).toString());
+      }
+    }
+  };
+
+  const clearIngredient = () => {
+    setIngName(""); setIngWeight(""); setIngCalories("");
+    setIngProtein(""); setIngFat(""); setIngCarbs("");
+    setIngError(""); setAutoFilled(false); setDbProduct(null);
+  };
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -34,21 +89,15 @@ export default function AddMealModal({ onClose }) {
     );
   }, [allRecipes, query]);
 
-  const handleCreateRecipe = () => {
-    onClose();
-    onAddRecipeClick();
-  };
+  const handleCreateRecipe = () => { onClose(); onAddRecipeClick(); };
 
   const handleAddIngredient = () => {
     if (!ingName.trim()) { setIngError(t("Введите название продукта", "Enter product name")); return; }
     if (!ingCalories && !ingWeight) { setIngError(t("Укажите калории или вес", "Enter calories or weight")); return; }
     setIngError("");
-
     const kcal = ingCalories ? parseFloat(ingCalories) : 0;
     const weight = ingWeight ? parseFloat(ingWeight) : null;
     const label = weight ? `${ingName.trim()} (${weight} г)` : ingName.trim();
-
-    // Собираем псевдо-рецепт по формату addMealToHistory
     const pseudoRecipe = {
       id: `ingredient_${Date.now()}`,
       title: label,
@@ -63,9 +112,9 @@ export default function AddMealModal({ onClose }) {
       _isIngredient: true,
       _nutrition: {
         calories: kcal,
-        protein:  ingProtein  ? parseFloat(ingProtein)  : 0,
-        fat:      ingFat      ? parseFloat(ingFat)      : 0,
-        carbs:    ingCarbs    ? parseFloat(ingCarbs)    : 0,
+        protein:  ingProtein ? parseFloat(ingProtein) : 0,
+        fat:      ingFat     ? parseFloat(ingFat)     : 0,
+        carbs:    ingCarbs   ? parseFloat(ingCarbs)   : 0,
       },
     };
     addMealToHistory(pseudoRecipe, addMealCategory);
@@ -73,12 +122,10 @@ export default function AddMealModal({ onClose }) {
   };
 
   const tabBtn = (id, label) => (
-    <button
-      onClick={() => setTab(id)}
+    <button onClick={() => setTab(id)}
       className={`flex-1 py-2 rounded-xl ${fontSize.small} font-semibold transition ${
         tab === id ? `${theme.accent} text-white shadow` : `${theme.border} border`
-      }`}
-    >
+      }`}>
       {label}
     </button>
   );
@@ -89,13 +136,11 @@ export default function AddMealModal({ onClose }) {
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" onClick={onClose}>
       <div className={`${theme.cardBg} rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto p-6`} onClick={e => e.stopPropagation()}>
 
-        {/* Шапка */}
         <div className="flex items-center justify-between mb-4">
           <h2 className={`${fontSize.subheading} font-bold`}>{t("Добавить прием пищи", "Add Meal")}</h2>
           <button onClick={onClose} className={`${theme.textSecondary} hover:${theme.text} transition`}><FaTimes size={24} /></button>
         </div>
 
-        {/* Тип приёма */}
         <div className="mb-4">
           <label className={`block ${fontSize.body} font-semibold mb-2`}>{t("Тип приема пищи:", "Meal type:")}</label>
           <div className="flex gap-2 flex-wrap">
@@ -110,13 +155,12 @@ export default function AddMealModal({ onClose }) {
           </div>
         </div>
 
-        {/* Вкладки */}
         <div className="flex gap-2 mb-5">
           {tabBtn("recipe", `🍳 ${t("Рецепт", "Recipe")}`)}
           {tabBtn("ingredient", `🥑 ${t("Продукт", "Product")}`)}
         </div>
 
-        {/* ── Вкладка Рецепт ── */}
+        {/* ── вкладка Рецепт ── */}
         {tab === "recipe" && (
           <div>
             <div className="mb-4 relative">
@@ -142,7 +186,7 @@ export default function AddMealModal({ onClose }) {
                     {t("Попробуйте другое название или создайте рецепт:", "Try a different name or create your own recipe:")}
                   </p>
                   <button onClick={handleCreateRecipe}
-                    className={`flex items-center gap-2 px-6 py-3 rounded-xl ${theme.accent} ${theme.accentHover} text-white font-semibold ${fontSize.body} transition shadow-md hover:shadow-lg`}>
+                    className={`flex items-center gap-2 px-6 py-3 rounded-xl ${theme.accent} ${theme.accentHover} text-white font-semibold ${fontSize.body} transition shadow-md`}>
                     <FaPencilAlt />
                     {t("Создать рецепт «", "Create recipe “")}{query}{t("»", "”")}
                   </button>
@@ -167,62 +211,110 @@ export default function AddMealModal({ onClose }) {
           </div>
         )}
 
-        {/* ── Вкладка Продукт ── */}
+        {/* ── вкладка Продукт ── */}
         {tab === "ingredient" && (
           <div className="space-y-4">
             <p className={`${fontSize.small} ${theme.textSecondary}`}>
-              {t(
-                "Добавьте отдельный продукт — например, один огурец или кусочек сыра",
-                "Add a single product \u2014 e.g. one cucumber or a slice of cheese"
-              )}
+              {t("Добавьте отдельный продукт — например, один огурец или кусочек сыра", "Add a single product — e.g. one cucumber or a slice of cheese")}
             </p>
 
-            <div>
-              <label className={`block ${fontSize.small} font-semibold mb-1`}>{t("Название продукта", "Product name")} *</label>
-              <input type="text" value={ingName} onChange={e => { setIngName(e.target.value); setIngError(""); }}
-                placeholder={t("Например: Огурец", "E.g.: Cucumber")}
-                className={inputCls} autoFocus />
+            {/* Название + подсказки */}
+            <div className="relative">
+              <label className={`block ${fontSize.small} font-semibold mb-1`}>
+                {t("Название продукта", "Product name")} *
+              </label>
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <FaSearch className={`absolute left-3 top-1/2 -translate-y-1/2 ${theme.textSecondary} pointer-events-none`} />
+                  <input
+                    ref={nameRef}
+                    type="text"
+                    value={ingName}
+                    onChange={e => { setIngName(e.target.value); setAutoFilled(false); setDbProduct(null); setIngError(""); }}
+                    onFocus={() => suggestions.length > 0 && setShowSug(true)}
+                    onBlur={() => setTimeout(() => setShowSug(false), 150)}
+                    placeholder={t("Например: Огурец", "E.g.: Cucumber")}
+                    className={`w-full pl-9 pr-3 py-2.5 rounded-xl border ${theme.border} ${theme.input} focus:outline-none focus:ring-2 focus:ring-[#606C38] ${fontSize.body}`}
+                    autoFocus
+                  />
+                  {/* Дропдаун подсказок */}
+                  {showSug && suggestions.length > 0 && (
+                    <ul className={`absolute z-50 left-0 right-0 top-full mt-1 rounded-xl border ${theme.border} ${theme.cardBg} shadow-xl max-h-48 overflow-y-auto`}>
+                      {suggestions.map(name => (
+                        <li key={name}>
+                          <button
+                            type="button"
+                            onMouseDown={() => selectSuggestion(name)}
+                            className={`w-full text-left px-4 py-2.5 ${fontSize.small} hover:${theme.accent} hover:text-white transition flex items-center justify-between gap-3`}
+                          >
+                            <span>{PRODUCTS_BY_NAME[name].name || name}</span>
+                            <span className={`${theme.textSecondary} ${fontSize.tiny} whitespace-nowrap`}>
+                              {PRODUCTS_BY_NAME[name].calories} {t("ккал/100г", "kcal/100g")}
+                            </span>
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+                {ingName && (
+                  <button onClick={clearIngredient}
+                    className={`px-3 rounded-xl border ${theme.border} ${theme.textSecondary} hover:text-red-500 transition`}
+                    title={t("Очистить", "Clear")}>
+                    <FaTimes />
+                  </button>
+                )}
+              </div>
+              {/* Бэдж "Из базы" */}
+              {autoFilled && (
+                <p className={`mt-1.5 ${fontSize.tiny} text-green-600 font-semibold`}>
+                  ✅ {t("КБЖУ загружено из базы продуктов — введите вес для пересчёта", "Nutrition loaded from database — enter weight to recalculate")}
+                </p>
+              )}
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className={`block ${fontSize.small} font-semibold mb-1`}>{t("Вес, г", "Weight, g")}</label>
-                <input type="number" min="0" value={ingWeight} onChange={e => { setIngWeight(e.target.value); setIngError(""); }}
-                  placeholder="100" className={inputCls} />
+                <input type="number" min="0" value={ingWeight}
+                  onChange={e => { setIngWeight(e.target.value); setIngError(""); }}
+                  placeholder="100"
+                  className={inputCls} />
               </div>
               <div>
-                <label className={`block ${fontSize.small} font-semibold mb-1`}>{t("Ккал", "kcal")} *</label>
-                <input type="number" min="0" value={ingCalories} onChange={e => { setIngCalories(e.target.value); setIngError(""); }}
-                  placeholder="15" className={inputCls} />
+                <label className={`block ${fontSize.small} font-semibold mb-1`}>
+                  {t("Ккал", "kcal")} *
+                  {autoFilled && ingWeight && <span className={`ml-1 text-green-600 ${fontSize.tiny}`}>({t("авто", "auto")})</span>}
+                </label>
+                <input type="number" min="0" value={ingCalories}
+                  onChange={e => { setIngCalories(e.target.value); setIngError(""); }}
+                  placeholder="15"
+                  className={inputCls} />
               </div>
             </div>
 
             <div>
               <label className={`block ${fontSize.small} font-semibold mb-2 ${theme.textSecondary}`}>
                 {t("Макронутриенты (необязательно), г", "Macros (optional), g")}
+                {autoFilled && ingWeight && <span className={`ml-1 text-green-600 ${fontSize.tiny}`}>({t("авто", "auto")})</span>}
               </label>
               <div className="grid grid-cols-3 gap-3">
-                <div>
-                  <label className={`block ${fontSize.tiny} ${theme.textSecondary} mb-1`}>{t("Белки", "Protein")}</label>
-                  <input type="number" min="0" step="0.1" value={ingProtein} onChange={e => setIngProtein(e.target.value)}
-                    placeholder="0" className={inputCls} />
-                </div>
-                <div>
-                  <label className={`block ${fontSize.tiny} ${theme.textSecondary} mb-1`}>{t("Жиры", "Fat")}</label>
-                  <input type="number" min="0" step="0.1" value={ingFat} onChange={e => setIngFat(e.target.value)}
-                    placeholder="0" className={inputCls} />
-                </div>
-                <div>
-                  <label className={`block ${fontSize.tiny} ${theme.textSecondary} mb-1`}>{t("Углеводы", "Carbs")}</label>
-                  <input type="number" min="0" step="0.1" value={ingCarbs} onChange={e => setIngCarbs(e.target.value)}
-                    placeholder="0" className={inputCls} />
-                </div>
+                {[
+                  [t("Белки", "Protein"), ingProtein, setIngProtein],
+                  [t("Жиры", "Fat"), ingFat, setIngFat],
+                  [t("Углеводы", "Carbs"), ingCarbs, setIngCarbs],
+                ].map(([label, val, setter]) => (
+                  <div key={label}>
+                    <label className={`block ${fontSize.tiny} ${theme.textSecondary} mb-1`}>{label}</label>
+                    <input type="number" min="0" step="0.1" value={val}
+                      onChange={e => setter(e.target.value)}
+                      placeholder="0" className={inputCls} />
+                  </div>
+                ))}
               </div>
             </div>
 
-            {ingError && (
-              <p className={`text-red-500 ${fontSize.small}`}>{ingError}</p>
-            )}
+            {ingError && <p className={`text-red-500 ${fontSize.small}`}>{ingError}</p>}
 
             <button onClick={handleAddIngredient}
               className={`w-full py-3 rounded-xl ${theme.accent} ${theme.accentHover} text-white font-semibold ${fontSize.body} flex items-center justify-center gap-2 transition`}>
