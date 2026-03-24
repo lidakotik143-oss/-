@@ -5,25 +5,10 @@ import {
   getUserProfile,
   getMealHistory,
   getWeeklyPlan,
+  getFavorites,
 } from '../firebase.js';
 import { loadUserSubstitutions } from '../utils/substitutions';
 
-/**
- * useAuth — хук авторизации Firebase.
- * Инкапсулирует слушатель onAuthStateChanged, загрузку профиля
- * и восстановление данных из Firestore / localStorage.
- *
- * Возвращает:
- *   firebaseUser   — объект пользователя Firebase (или null)
- *   userData       — профиль пользователя из Firestore
- *   setUserData    — сеттер профиля
- *   registered     — залогинен ли пользователь
- *   setRegistered  — сеттер
- *   authLoading    — идёт ли первичная проверка авторизации
- *
- * Колбэки onLoggedIn / onLoggedOut вызываются при смене состояния
- * и используются в CookifyDemo для загрузки настроек из localStorage.
- */
 export function useAuth({ onLoggedIn, onLoggedOut } = {}) {
   const [firebaseUser, setFirebaseUser] = useState(null);
   const [userData, setUserData] = useState(null);
@@ -48,29 +33,33 @@ export function useAuth({ onLoggedIn, onLoggedOut } = {}) {
           setUserData({ email: user.email, uid: user.uid, login: user.email });
         }
 
-        // Загружаем историю питания и план меню
+        // Загружаем историю, план меню и избранное параллельно
         let firestoreHistory = [];
         let firestorePlan = {};
+        let firestoreFavorites = [];
         try {
-          [firestoreHistory, firestorePlan] = await Promise.all([
+          [firestoreHistory, firestorePlan, firestoreFavorites] = await Promise.all([
             getMealHistory(user.uid),
             getWeeklyPlan(user.uid),
+            getFavorites(user.uid),
           ]);
         } catch {
-          const savedHistory = localStorage.getItem(`cookify_mealHistory_${user.uid}`);
-          const savedPlan = localStorage.getItem(`cookify_weeklyPlan_${user.uid}`);
-          if (savedHistory) firestoreHistory = JSON.parse(savedHistory);
-          if (savedPlan) firestorePlan = JSON.parse(savedPlan);
+          const savedHistory   = localStorage.getItem(`cookify_mealHistory_${user.uid}`);
+          const savedPlan      = localStorage.getItem(`cookify_weeklyPlan_${user.uid}`);
+          const savedFavorites = localStorage.getItem('cookify_favorites');
+          if (savedHistory)   firestoreHistory   = JSON.parse(savedHistory);
+          if (savedPlan)      firestorePlan       = JSON.parse(savedPlan);
+          if (savedFavorites) firestoreFavorites  = JSON.parse(savedFavorites);
         }
 
         const substitutions = loadUserSubstitutions();
 
-        // Вызываем колбэк — CookifyDemo применит настройки из localStorage
         onLoggedIn?.({
           user,
           firestoreHistory,
           firestorePlan,
           substitutions,
+          firestoreFavorites,
         });
       } else {
         setFirebaseUser(null);
