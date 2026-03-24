@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { FaCalendarAlt, FaUtensils, FaShoppingCart, FaTint, FaEye, FaEyeSlash, FaLeaf } from "react-icons/fa";
+import { FaCalendarAlt, FaUtensils, FaShoppingCart, FaTint, FaEye, FaEyeSlash, FaLeaf, FaHeart, FaRegHeart } from "react-icons/fa";
 import { auth } from '../firebase.js';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 import { setUserProfile } from '../firebase.js';
@@ -12,6 +12,8 @@ import HistoryTab from "./account/HistoryTab";
 import PlannerTab from "./account/PlannerTab";
 import ShoppingListTab from "./account/ShoppingListTab";
 import WaterTracker from "./WaterTracker";
+
+const RECIPE_PLACEHOLDER = "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=120&h=80&fit=crop&auto=format";
 
 function FirebaseAuthPanel({ t, theme, fontSize, language }) {
   const [mode, setMode] = useState('choice');
@@ -141,12 +143,95 @@ function FirebaseAuthPanel({ t, theme, fontSize, language }) {
   );
 }
 
+function FavoritesTab({ t, theme, fontSize, language, favorites, allRecipes, isFavorite, toggleFav, setSelectedRecipe, setSelectedRecipeVariantKey, getDishTypeInfo }) {
+  const favoriteRecipes = (allRecipes || []).filter(r => isFavorite(r.id));
+
+  if (favoriteRecipes.length === 0) {
+    return (
+      <div className={`${theme.cardBg} p-8 rounded-2xl shadow text-center`}>
+        <FaRegHeart className={`mx-auto text-4xl ${theme.textSecondary} mb-3 opacity-40`} />
+        <p className={`${fontSize.body} ${theme.textSecondary}`}>
+          {t('Здесь будут ваши избранные рецепты', 'Your favourite recipes will appear here')}
+        </p>
+        <p className={`${fontSize.small} ${theme.textSecondary} mt-1 opacity-60`}>
+          {t('Нажмите ♡ на карточке рецепта, чтобы добавить', 'Tap ♡ on any recipe card to save it')}
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className={`${theme.cardBg} p-4 rounded-2xl shadow`}>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className={`${fontSize.subheading} font-semibold`}>{t('Избранное', 'Favorites')}</h2>
+        <span className={`${fontSize.small} ${theme.textSecondary}`}>{favoriteRecipes.length} {t('рецептов', 'recipes')}</span>
+      </div>
+      <div className="grid gap-3">
+        {favoriteRecipes.map(r => {
+          const dishTypeInfo = getDishTypeInfo(r.type);
+          const kcal = r.caloriesPerServing ?? r.calories;
+          const imgSrc = r.image || r.imageUrl || RECIPE_PLACEHOLDER;
+          const fav = isFavorite(r.id);
+          return (
+            <div
+              key={r.id}
+              onClick={() => { setSelectedRecipe(r); setSelectedRecipeVariantKey(r?.variants?.[0]?.key || null); }}
+              className={`p-4 ${theme.border} border rounded-xl cursor-pointer hover:shadow-lg transition`}
+            >
+              <div className="flex items-start gap-4">
+                <img
+                  src={imgSrc}
+                  alt={r.title}
+                  className="w-20 h-16 object-cover rounded-xl flex-shrink-0 bg-gray-100"
+                  onError={(e) => { e.target.src = RECIPE_PLACEHOLDER; }}
+                />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1 min-w-0">
+                      <h3 className={`${fontSize.cardTitle} font-bold`}>{r.title}</h3>
+                      <div className={`${fontSize.small} ${theme.textSecondary} mt-1`}>
+                        {r.time} {t('мин', 'min')} • {kcal} {t('ккал/порц.', 'kcal/srv')}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      {r.type && (
+                        <span className={`${dishTypeInfo.color} text-white px-3 py-1 rounded-full ${fontSize.tiny} font-semibold`}>
+                          {dishTypeInfo.label}
+                        </span>
+                      )}
+                      <button
+                        onClick={(e) => { e.stopPropagation(); toggleFav(r.id); }}
+                        className={`p-2 rounded-full transition hover:scale-110 ${
+                          fav ? 'text-red-500' : theme.textSecondary
+                        }`}
+                        title={t('Удалить из избранного', 'Remove from favorites')}
+                      >
+                        {fav ? <FaHeart size={16} /> : <FaRegHeart size={16} />}
+                      </button>
+                    </div>
+                  </div>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {(r.tags || []).slice(0, 4).map((tag, i) => (
+                      <span key={i} className={`px-2 py-1 ${theme.accent} text-white rounded-full ${fontSize.tiny}`}>{tag}</span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export default function AccountScreen(props) {
   const {
     t, theme, fontSize, registered, setShowRegisterForm, accountTab, setAccountTab,
     showRegisterForm, setIsEditingProfile, showAddMealModal, setShowAddMealModal,
     showPlannerModal, setShowPlannerModal, language, userData,
-    setUserData, setRegistered, setMealHistory, setWeeklyPlan, setShoppingList
+    setUserData, setRegistered, setMealHistory, setWeeklyPlan,
+    favorites, allRecipes, isFavorite, toggleFav, setSelectedRecipe, setSelectedRecipeVariantKey, getDishTypeInfo,
   } = props;
 
   return (
@@ -166,13 +251,26 @@ export default function AccountScreen(props) {
             <button onClick={() => setAccountTab("shopping")} className={`flex-1 min-w-fit px-4 py-2 rounded-xl ${fontSize.small} transition flex items-center justify-center gap-2 ${accountTab === "shopping" ? `${theme.accent} text-white` : `${theme.border} border`}`}>
               <FaShoppingCart /> {t("Покупки", "Shopping")}
             </button>
+            <button onClick={() => setAccountTab("favorites")} className={`flex-1 min-w-fit px-4 py-2 rounded-xl ${fontSize.small} transition flex items-center justify-center gap-2 ${accountTab === "favorites" ? `${theme.accent} text-white` : `${theme.border} border`}`}>
+              <FaHeart /> {t("Избранное", "Favorites")}
+            </button>
             <button onClick={() => setAccountTab("water")} className={`flex-1 min-w-fit px-4 py-2 rounded-xl ${fontSize.small} transition flex items-center justify-center gap-2 ${accountTab === "water" ? `${theme.accent} text-white` : `${theme.border} border`}`}>
               <FaTint /> {t("Вода", "Water")}
             </button>
           </div>
-          {accountTab === "history" && <HistoryTab {...props} />}
-          {accountTab === "planner" && <PlannerTab {...props} />}
-          {accountTab === "shopping" && <ShoppingListTab {...props} />}
+          {accountTab === "history"   && <HistoryTab {...props} />}
+          {accountTab === "planner"   && <PlannerTab {...props} />}
+          {accountTab === "shopping"  && <ShoppingListTab {...props} />}
+          {accountTab === "favorites" && (
+            <FavoritesTab
+              t={t} theme={theme} fontSize={fontSize} language={language}
+              favorites={favorites} allRecipes={allRecipes}
+              isFavorite={isFavorite} toggleFav={toggleFav}
+              setSelectedRecipe={setSelectedRecipe}
+              setSelectedRecipeVariantKey={setSelectedRecipeVariantKey}
+              getDishTypeInfo={getDishTypeInfo}
+            />
+          )}
           {accountTab === "water" && <WaterTracker theme={theme} fontSize={fontSize} language={language} userData={userData} />}
           <CustomizationPanel {...props} />
         </>

@@ -1,6 +1,6 @@
 // =================== БЛОК 1: Импорты и примерные данные ===================
 import React, { useState, useEffect, useMemo } from "react";
-import { FaTimes, FaPlus, FaMinus } from "react-icons/fa";
+import { FaTimes, FaPlus, FaMinus, FaHeart, FaRegHeart } from "react-icons/fa";
 import { RECIPES_DATABASE } from './recipesData';
 
 import {
@@ -32,6 +32,7 @@ import { useAuth }          from './hooks/useAuth';
 import { useMealPlan }      from './hooks/useMealPlan';
 import { useWeeklyPlanner } from './hooks/useWeeklyPlanner';
 import { useShoppingList }  from './hooks/useShoppingList';
+import { useFavorites }     from './hooks/useFavorites';
 
 // 🔥 Firebase
 import { auth } from './firebase.js';
@@ -341,6 +342,9 @@ export default function CookifyDemo() {
     getWeekDays,
   });
 
+  // ✅ useFavorites
+  const { favorites, toggleFav, isFavorite } = useFavorites(firebaseUser);
+
   // 🔥 Загружаем рецепты сообщества из Firestore при старте
   useEffect(() => {
     getRecipes()
@@ -610,6 +614,8 @@ export default function CookifyDemo() {
     setVariantSelectionRecipe, variantSelectionCallback, setVariantSelectionCallback,
     showAddRecipeModal, setShowAddRecipeModal,
     mealPlan, setMealPlan, addToMealPlan,
+    // ⭐ Избранное
+    favorites, toggleFav, isFavorite,
   };
 
   if (authLoading) {
@@ -664,6 +670,7 @@ export default function CookifyDemo() {
           const totalProtein = Math.round((nutritionInfo.total.protein  || 0) * servingsMultiplier);
           const totalFat     = Math.round((nutritionInfo.total.fat      || 0) * servingsMultiplier);
           const totalCarbs   = Math.round((nutritionInfo.total.carbs    || 0) * servingsMultiplier);
+          const fav          = isFavorite(selectedRecipe.id);
 
           const updateSubstitution = (subId, value) => {
             setUserSubstitutions(prev => {
@@ -707,7 +714,17 @@ export default function CookifyDemo() {
                       </div>
                     )}
                   </div>
-                  <button onClick={closeModal} className={`${theme.textSecondary} hover:${theme.text} transition ml-4`}><FaTimes size={24} /></button>
+                  {/* Кнопка избранного в шапке модалки */}
+                  <button
+                    onClick={(e) => { e.stopPropagation(); toggleFav(selectedRecipe.id); }}
+                    className={`p-2 rounded-full transition hover:scale-110 mr-2 ${
+                      fav ? 'text-red-500' : theme.textSecondary
+                    }`}
+                    title={fav ? t('Удалить из избранного', 'Remove from favorites') : t('В избранное', 'Add to favorites')}
+                  >
+                    {fav ? <FaHeart size={20} /> : <FaRegHeart size={20} />}
+                  </button>
+                  <button onClick={closeModal} className={`${theme.textSecondary} hover:${theme.text} transition`}><FaTimes size={24} /></button>
                 </div>
 
                 <div className={`${theme.cardBg} border-2 rounded-xl p-4 mb-6 shadow-md`} style={{ borderColor: timeInfo.color }}>
@@ -854,6 +871,7 @@ export default function CookifyDemo() {
             getDishTypeInfo={getDishTypeInfo} allergyList={allergyList} setSelectedRecipe={setSelectedRecipe}
             setSelectedRecipeVariantKey={setSelectedRecipeVariantKey} userSubstitutions={userSubstitutions}
             onAddRecipeClick={handleAddRecipeClick}
+            isFavorite={isFavorite} toggleFav={toggleFav}
           />
         )}
 
@@ -891,6 +909,7 @@ export default function CookifyDemo() {
             setShoppingList={setShoppingList} generateShoppingListFromPlanner={generateShoppingListFromPlanner}
             setUserData={setUserData} setRegistered={setRegistered} setMealHistory={setMealHistory}
             setWeeklyPlan={setWeeklyPlan}
+            favorites={favorites} toggleFav={toggleFav} isFavorite={isFavorite}
           />
         )}
 
