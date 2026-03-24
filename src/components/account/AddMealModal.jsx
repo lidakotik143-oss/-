@@ -1,5 +1,5 @@
-import React from "react";
-import { FaTimes, FaPlus } from "react-icons/fa";
+import React, { useState, useMemo } from "react";
+import { FaTimes, FaPlus, FaSearch } from "react-icons/fa";
 import { useApp } from "../../context/AppContext";
 
 export default function AddMealModal({ onClose }) {
@@ -10,6 +10,18 @@ export default function AddMealModal({ onClose }) {
     addMealCategory, setAddMealCategory,
     addMealToHistory
   } = useApp();
+
+  const [query, setQuery] = useState("");
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return allRecipes;
+    return allRecipes.filter(r =>
+      (r.title || "").toLowerCase().includes(q) ||
+      (r.tags || []).some(tag => tag.toLowerCase().includes(q)) ||
+      (r.type || "").toLowerCase().includes(q)
+    );
+  }, [allRecipes, query]);
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" onClick={onClose}>
@@ -36,29 +48,52 @@ export default function AddMealModal({ onClose }) {
           </div>
         </div>
 
+        <div className="mb-4 relative">
+          <FaSearch className={`absolute left-3 top-1/2 -translate-y-1/2 ${theme.textSecondary} pointer-events-none`} />
+          <input
+            type="text"
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            placeholder={t("Поиск рецепта...", "Search recipe...")}
+            className={`w-full pl-10 pr-4 py-2.5 rounded-xl border ${theme.border} ${theme.input} focus:outline-none focus:ring-2 focus:ring-[#606C38] ${fontSize.body}`}
+            autoFocus
+          />
+        </div>
+
         <div>
-          <h3 className={`${fontSize.cardTitle} font-semibold mb-3`}>{t("Выберите рецепт:", "Select recipe:")}</h3>
+          <h3 className={`${fontSize.cardTitle} font-semibold mb-3`}>
+            {t("Выберите рецепт:", "Select recipe:")}
+            <span className={`ml-2 ${fontSize.small} ${theme.textSecondary} font-normal`}>
+              {filtered.length} {t("рецептов", "recipes")}
+            </span>
+          </h3>
           <div className="grid gap-2 max-h-96 overflow-y-auto">
-            {allRecipes.map(r => (
-              <div
-                key={r.id}
-                className={`p-3 ${theme.border} border rounded-lg hover:shadow-lg transition flex items-center justify-between`}
-              >
-                <div className="flex-1">
-                  <div className={`${fontSize.body} font-semibold`}>{r.title}</div>
-                  <div className={`${fontSize.small} ${theme.textSecondary}`}>
-                    {r.caloriesPerServing || r.calories} {t("ккал", "kcal")} • {r.time} {t("мин", "min")}
-                  </div>
-                </div>
-                <button
-                  onClick={() => { addMealToHistory(r, addMealCategory); onClose(); }}
-                  className={`ml-3 px-4 py-2 rounded-xl ${fontSize.small} ${theme.accent} ${theme.accentHover} text-white flex items-center gap-2 flex-shrink-0`}
+            {filtered.length === 0 ? (
+              <p className={`text-center py-8 ${theme.textSecondary} ${fontSize.body}`}>
+                {t("Ничего не найдено", "Nothing found")}
+              </p>
+            ) : (
+              filtered.map(r => (
+                <div
+                  key={r.id}
+                  className={`p-3 ${theme.border} border rounded-lg hover:shadow-lg transition flex items-center justify-between`}
                 >
-                  <FaPlus />
-                  {t("Добавить", "Add")}
-                </button>
-              </div>
-            ))}
+                  <div className="flex-1">
+                    <div className={`${fontSize.body} font-semibold`}>{r.title}</div>
+                    <div className={`${fontSize.small} ${theme.textSecondary}`}>
+                      {r.caloriesPerServing || r.calories} {t("ккал", "kcal")} • {r.time} {t("мин", "min")}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => { addMealToHistory(r, addMealCategory); onClose(); }}
+                    className={`ml-3 px-4 py-2 rounded-xl ${fontSize.small} ${theme.accent} ${theme.accentHover} text-white flex items-center gap-2 flex-shrink-0`}
+                  >
+                    <FaPlus />
+                    {t("Добавить", "Add")}
+                  </button>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </div>
