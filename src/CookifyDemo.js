@@ -36,7 +36,7 @@ import { useFavorites }     from './hooks/useFavorites';
 
 // 🔥 Firebase
 import { auth } from './firebase.js';
-import { getRecipes } from './firebase.js';
+import { getRecipes, setUserProfile } from './firebase.js';
 
 // 🔧 Временные точечные исправления некорректных типов блюд из базы рецептов
 const RECIPE_TYPE_FIXES = {
@@ -442,6 +442,7 @@ export default function CookifyDemo() {
     reader.readAsDataURL(file);
   };
 
+  // ✅ ИСПРАВЛЕНО: handleRegister теперь сохраняет профиль в Firestore
   const handleRegister = (e) => {
     e.preventDefault();
     const form = new FormData(e.target);
@@ -458,8 +459,15 @@ export default function CookifyDemo() {
     setRegistered(true);
     setShowRegisterForm(false);
     setIsEditingProfile(false);
+    // Сохраняем в localStorage (резервная копия)
     if (data.login) {
       localStorage.setItem(`cookify_userdata_${data.login}`, JSON.stringify(data));
+    }
+    // ✅ Сохраняем профиль в Firestore — чтобы данные не пропадали при обновлении страницы
+    if (firebaseUser?.uid) {
+      setUserProfile(firebaseUser.uid, data).catch(err => {
+        console.error('Ошибка сохранения профиля в Firestore:', err);
+      });
     }
   };
 
