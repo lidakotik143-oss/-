@@ -22,6 +22,9 @@ import SearchScreen from "./components/SearchScreen";
 import AccountScreen from "./components/AccountScreen";
 import AddRecipeModal from "./components/AddRecipeModal";
 
+// 🌐 Context
+import { AppContext } from './context/AppContext';
+
 // 🔥 Firebase
 import { auth } from './firebase.js';
 import { onAuthStateChanged } from 'firebase/auth';
@@ -844,6 +847,186 @@ export default function CookifyDemo() {
     return results;
   }, [allRecipes, searchQuery, searchMode, excludeIngredients, selectedFilters]);
 
+  // =================== ЗНАЧЕНИЕ КОНТЕКСТА ===================
+  // Все глобальные данные и хелперы, которые нужны дочерним компонентам.
+  // Компоненты используют useApp() вместо получения этого через пропсы.
+  const contextValue = {
+    // UI настройки
+    theme,
+    font,
+    fontSize,
+    language,
+    setLanguage,
+    unitSystem,
+    setUnitSystem,
+    toggleUnitSystem,
+    currentTheme,
+    setCurrentTheme,
+    currentFont,
+    setCurrentFont,
+    currentFontSize,
+    setCurrentFontSize,
+    showCustomization,
+    setShowCustomization,
+    THEMES,
+    FONTS,
+    FONT_SIZES,
+
+    // Хелпер перевода
+    t,
+
+    // Пользователь
+    firebaseUser,
+    userData,
+    setUserData,
+    registered,
+    setRegistered,
+    isEditingProfile,
+    setIsEditingProfile,
+    showRegisterForm,
+    setShowRegisterForm,
+    handleRegister,
+    handleStartEditProfile,
+    handleLogout,
+    handleAvatarUpload,
+    getDisplayWeight,
+    getDisplayHeight,
+    convertWeight,
+    convertHeight,
+    GOALS,
+    LIFESTYLE,
+    allergyList,
+
+    // Навигация
+    activeScreen,
+    setActiveScreen,
+    accountTab,
+    setAccountTab,
+
+    // Рецепты
+    allRecipes,
+    DISH_TYPE_LABELS,
+    DIET_LABELS,
+    DIFFICULTY_LABELS,
+    getDishTypeInfo,
+    normalize,
+    TYPE_OPTIONS,
+    DIET_OPTIONS,
+    DIFFICULTY_OPTIONS,
+    TAG_OPTIONS,
+    CUISINE_OPTIONS,
+    getSortedRecipesForPlanner,
+    onAddRecipeClick: handleAddRecipeClick,
+
+    // Поиск
+    searchQuery,
+    setSearchQuery,
+    searchMode,
+    setSearchMode,
+    excludeIngredients,
+    setExcludeIngredients,
+    showFilters,
+    setShowFilters,
+    selectedFilters,
+    setSelectedFilters,
+    filteredResults,
+
+    // Просмотр рецепта
+    selectedRecipe,
+    setSelectedRecipe,
+    selectedRecipeVariantKey,
+    setSelectedRecipeVariantKey,
+    currentServings,
+    setCurrentServings,
+    userSubstitutions,
+    setUserSubstitutions,
+    openSubPicker,
+    setOpenSubPicker,
+
+    // История питания
+    mealHistory,
+    setMealHistory,
+    addMealToHistory,
+    removeMealFromHistory,
+    viewPeriod,
+    setViewPeriod,
+    selectedDate,
+    setSelectedDate,
+    selectedWeekDay,
+    setSelectedWeekDay,
+    getFilteredHistory,
+    getMealsForDay,
+    calculateDayCalories,
+    calculatePeriodNutrition,
+    calculatePeriodStats,
+    getPeriodDisplayText,
+    todayNutrition,
+    showAddMealModal,
+    setShowAddMealModal,
+    addMealCategory,
+    setAddMealCategory,
+
+    // Планировщик
+    weeklyPlan,
+    setWeeklyPlan,
+    plannerWeekDate,
+    setPlannerWeekDate,
+    showPlannerModal,
+    setShowPlannerModal,
+    plannerModalDate,
+    setPlannerModalDate,
+    plannerModalCategory,
+    setPlannerModalCategory,
+    addRecipeToPlanner,
+    removeRecipeFromPlanner,
+    getPlannerRecipes,
+    calculatePlannerDayCalories,
+
+    // Список покупок
+    shoppingList,
+    setShoppingList,
+    generateShoppingListFromPlanner,
+
+    // Даты
+    MEAL_CATEGORIES,
+    MEAL_LABELS,
+    WEEKDAY_NAMES,
+    WEEKDAY_SHORT,
+    MONTH_NAMES,
+    getWeekDays,
+    getWeekRange,
+    formatDate,
+    addDays,
+    addWeeks,
+    addMonths,
+    setMonthYear,
+
+    // Уведомления
+    showNotificationModal,
+    setShowNotificationModal,
+    notificationTitle,
+    setNotificationTitle,
+    notificationMessage,
+    setNotificationMessage,
+
+    // Модалка вариантов
+    showVariantSelectionModal,
+    setShowVariantSelectionModal,
+    variantSelectionRecipe,
+    setVariantSelectionRecipe,
+    variantSelectionCallback,
+    setVariantSelectionCallback,
+
+    // Добавление рецепта
+    showAddRecipeModal,
+    setShowAddRecipeModal,
+
+    // Устаревший план приёма пищи (оставлен для совместимости)
+    mealPlan,
+    setMealPlan,
+    addToMealPlan,
+  };
+
   if (authLoading) {
     return (
       <div className={`min-h-screen ${THEMES.olive.bg} flex items-center justify-center`}>
@@ -853,310 +1036,312 @@ export default function CookifyDemo() {
   }
 
   return (
-    <div className={`min-h-screen ${theme.bg} ${theme.text} ${font.class} p-4`}>
-      <Header
-        activeScreen={activeScreen}
-        setActiveScreen={setActiveScreen}
-        language={language}
-        setLanguage={setLanguage}
-        theme={theme}
-        fontSize={fontSize}
-      />
-
-      <NotificationModal
-        isOpen={showNotificationModal}
-        onClose={() => setShowNotificationModal(false)}
-        title={notificationTitle}
-        message={notificationMessage}
-        theme={theme}
-        fontSize={fontSize}
-        language={language}
-      />
-
-      {showVariantSelectionModal && variantSelectionRecipe && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" onClick={() => setShowVariantSelectionModal(false)}>
-          <div className={`${theme.cardBg} ${fontSize.body} rounded-2xl max-w-md w-full p-6`} onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-start justify-between mb-4">
-              <h3 className={`${fontSize.cardTitle} font-bold ${theme.headerText}`}>{t("Выберите вариант рецепта", "Choose recipe variant")}</h3>
-              <button onClick={() => setShowVariantSelectionModal(false)} className={`${theme.textSecondary} hover:${theme.text} transition`}><FaTimes size={20} /></button>
-            </div>
-            <p className={`${fontSize.small} ${theme.textSecondary} mb-4`}>{variantSelectionRecipe.title}</p>
-            <div className="space-y-2">
-              {variantSelectionRecipe.variants.map(variant => (
-                <button key={variant.key} onClick={() => variantSelectionCallback && variantSelectionCallback(variant.key)}
-                  className={`w-full p-3 rounded-lg ${theme.accent} ${theme.accentHover} text-white transition ${fontSize.body}`}>
-                  {language === "ru" ? (variant.labelRu || variant.key) : (variant.labelEn || variant.key)}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {selectedRecipe && (() => {
-        const dishTypeInfo = getDishTypeInfo(selectedRecipe.type);
-        const variants = Array.isArray(selectedRecipe.variants) ? selectedRecipe.variants : [];
-        const activeVariant = variants.length ? (variants.find(v => v.key === selectedRecipeVariantKey) || variants[0]) : null;
-        const activeRecipe = activeVariant || selectedRecipe;
-        const subsKey = getRecipeSubKey(selectedRecipe.id, activeVariant?.key || null);
-        const recipeSubs = userSubstitutions?.[subsKey] || {};
-        const recipeTime = activeVariant?.time ?? selectedRecipe.time;
-        const recipeCalories = activeVariant?.caloriesPerServing ?? activeVariant?.calories ?? selectedRecipe.caloriesPerServing ?? selectedRecipe.calories;
-        const timeInfo = getTimeCategory(recipeTime);
-        const timeMinutes = parseInt(recipeTime, 10);
-        const progressPercentage = Math.min((timeMinutes / 120) * 100, 100);
-        const baseServings = selectedRecipe.servings ?? 2;
-        const closeModal = () => { setSelectedRecipe(null); setSelectedRecipeVariantKey(null); };
-        const servingsMultiplier = currentServings / baseServings;
-        const nutritionInfo = calculateRecipeNutrition(activeRecipe.ingredients || [], baseServings);
-        const totalKcal = Math.round((nutritionInfo.total.calories || recipeCalories * baseServings || 0) * servingsMultiplier);
-        const totalProtein = Math.round((nutritionInfo.total.protein || 0) * servingsMultiplier);
-        const totalFat = Math.round((nutritionInfo.total.fat || 0) * servingsMultiplier);
-        const totalCarbs = Math.round((nutritionInfo.total.carbs || 0) * servingsMultiplier);
-
-        const updateSubstitution = (subId, value) => {
-          setUserSubstitutions(prev => {
-            const all = { ...(prev || {}) };
-            const curRecipeSubs = { ...(all[subsKey] || {}) };
-            if (!value) { delete curRecipeSubs[subId]; } else { curRecipeSubs[subId] = value; }
-            if (Object.keys(curRecipeSubs).length === 0) { delete all[subsKey]; } else { all[subsKey] = curRecipeSubs; }
-            saveUserSubstitutions(all);
-            return all;
-          });
-        };
-
-        const toggleSubPicker = (subId) => { setOpenSubPicker(prev => (prev === subId ? null : subId)); };
-
-        const scaleIngredientQuantity = (quantity) => {
-          if (!quantity) return '';
-          const num = parseFloat(quantity.toString().replace(',', '.'));
-          if (isNaN(num)) return quantity;
-          const scaled = num * servingsMultiplier;
-          return scaled % 1 === 0 ? scaled.toString() : scaled.toFixed(1).replace('.', ',');
-        };
-
-        return (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" onClick={closeModal}>
-            <div className={`${theme.cardBg} ${fontSize.body} rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6`} onClick={(e) => e.stopPropagation()}>
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex-1">
-                  <h2 className={`${fontSize.subheading} font-bold ${theme.headerText}`}>{selectedRecipe.title}</h2>
-                  {selectedRecipe.type && <span className={`${dishTypeInfo.color} text-white px-3 py-1 rounded-full ${fontSize.tiny} font-semibold inline-block mt-2`}>{dishTypeInfo.label}</span>}
-                  {variants.length > 0 && (
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {variants.map(v => {
-                        const isActive = v.key === activeVariant?.key;
-                        return (
-                          <button key={v.key} onClick={() => setSelectedRecipeVariantKey(v.key)}
-                            className={`px-3 py-1 rounded-full ${fontSize.small} transition ${isActive ? `${theme.accent} text-white` : `${theme.cardBg} border ${theme.border}`}`}>
-                            {language === "ru" ? (v.labelRu || v.key) : (v.labelEn || v.key)}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-                <button onClick={closeModal} className={`${theme.textSecondary} hover:${theme.text} transition ml-4`}><FaTimes size={24} /></button>
-              </div>
-
-              <div className={`${theme.cardBg} border-2 rounded-xl p-4 mb-6 shadow-md`} style={{ borderColor: timeInfo.color }}>
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-3">
-                    <span className="text-4xl">{timeInfo.emoji}</span>
-                    <div>
-                      <div className={`${fontSize.body} font-bold`} style={{ color: timeInfo.color }}>{timeMinutes} {t("минут", "minutes")}</div>
-                      <div className={`${fontSize.small} ${theme.textSecondary}`}>{language === "ru" ? timeInfo.label_ru : timeInfo.label_en}</div>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className={`${fontSize.tiny} ${theme.textSecondary} mb-1`}>{t("Всего", "Total")}</div>
-                    <div className={`${fontSize.body} font-bold ${theme.accentText}`}>{totalKcal} {t("ккал", "kcal")}</div>
-                    <div className="flex items-center justify-end gap-2 mt-2">
-                      <button onClick={() => setCurrentServings(Math.max(1, currentServings - 1))} className={`w-6 h-6 flex items-center justify-center rounded-full ${theme.accent} text-white hover:opacity-80 transition`} disabled={currentServings <= 1}><FaMinus size={10} /></button>
-                      <span className={`${fontSize.small} font-semibold ${theme.text} min-w-[60px] text-center`}>{currentServings} {t(currentServings === 1 ? "порция" : "порции", currentServings === 1 ? "serving" : "servings")}</span>
-                      <button onClick={() => setCurrentServings(currentServings + 1)} className={`w-6 h-6 flex items-center justify-center rounded-full ${theme.accent} text-white hover:opacity-80 transition`}><FaPlus size={10} /></button>
-                    </div>
-                  </div>
-                </div>
-                <div className="grid grid-cols-3 gap-2 mb-3">
-                  <div className={`${theme.cardBg} rounded-lg p-2 text-center border ${theme.border}`}><div className={`${fontSize.tiny} ${theme.textSecondary}`}>{t("Белки", "Protein")}</div><div className={`${fontSize.small} font-bold ${theme.text}`}>{totalProtein}{t("г", "g")}</div></div>
-                  <div className={`${theme.cardBg} rounded-lg p-2 text-center border ${theme.border}`}><div className={`${fontSize.tiny} ${theme.textSecondary}`}>{t("Жиры", "Fat")}</div><div className={`${fontSize.small} font-bold ${theme.text}`}>{totalFat}{t("г", "g")}</div></div>
-                  <div className={`${theme.cardBg} rounded-lg p-2 text-center border ${theme.border}`}><div className={`${fontSize.tiny} ${theme.textSecondary}`}>{t("Углеводы", "Carbs")}</div><div className={`${fontSize.small} font-bold ${theme.text}`}>{totalCarbs}{t("г", "g")}</div></div>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2.5 mb-2">
-                  <div className="h-2.5 rounded-full transition-all duration-500" style={{ width: `${progressPercentage}%`, backgroundColor: timeInfo.color }}></div>
-                </div>
-                <div className={`${fontSize.tiny} ${theme.textSecondary} text-center`}>{t(`${timeMinutes <= 15 ? 'Быстрое приготовление!' : timeMinutes <= 40 ? 'Умеренное время' : 'Требуется терпение'}`, `${timeMinutes <= 15 ? 'Quick cooking!' : timeMinutes <= 40 ? 'Moderate time' : 'Takes patience'}`)}</div>
-              </div>
-
-              <div className={`${theme.textSecondary} ${fontSize.small} mb-4`}>{t("Сложность:", "Difficulty:")} {selectedRecipe.difficulty}</div>
-
-              <div className="mb-6">
-                <h3 className={`${fontSize.cardTitle} font-semibold mb-2 ${theme.headerText}`}>{t("Ингредиенты:", "Ingredients:")}</h3>
-                <ul className={`space-y-2 ${fontSize.body}`}>
-                  {(activeRecipe.ingredients || []).map((ing, i) => {
-                    const effectiveName = getEffectiveIngredientName(ing, recipeSubs);
-                    const low = (effectiveName || "").toLowerCase();
-                    const isAllergy = allergyList.some(a => a && low.includes(a));
-                    const isObj = typeof ing === 'object';
-                    const hasSubs = isObj && ing.subId && Array.isArray(ing.substitutes) && ing.substitutes.length > 0;
-                    const currentChoice = isObj && ing.subId ? (recipeSubs?.[ing.subId] || "") : "";
-                    const meta = isObj ? (ing.meta || "") : "";
-                    const scaledQuantity = isObj && ing.quantity ? scaleIngredientQuantity(ing.quantity) : '';
-                    const scaledUnit = isObj ? (ing.unit || '') : '';
-                    let displayText = '';
-                    if (scaledQuantity && scaledUnit) {
-                      const converted = convertToGrams(scaledQuantity, scaledUnit, effectiveName);
-                      displayText = converted.displayText;
-                    }
-                    const canToggle = hasSubs && !isAllergy;
-                    const isOpen = hasSubs && openSubPicker === ing.subId;
-                    return (
-                      <li key={i} className={isAllergy ? "text-red-600 font-semibold" : ""}>
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="flex-1 text-left">
-                            <div className="flex flex-wrap items-baseline gap-2">
-                              <span>{effectiveName}</span>
-                              {meta && <span className={`inline-flex items-center px-2 py-0.5 rounded-full bg-gray-200 text-gray-700 ${fontSize.tiny} font-medium`}>{meta}</span>}
-                              {displayText && <span className={`${theme.textSecondary}`}>— {displayText}</span>}
-                            </div>
-                          </div>
-                          {hasSubs && (
-                            <div className="flex items-center gap-2">
-                              <button type="button" onClick={() => canToggle && toggleSubPicker(ing.subId)} disabled={!canToggle}
-                                className={canToggle ? `w-7 h-7 flex items-center justify-center rounded-full border ${theme.border} ${theme.cardBg} hover:opacity-80 transition` : `w-7 h-7 flex items-center justify-center rounded-full border ${theme.border} opacity-40 cursor-not-allowed`}
-                                title={canToggle ? t("Показать варианты", "Show options") : t("Недоступно для аллергенов", "Unavailable for allergens")}>
-                                <span className={`${fontSize.small} leading-none`}>{isOpen ? "▴" : "▾"}</span>
-                              </button>
-                              <span className={`${fontSize.tiny} ${theme.textSecondary} mt-1 whitespace-nowrap`}>{currentChoice ? t("Заменено", "Replaced") : t("Можно заменить", "Replaceable")}</span>
-                            </div>
-                          )}
-                        </div>
-                        {hasSubs && isOpen && (
-                          <div className={`mt-2 ml-1 p-3 rounded-xl border ${theme.border} ${theme.cardBg}`}>
-                            <div className={`mb-2 ${fontSize.small} ${theme.textSecondary}`}>{t("Выберите замену:", "Choose a substitution:")}</div>
-                            <div className="flex flex-wrap gap-2">
-                              <button type="button" onClick={() => { updateSubstitution(ing.subId, ""); setOpenSubPicker(null); }} className={`px-3 py-1 rounded-full border ${theme.border} ${fontSize.small} hover:opacity-80 transition`}>{t("Не заменять", "No substitution")}</button>
-                              {ing.substitutes.map((opt) => (
-                                <button key={opt} type="button" onClick={() => { updateSubstitution(ing.subId, opt); setOpenSubPicker(null); }} className={`px-3 py-1 rounded-full ${theme.accent} ${theme.accentHover} text-white ${fontSize.small} transition`}>{opt}</button>
-                              ))}
-                            </div>
-                            {currentChoice && <div className={`mt-2 ${fontSize.tiny} ${theme.textSecondary}`}>{t("Текущая замена:", "Current:")} {currentChoice}</div>}
-                          </div>
-                        )}
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
-
-              <div>
-                <h3 className={`${fontSize.cardTitle} font-semibold mb-3 ${theme.headerText}`}>{t("Как готовить:", "How to cook:")}</h3>
-                <ol className={`space-y-3 ${fontSize.body}`}>
-                  {(activeRecipe.instructions || []).map((step, i) => (
-                    <li key={i} className="flex gap-3">
-                      <span className={`${theme.accent} text-white rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0 ${fontSize.small} font-bold`}>{i + 1}</span>
-                      <span>{step}</span>
-                    </li>
-                  ))}
-                </ol>
-              </div>
-
-              <div className="mt-6 flex gap-2 flex-wrap">
-                {(selectedRecipe.tags || []).map((tag, i) => <span key={i} className={`px-3 py-1 ${theme.accent} text-white rounded-full ${fontSize.small}`}>{tag}</span>)}
-              </div>
-
-              {registered && (
-                <div className="mt-6 border-t pt-4">
-                  <h4 className={`${fontSize.body} font-semibold mb-3`}>{t("Добавить в историю питания:", "Add to meal history:")}</h4>
-                  <div className="flex gap-2 flex-wrap">
-                    {MEAL_CATEGORIES.map(cat => (
-                      <button key={cat} onClick={() => { addMealToHistory(selectedRecipe, cat, new Date().toISOString().split('T')[0], selectedRecipeVariantKey); closeModal(); }}
-                        className={`px-3 py-1 rounded ${fontSize.small} ${theme.accent} ${theme.accentHover} text-white`}>{MEAL_LABELS[cat]}</button>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        );
-      })()}
-
-      {activeScreen === "home" && (
-        <HomeScreen
-          t={t} theme={theme} fontSize={fontSize} language={language} setLanguage={setLanguage}
-          setActiveScreen={setActiveScreen} userData={userData} todayNutrition={todayNutrition}
-          setShowAddMealModal={setShowAddMealModal} setAccountTab={setAccountTab}
-          SAMPLE_RECIPES={allRecipes}
+    <AppContext.Provider value={contextValue}>
+      <div className={`min-h-screen ${theme.bg} ${theme.text} ${font.class} p-4`}>
+        <Header
+          activeScreen={activeScreen}
+          setActiveScreen={setActiveScreen}
+          language={language}
+          setLanguage={setLanguage}
+          theme={theme}
+          fontSize={fontSize}
         />
-      )}
 
-      {activeScreen === "search" && (
-        <SearchScreen
-          t={t} theme={theme} fontSize={fontSize} searchQuery={searchQuery} setSearchQuery={setSearchQuery}
-          searchMode={searchMode} setSearchMode={setSearchMode} excludeIngredients={excludeIngredients}
-          setExcludeIngredients={setExcludeIngredients} showFilters={showFilters} setShowFilters={setShowFilters}
-          selectedFilters={selectedFilters} setSelectedFilters={setSelectedFilters} TYPE_OPTIONS={TYPE_OPTIONS}
-          DIET_OPTIONS={DIET_OPTIONS} DIFFICULTY_OPTIONS={DIFFICULTY_OPTIONS} TAG_OPTIONS={TAG_OPTIONS}
-          CUISINE_OPTIONS={CUISINE_OPTIONS} DISH_TYPE_LABELS={DISH_TYPE_LABELS} DIET_LABELS={DIET_LABELS}
-          DIFFICULTY_LABELS={DIFFICULTY_LABELS} language={language} normalize={normalize} filteredResults={filteredResults}
-          getDishTypeInfo={getDishTypeInfo} allergyList={allergyList} setSelectedRecipe={setSelectedRecipe}
-          setSelectedRecipeVariantKey={setSelectedRecipeVariantKey} userSubstitutions={userSubstitutions}
-          onAddRecipeClick={handleAddRecipeClick}
-        />
-      )}
-
-      {activeScreen === "account" && (
-        <AccountScreen
-          t={t} theme={theme} fontSize={fontSize} language={language} registered={registered} userData={userData}
-          unitSystem={unitSystem} currentTheme={currentTheme} currentFont={currentFont} currentFontSize={currentFontSize}
-          showCustomization={showCustomization} setShowCustomization={setShowCustomization}
-          showRegisterForm={showRegisterForm} setShowRegisterForm={setShowRegisterForm}
-          isEditingProfile={isEditingProfile} setIsEditingProfile={setIsEditingProfile} GOALS={GOALS} LIFESTYLE={LIFESTYLE}
-          accountTab={accountTab} setAccountTab={setAccountTab} viewPeriod={viewPeriod} setViewPeriod={setViewPeriod}
-          selectedDate={selectedDate} setSelectedDate={setSelectedDate} selectedWeekDay={selectedWeekDay}
-          setSelectedWeekDay={setSelectedWeekDay} MONTH_NAMES={MONTH_NAMES} WEEKDAY_NAMES={WEEKDAY_NAMES}
-          WEEKDAY_SHORT={WEEKDAY_SHORT} MEAL_CATEGORIES={MEAL_CATEGORIES} MEAL_LABELS={MEAL_LABELS}
-          SAMPLE_RECIPES={allRecipes} getFilteredHistory={getFilteredHistory} getMealsForDay={getMealsForDay}
-          calculateDayCalories={calculateDayCalories} calculatePeriodStats={calculatePeriodStats}
-          calculatePeriodNutrition={calculatePeriodNutrition} getWeekDays={getWeekDays} getWeekRange={getWeekRange}
-          formatDate={formatDate} getPeriodDisplayText={getPeriodDisplayText} addDays={addDays} addWeeks={addWeeks}
-          addMonths={addMonths} setMonthYear={setMonthYear} plannerWeekDate={plannerWeekDate}
-          setPlannerWeekDate={setPlannerWeekDate} weeklyPlan={weeklyPlan} getPlannerRecipes={getPlannerRecipes}
-          calculatePlannerDayCalories={calculatePlannerDayCalories} showAddMealModal={showAddMealModal}
-          setShowAddMealModal={setShowAddMealModal} addMealCategory={addMealCategory} setAddMealCategory={setAddMealCategory}
-          showPlannerModal={showPlannerModal} setShowPlannerModal={setShowPlannerModal} plannerModalDate={plannerModalDate}
-          setPlannerModalDate={setPlannerModalDate} plannerModalCategory={plannerModalCategory}
-          setPlannerModalCategory={setPlannerModalCategory} getSortedRecipesForPlanner={getSortedRecipesForPlanner}
-          handleStartEditProfile={handleStartEditProfile} handleLogout={handleLogout} toggleUnitSystem={toggleUnitSystem}
-          handleRegister={handleRegister} handleAvatarUpload={handleAvatarUpload} setCurrentTheme={setCurrentTheme}
-          setCurrentFont={setCurrentFont} setCurrentFontSize={setCurrentFontSize} getDisplayWeight={getDisplayWeight}
-          getDisplayHeight={getDisplayHeight} removeMealFromHistory={removeMealFromHistory}
-          addMealToHistory={addMealToHistory} addRecipeToPlanner={addRecipeToPlanner}
-          removeRecipeFromPlanner={removeRecipeFromPlanner} setSelectedRecipe={setSelectedRecipe}
-          setSelectedRecipeVariantKey={setSelectedRecipeVariantKey} DISH_TYPE_LABELS={DISH_TYPE_LABELS}
-          normalize={normalize} THEMES={THEMES} FONTS={FONTS} FONT_SIZES={FONT_SIZES}
-          convertWeight={convertWeight} convertHeight={convertHeight} shoppingList={shoppingList}
-          setShoppingList={setShoppingList} generateShoppingListFromPlanner={generateShoppingListFromPlanner}
-          setUserData={setUserData} setRegistered={setRegistered} setMealHistory={setMealHistory}
-          setWeeklyPlan={setWeeklyPlan}
-        />
-      )}
-
-      {showAddRecipeModal && firebaseUser && (
-        <AddRecipeModal
+        <NotificationModal
+          isOpen={showNotificationModal}
+          onClose={() => setShowNotificationModal(false)}
+          title={notificationTitle}
+          message={notificationMessage}
           theme={theme}
           fontSize={fontSize}
           language={language}
-          firebaseUser={firebaseUser}
-          onClose={() => setShowAddRecipeModal(false)}
-          onAdded={() => {
-            getRecipes()
-              .then(recipes => setCommunityRecipes(recipes))
-              .catch(() => {});
-          }}
         />
-      )}
-    </div>
+
+        {showVariantSelectionModal && variantSelectionRecipe && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" onClick={() => setShowVariantSelectionModal(false)}>
+            <div className={`${theme.cardBg} ${fontSize.body} rounded-2xl max-w-md w-full p-6`} onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-start justify-between mb-4">
+                <h3 className={`${fontSize.cardTitle} font-bold ${theme.headerText}`}>{t("Выберите вариант рецепта", "Choose recipe variant")}</h3>
+                <button onClick={() => setShowVariantSelectionModal(false)} className={`${theme.textSecondary} hover:${theme.text} transition`}><FaTimes size={20} /></button>
+              </div>
+              <p className={`${fontSize.small} ${theme.textSecondary} mb-4`}>{variantSelectionRecipe.title}</p>
+              <div className="space-y-2">
+                {variantSelectionRecipe.variants.map(variant => (
+                  <button key={variant.key} onClick={() => variantSelectionCallback && variantSelectionCallback(variant.key)}
+                    className={`w-full p-3 rounded-lg ${theme.accent} ${theme.accentHover} text-white transition ${fontSize.body}`}>
+                    {language === "ru" ? (variant.labelRu || variant.key) : (variant.labelEn || variant.key)}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {selectedRecipe && (() => {
+          const dishTypeInfo = getDishTypeInfo(selectedRecipe.type);
+          const variants = Array.isArray(selectedRecipe.variants) ? selectedRecipe.variants : [];
+          const activeVariant = variants.length ? (variants.find(v => v.key === selectedRecipeVariantKey) || variants[0]) : null;
+          const activeRecipe = activeVariant || selectedRecipe;
+          const subsKey = getRecipeSubKey(selectedRecipe.id, activeVariant?.key || null);
+          const recipeSubs = userSubstitutions?.[subsKey] || {};
+          const recipeTime = activeVariant?.time ?? selectedRecipe.time;
+          const recipeCalories = activeVariant?.caloriesPerServing ?? activeVariant?.calories ?? selectedRecipe.caloriesPerServing ?? selectedRecipe.calories;
+          const timeInfo = getTimeCategory(recipeTime);
+          const timeMinutes = parseInt(recipeTime, 10);
+          const progressPercentage = Math.min((timeMinutes / 120) * 100, 100);
+          const baseServings = selectedRecipe.servings ?? 2;
+          const closeModal = () => { setSelectedRecipe(null); setSelectedRecipeVariantKey(null); };
+          const servingsMultiplier = currentServings / baseServings;
+          const nutritionInfo = calculateRecipeNutrition(activeRecipe.ingredients || [], baseServings);
+          const totalKcal = Math.round((nutritionInfo.total.calories || recipeCalories * baseServings || 0) * servingsMultiplier);
+          const totalProtein = Math.round((nutritionInfo.total.protein || 0) * servingsMultiplier);
+          const totalFat = Math.round((nutritionInfo.total.fat || 0) * servingsMultiplier);
+          const totalCarbs = Math.round((nutritionInfo.total.carbs || 0) * servingsMultiplier);
+
+          const updateSubstitution = (subId, value) => {
+            setUserSubstitutions(prev => {
+              const all = { ...(prev || {}) };
+              const curRecipeSubs = { ...(all[subsKey] || {}) };
+              if (!value) { delete curRecipeSubs[subId]; } else { curRecipeSubs[subId] = value; }
+              if (Object.keys(curRecipeSubs).length === 0) { delete all[subsKey]; } else { all[subsKey] = curRecipeSubs; }
+              saveUserSubstitutions(all);
+              return all;
+            });
+          };
+
+          const toggleSubPicker = (subId) => { setOpenSubPicker(prev => (prev === subId ? null : subId)); };
+
+          const scaleIngredientQuantity = (quantity) => {
+            if (!quantity) return '';
+            const num = parseFloat(quantity.toString().replace(',', '.'));
+            if (isNaN(num)) return quantity;
+            const scaled = num * servingsMultiplier;
+            return scaled % 1 === 0 ? scaled.toString() : scaled.toFixed(1).replace('.', ',');
+          };
+
+          return (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" onClick={closeModal}>
+              <div className={`${theme.cardBg} ${fontSize.body} rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6`} onClick={(e) => e.stopPropagation()}>
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex-1">
+                    <h2 className={`${fontSize.subheading} font-bold ${theme.headerText}`}>{selectedRecipe.title}</h2>
+                    {selectedRecipe.type && <span className={`${dishTypeInfo.color} text-white px-3 py-1 rounded-full ${fontSize.tiny} font-semibold inline-block mt-2`}>{dishTypeInfo.label}</span>}
+                    {variants.length > 0 && (
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {variants.map(v => {
+                          const isActive = v.key === activeVariant?.key;
+                          return (
+                            <button key={v.key} onClick={() => setSelectedRecipeVariantKey(v.key)}
+                              className={`px-3 py-1 rounded-full ${fontSize.small} transition ${isActive ? `${theme.accent} text-white` : `${theme.cardBg} border ${theme.border}`}`}>
+                              {language === "ru" ? (v.labelRu || v.key) : (v.labelEn || v.key)}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                  <button onClick={closeModal} className={`${theme.textSecondary} hover:${theme.text} transition ml-4`}><FaTimes size={24} /></button>
+                </div>
+
+                <div className={`${theme.cardBg} border-2 rounded-xl p-4 mb-6 shadow-md`} style={{ borderColor: timeInfo.color }}>
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      <span className="text-4xl">{timeInfo.emoji}</span>
+                      <div>
+                        <div className={`${fontSize.body} font-bold`} style={{ color: timeInfo.color }}>{timeMinutes} {t("минут", "minutes")}</div>
+                        <div className={`${fontSize.small} ${theme.textSecondary}`}>{language === "ru" ? timeInfo.label_ru : timeInfo.label_en}</div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className={`${fontSize.tiny} ${theme.textSecondary} mb-1`}>{t("Всего", "Total")}</div>
+                      <div className={`${fontSize.body} font-bold ${theme.accentText}`}>{totalKcal} {t("ккал", "kcal")}</div>
+                      <div className="flex items-center justify-end gap-2 mt-2">
+                        <button onClick={() => setCurrentServings(Math.max(1, currentServings - 1))} className={`w-6 h-6 flex items-center justify-center rounded-full ${theme.accent} text-white hover:opacity-80 transition`} disabled={currentServings <= 1}><FaMinus size={10} /></button>
+                        <span className={`${fontSize.small} font-semibold ${theme.text} min-w-[60px] text-center`}>{currentServings} {t(currentServings === 1 ? "порция" : "порции", currentServings === 1 ? "serving" : "servings")}</span>
+                        <button onClick={() => setCurrentServings(currentServings + 1)} className={`w-6 h-6 flex items-center justify-center rounded-full ${theme.accent} text-white hover:opacity-80 transition`}><FaPlus size={10} /></button>
+                      </div>
+                    </div>
+  </div>
+                  <div className="grid grid-cols-3 gap-2 mb-3">
+                    <div className={`${theme.cardBg} rounded-lg p-2 text-center border ${theme.border}`}><div className={`${fontSize.tiny} ${theme.textSecondary}`}>{t("Белки", "Protein")}</div><div className={`${fontSize.small} font-bold ${theme.text}`}>{totalProtein}{t("г", "g")}</div></div>
+                    <div className={`${theme.cardBg} rounded-lg p-2 text-center border ${theme.border}`}><div className={`${fontSize.tiny} ${theme.textSecondary}`}>{t("Жиры", "Fat")}</div><div className={`${fontSize.small} font-bold ${theme.text}`}>{totalFat}{t("г", "g")}</div></div>
+                    <div className={`${theme.cardBg} rounded-lg p-2 text-center border ${theme.border}`}><div className={`${fontSize.tiny} ${theme.textSecondary}`}>{t("Углеводы", "Carbs")}</div><div className={`${fontSize.small} font-bold ${theme.text}`}>{totalCarbs}{t("г", "g")}</div></div>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2.5 mb-2">
+                    <div className="h-2.5 rounded-full transition-all duration-500" style={{ width: `${progressPercentage}%`, backgroundColor: timeInfo.color }}></div>
+                  </div>
+                  <div className={`${fontSize.tiny} ${theme.textSecondary} text-center`}>{t(`${timeMinutes <= 15 ? 'Быстрое приготовление!' : timeMinutes <= 40 ? 'Умеренное время' : 'Требуется терпение'}`, `${timeMinutes <= 15 ? 'Quick cooking!' : timeMinutes <= 40 ? 'Moderate time' : 'Takes patience'}`)}</div>
+                </div>
+
+                <div className={`${theme.textSecondary} ${fontSize.small} mb-4`}>{t("Сложность:", "Difficulty:")} {selectedRecipe.difficulty}</div>
+
+                <div className="mb-6">
+                  <h3 className={`${fontSize.cardTitle} font-semibold mb-2 ${theme.headerText}`}>{t("Ингредиенты:", "Ingredients:")}</h3>
+                  <ul className={`space-y-2 ${fontSize.body}`}>
+                    {(activeRecipe.ingredients || []).map((ing, i) => {
+                      const effectiveName = getEffectiveIngredientName(ing, recipeSubs);
+                      const low = (effectiveName || "").toLowerCase();
+                      const isAllergy = allergyList.some(a => a && low.includes(a));
+                      const isObj = typeof ing === 'object';
+                      const hasSubs = isObj && ing.subId && Array.isArray(ing.substitutes) && ing.substitutes.length > 0;
+                      const currentChoice = isObj && ing.subId ? (recipeSubs?.[ing.subId] || "") : "";
+                      const meta = isObj ? (ing.meta || "") : "";
+                      const scaledQuantity = isObj && ing.quantity ? scaleIngredientQuantity(ing.quantity) : '';
+                      const scaledUnit = isObj ? (ing.unit || '') : '';
+                      let displayText = '';
+                      if (scaledQuantity && scaledUnit) {
+                        const converted = convertToGrams(scaledQuantity, scaledUnit, effectiveName);
+                        displayText = converted.displayText;
+                      }
+                      const canToggle = hasSubs && !isAllergy;
+                      const isOpen = hasSubs && openSubPicker === ing.subId;
+                      return (
+                        <li key={i} className={isAllergy ? "text-red-600 font-semibold" : ""}>
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex-1 text-left">
+                              <div className="flex flex-wrap items-baseline gap-2">
+                                <span>{effectiveName}</span>
+                                {meta && <span className={`inline-flex items-center px-2 py-0.5 rounded-full bg-gray-200 text-gray-700 ${fontSize.tiny} font-medium`}>{meta}</span>}
+                                {displayText && <span className={`${theme.textSecondary}`}>— {displayText}</span>}
+                              </div>
+                            </div>
+                            {hasSubs && (
+                              <div className="flex items-center gap-2">
+                                <button type="button" onClick={() => canToggle && toggleSubPicker(ing.subId)} disabled={!canToggle}
+                                  className={canToggle ? `w-7 h-7 flex items-center justify-center rounded-full border ${theme.border} ${theme.cardBg} hover:opacity-80 transition` : `w-7 h-7 flex items-center justify-center rounded-full border ${theme.border} opacity-40 cursor-not-allowed`}
+                                  title={canToggle ? t("Показать варианты", "Show options") : t("Недоступно для аллергенов", "Unavailable for allergens")}>
+                                  <span className={`${fontSize.small} leading-none`}>{isOpen ? "▴" : "▾"}</span>
+                                </button>
+                                <span className={`${fontSize.tiny} ${theme.textSecondary} mt-1 whitespace-nowrap`}>{currentChoice ? t("Заменено", "Replaced") : t("Можно заменить", "Replaceable")}</span>
+                              </div>
+                            )}
+                          </div>
+                          {hasSubs && isOpen && (
+                            <div className={`mt-2 ml-1 p-3 rounded-xl border ${theme.border} ${theme.cardBg}`}>
+                              <div className={`mb-2 ${fontSize.small} ${theme.textSecondary}`}>{t("Выберите замену:", "Choose a substitution:")}</div>
+                              <div className="flex flex-wrap gap-2">
+                                <button type="button" onClick={() => { updateSubstitution(ing.subId, ""); setOpenSubPicker(null); }} className={`px-3 py-1 rounded-full border ${theme.border} ${fontSize.small} hover:opacity-80 transition`}>{t("Не заменять", "No substitution")}</button>
+                                {ing.substitutes.map((opt) => (
+                                  <button key={opt} type="button" onClick={() => { updateSubstitution(ing.subId, opt); setOpenSubPicker(null); }} className={`px-3 py-1 rounded-full ${theme.accent} ${theme.accentHover} text-white ${fontSize.small} transition`}>{opt}</button>
+                                ))}
+                              </div>
+                              {currentChoice && <div className={`mt-2 ${fontSize.tiny} ${theme.textSecondary}`}>{t("Текущая замена:", "Current:")} {currentChoice}</div>}
+                            </div>
+                          )}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+
+                <div>
+                  <h3 className={`${fontSize.cardTitle} font-semibold mb-3 ${theme.headerText}`}>{t("Как готовить:", "How to cook:")}</h3>
+                  <ol className={`space-y-3 ${fontSize.body}`}>
+                    {(activeRecipe.instructions || []).map((step, i) => (
+                      <li key={i} className="flex gap-3">
+                        <span className={`${theme.accent} text-white rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0 ${fontSize.small} font-bold`}>{i + 1}</span>
+                        <span>{step}</span>
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+
+                <div className="mt-6 flex gap-2 flex-wrap">
+                  {(selectedRecipe.tags || []).map((tag, i) => <span key={i} className={`px-3 py-1 ${theme.accent} text-white rounded-full ${fontSize.small}`}>{tag}</span>)}
+                </div>
+
+                {registered && (
+                  <div className="mt-6 border-t pt-4">
+                    <h4 className={`${fontSize.body} font-semibold mb-3`}>{t("Добавить в историю питания:", "Add to meal history:")}</h4>
+                    <div className="flex gap-2 flex-wrap">
+                      {MEAL_CATEGORIES.map(cat => (
+                        <button key={cat} onClick={() => { addMealToHistory(selectedRecipe, cat, new Date().toISOString().split('T')[0], selectedRecipeVariantKey); closeModal(); }}
+                          className={`px-3 py-1 rounded ${fontSize.small} ${theme.accent} ${theme.accentHover} text-white`}>{MEAL_LABELS[cat]}</button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })()}
+
+        {activeScreen === "home" && (
+          <HomeScreen
+            t={t} theme={theme} fontSize={fontSize} language={language} setLanguage={setLanguage}
+            setActiveScreen={setActiveScreen} userData={userData} todayNutrition={todayNutrition}
+            setShowAddMealModal={setShowAddMealModal} setAccountTab={setAccountTab}
+            SAMPLE_RECIPES={allRecipes}
+          />
+        )}
+
+        {activeScreen === "search" && (
+          <SearchScreen
+            t={t} theme={theme} fontSize={fontSize} searchQuery={searchQuery} setSearchQuery={setSearchQuery}
+            searchMode={searchMode} setSearchMode={setSearchMode} excludeIngredients={excludeIngredients}
+            setExcludeIngredients={setExcludeIngredients} showFilters={showFilters} setShowFilters={setShowFilters}
+            selectedFilters={selectedFilters} setSelectedFilters={setSelectedFilters} TYPE_OPTIONS={TYPE_OPTIONS}
+            DIET_OPTIONS={DIET_OPTIONS} DIFFICULTY_OPTIONS={DIFFICULTY_OPTIONS} TAG_OPTIONS={TAG_OPTIONS}
+            CUISINE_OPTIONS={CUISINE_OPTIONS} DISH_TYPE_LABELS={DISH_TYPE_LABELS} DIET_LABELS={DIET_LABELS}
+            DIFFICULTY_LABELS={DIFFICULTY_LABELS} language={language} normalize={normalize} filteredResults={filteredResults}
+            getDishTypeInfo={getDishTypeInfo} allergyList={allergyList} setSelectedRecipe={setSelectedRecipe}
+            setSelectedRecipeVariantKey={setSelectedRecipeVariantKey} userSubstitutions={userSubstitutions}
+            onAddRecipeClick={handleAddRecipeClick}
+          />
+        )}
+
+        {activeScreen === "account" && (
+          <AccountScreen
+            t={t} theme={theme} fontSize={fontSize} language={language} registered={registered} userData={userData}
+            unitSystem={unitSystem} currentTheme={currentTheme} currentFont={currentFont} currentFontSize={currentFontSize}
+            showCustomization={showCustomization} setShowCustomization={setShowCustomization}
+            showRegisterForm={showRegisterForm} setShowRegisterForm={setShowRegisterForm}
+            isEditingProfile={isEditingProfile} setIsEditingProfile={setIsEditingProfile} GOALS={GOALS} LIFESTYLE={LIFESTYLE}
+            accountTab={accountTab} setAccountTab={setAccountTab} viewPeriod={viewPeriod} setViewPeriod={setViewPeriod}
+            selectedDate={selectedDate} setSelectedDate={setSelectedDate} selectedWeekDay={selectedWeekDay}
+            setSelectedWeekDay={setSelectedWeekDay} MONTH_NAMES={MONTH_NAMES} WEEKDAY_NAMES={WEEKDAY_NAMES}
+            WEEKDAY_SHORT={WEEKDAY_SHORT} MEAL_CATEGORIES={MEAL_CATEGORIES} MEAL_LABELS={MEAL_LABELS}
+            SAMPLE_RECIPES={allRecipes} getFilteredHistory={getFilteredHistory} getMealsForDay={getMealsForDay}
+            calculateDayCalories={calculateDayCalories} calculatePeriodStats={calculatePeriodStats}
+            calculatePeriodNutrition={calculatePeriodNutrition} getWeekDays={getWeekDays} getWeekRange={getWeekRange}
+            formatDate={formatDate} getPeriodDisplayText={getPeriodDisplayText} addDays={addDays} addWeeks={addWeeks}
+            addMonths={addMonths} setMonthYear={setMonthYear} plannerWeekDate={plannerWeekDate}
+            setPlannerWeekDate={setPlannerWeekDate} weeklyPlan={weeklyPlan} getPlannerRecipes={getPlannerRecipes}
+            calculatePlannerDayCalories={calculatePlannerDayCalories} showAddMealModal={showAddMealModal}
+            setShowAddMealModal={setShowAddMealModal} addMealCategory={addMealCategory} setAddMealCategory={setAddMealCategory}
+            showPlannerModal={showPlannerModal} setShowPlannerModal={setShowPlannerModal} plannerModalDate={plannerModalDate}
+            setPlannerModalDate={setPlannerModalDate} plannerModalCategory={plannerModalCategory}
+            setPlannerModalCategory={setPlannerModalCategory} getSortedRecipesForPlanner={getSortedRecipesForPlanner}
+            handleStartEditProfile={handleStartEditProfile} handleLogout={handleLogout} toggleUnitSystem={toggleUnitSystem}
+            handleRegister={handleRegister} handleAvatarUpload={handleAvatarUpload} setCurrentTheme={setCurrentTheme}
+            setCurrentFont={setCurrentFont} setCurrentFontSize={setCurrentFontSize} getDisplayWeight={getDisplayWeight}
+            getDisplayHeight={getDisplayHeight} removeMealFromHistory={removeMealFromHistory}
+            addMealToHistory={addMealToHistory} addRecipeToPlanner={addRecipeToPlanner}
+            removeRecipeFromPlanner={removeRecipeFromPlanner} setSelectedRecipe={setSelectedRecipe}
+            setSelectedRecipeVariantKey={setSelectedRecipeVariantKey} DISH_TYPE_LABELS={DISH_TYPE_LABELS}
+            normalize={normalize} THEMES={THEMES} FONTS={FONTS} FONT_SIZES={FONT_SIZES}
+            convertWeight={convertWeight} convertHeight={convertHeight} shoppingList={shoppingList}
+            setShoppingList={setShoppingList} generateShoppingListFromPlanner={generateShoppingListFromPlanner}
+            setUserData={setUserData} setRegistered={setRegistered} setMealHistory={setMealHistory}
+            setWeeklyPlan={setWeeklyPlan}
+          />
+        )}
+
+        {showAddRecipeModal && firebaseUser && (
+          <AddRecipeModal
+            theme={theme}
+            fontSize={fontSize}
+            language={language}
+            firebaseUser={firebaseUser}
+            onClose={() => setShowAddRecipeModal(false)}
+            onAdded={() => {
+              getRecipes()
+                .then(recipes => setCommunityRecipes(recipes))
+                .catch(() => {});
+            }}
+          />
+        )}
+      </div>
+    </AppContext.Provider>
   );
 }
