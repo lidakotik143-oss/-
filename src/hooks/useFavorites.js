@@ -5,12 +5,20 @@ import { getFavorites, toggleFavorite } from '../firebase';
  * useFavorites — хук для работы с избранными рецептами.
  * Синхронизирует данные с Firestore для авторизованных пользователей,
  * иначе хранит в localStorage.
+ *
+ * @param {object|null} firebaseUser - текущий пользователь Firebase
+ * @param {string[]|null} initialFavorites - предзагруженное избранное из Firestore (onLoggedIn)
  */
-export function useFavorites(firebaseUser) {
+export function useFavorites(firebaseUser, initialFavorites = null) {
   const [favorites, setFavorites] = useState([]);
 
-  // Загружаем избранное при входе
+  // Применяем initialFavorites если они пришли из CookifyDemo через onLoggedIn
   useEffect(() => {
+    if (Array.isArray(initialFavorites) && initialFavorites.length > 0) {
+      setFavorites(initialFavorites);
+      return;
+    }
+    // Иначе — обычная загрузка
     if (firebaseUser?.uid) {
       getFavorites(firebaseUser.uid)
         .then(ids => setFavorites(ids))
@@ -22,7 +30,8 @@ export function useFavorites(firebaseUser) {
       const saved = localStorage.getItem('cookify_favorites');
       setFavorites(saved ? JSON.parse(saved) : []);
     }
-  }, [firebaseUser?.uid]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [firebaseUser?.uid, initialFavorites]);
 
   // Сохраняем в localStorage для не-авторизованных
   useEffect(() => {
@@ -37,7 +46,6 @@ export function useFavorites(firebaseUser) {
         const updated = await toggleFavorite(firebaseUser.uid, recipeId);
         setFavorites(updated);
       } catch {
-        // fallback: обновляем локально
         setFavorites(prev =>
           prev.includes(recipeId) ? prev.filter(id => id !== recipeId) : [...prev, recipeId]
         );
