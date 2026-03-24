@@ -3,6 +3,7 @@ import { FaCalendarAlt, FaPlus, FaChevronLeft, FaChevronRight, FaTimes } from "r
 import { NutritionDashboard } from "../NutritionVisuals";
 import { calculateDailyGoals } from "../../utils/nutrition";
 import { useApp } from "../../context/AppContext";
+import TopDishesWidget from "./TopDishesWidget";
 
 export default function HistoryTab() {
   const {
@@ -202,6 +203,9 @@ export default function HistoryTab() {
           })()
         )}
       </div>
+
+      {/* ✨ Топ блюд — показываем только в режиме «Неделя» без дрилла дня */}
+      {viewPeriod === "week" && !selectedWeekDay && <TopDishesWidget />}
     </div>
   );
 }
