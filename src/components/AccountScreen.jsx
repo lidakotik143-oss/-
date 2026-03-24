@@ -3,6 +3,7 @@ import { FaCalendarAlt, FaUtensils, FaShoppingCart, FaTint, FaEye, FaEyeSlash, F
 import { auth } from '../firebase.js';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 import { setUserProfile } from '../firebase.js';
+import { useApp } from '../context/AppContext';
 import ProfileCard from "./account/ProfileCard";
 import ProfileEditForm from "./account/ProfileEditForm";
 import CustomizationPanel from "./account/CustomizationPanel";
@@ -143,7 +144,16 @@ function FirebaseAuthPanel({ t, theme, fontSize, language }) {
   );
 }
 
-function FavoritesTab({ t, theme, fontSize, language, favorites, allRecipes, isFavorite, toggleFav, setSelectedRecipe, setSelectedRecipeVariantKey, getDishTypeInfo }) {
+// ⭐ FavoritesTab — читает данные напрямую из AppContext
+function FavoritesTab() {
+  const {
+    t, theme, fontSize, language,
+    allRecipes,
+    favorites, isFavorite, toggleFav,
+    setSelectedRecipe, setSelectedRecipeVariantKey,
+    getDishTypeInfo,
+  } = useApp();
+
   const favoriteRecipes = (allRecipes || []).filter(r => isFavorite(r.id));
 
   if (favoriteRecipes.length === 0) {
@@ -230,8 +240,6 @@ export default function AccountScreen(props) {
     t, theme, fontSize, registered, setShowRegisterForm, accountTab, setAccountTab,
     showRegisterForm, setIsEditingProfile, showAddMealModal, setShowAddMealModal,
     showPlannerModal, setShowPlannerModal, language, userData,
-    setUserData, setRegistered, setMealHistory, setWeeklyPlan,
-    favorites, allRecipes, isFavorite, toggleFav, setSelectedRecipe, setSelectedRecipeVariantKey, getDishTypeInfo,
   } = props;
 
   return (
@@ -261,16 +269,7 @@ export default function AccountScreen(props) {
           {accountTab === "history"   && <HistoryTab {...props} />}
           {accountTab === "planner"   && <PlannerTab {...props} />}
           {accountTab === "shopping"  && <ShoppingListTab {...props} />}
-          {accountTab === "favorites" && (
-            <FavoritesTab
-              t={t} theme={theme} fontSize={fontSize} language={language}
-              favorites={favorites} allRecipes={allRecipes}
-              isFavorite={isFavorite} toggleFav={toggleFav}
-              setSelectedRecipe={setSelectedRecipe}
-              setSelectedRecipeVariantKey={setSelectedRecipeVariantKey}
-              getDishTypeInfo={getDishTypeInfo}
-            />
-          )}
+          {accountTab === "favorites" && <FavoritesTab />}
           {accountTab === "water" && <WaterTracker theme={theme} fontSize={fontSize} language={language} userData={userData} />}
           <CustomizationPanel {...props} />
         </>
