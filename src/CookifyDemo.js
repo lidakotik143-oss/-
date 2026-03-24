@@ -26,9 +26,10 @@ import AddRecipeModal from "./components/AddRecipeModal";
 import { AppContext } from './context/AppContext';
 
 // ✅ Кастомные хуки
-import { useAuth } from './hooks/useAuth';
-import { useMealPlan } from './hooks/useMealPlan';
+import { useAuth }          from './hooks/useAuth';
+import { useMealPlan }      from './hooks/useMealPlan';
 import { useWeeklyPlanner } from './hooks/useWeeklyPlanner';
+import { useShoppingList }  from './hooks/useShoppingList';
 
 // 🔥 Firebase
 import { auth } from './firebase.js';
@@ -193,16 +194,6 @@ const setMonthYear = (dateStr, month, year) => {
   return getDateKey(d);
 };
 
-const categorizeIngredient = (ingredientName) => {
-  const ing = (ingredientName || '').toLowerCase();
-  if (/(помидор|огурец|перец|лук|чеснок|морковь|капуста|картофель|баклажан|кабачок|тыква|свекла|редис|салат|шпинат|петрушка|укроп|базилик|кинза|руккола|авокадо|яблок|банан|апельсин|лимон|груша|персик|ягод|клубник|малин|черник|виноград|киви|манго|ананас|арбуз|дыня)/i.test(ing)) return "Овощи и фрукты";
-  if (/(мясо|курица|говядина|свинина|баранина|индейка|утка|фарш|филе|рыба|лосось|тунец|форель|семга|треска|креветк|кальмар|мидии|краб)/i.test(ing)) return "Мясо и рыба";
-  if (/(молоко|сливки|сметана|йогурт|кефир|творог|сыр|масло сливочное|ряженка|простокваша)/i.test(ing)) return "Молочные продукты";
-  if (/(соль|перец|специи|приправ|пряност|зелень|трав|орегано|тимьян|розмарин|паприка|куркума|карри|имбирь|корица|ваниль|мускатный|кориандр|тмин|анис|гвоздика|лавровый|майоран)/i.test(ing)) return "Зелень и приправы";
-  if (/(рис|гречка|овсянка|пшено|перловка|манка|кукурузная крупа|киноа|булгур|макарон|паста|спагетти|лапша|вермишель)/i.test(ing)) return "Крупы и макароны";
-  return "Продукты";
-};
-
 const NotificationModal = ({ isOpen, onClose, title, message, theme, fontSize, language }) => {
   if (!isOpen) return null;
   const btnText = language === "ru" ? "Закрыть" : "Close";
@@ -258,7 +249,6 @@ export default function CookifyDemo() {
   const [selectedWeekDay, setSelectedWeekDay] = useState(null);
   const [accountTab, setAccountTab] = useState("history");
 
-  const [shoppingList, setShoppingList] = useState([]);
   const [showVariantSelectionModal, setShowVariantSelectionModal] = useState(false);
   const [variantSelectionRecipe, setVariantSelectionRecipe] = useState(null);
   const [variantSelectionCallback, setVariantSelectionCallback] = useState(null);
@@ -274,6 +264,13 @@ export default function CookifyDemo() {
       setShowVariantSelectionModal(false);
     });
     setShowVariantSelectionModal(true);
+  };
+
+  // Shared колбэк уведомлений (для useShoppingList)
+  const handleNotify = (title, message) => {
+    setNotificationTitle(title);
+    setNotificationMessage(message);
+    setShowNotificationModal(true);
   };
 
   // ✅ useAuth
@@ -347,6 +344,20 @@ export default function CookifyDemo() {
     getPlannerRecipes, calculatePlannerDayCalories,
   } = useWeeklyPlanner(firebaseUser, allRecipes, openVariantModal);
 
+  // ✅ useShoppingList
+  const {
+    shoppingList, setShoppingList,
+    generateShoppingListFromPlanner,
+  } = useShoppingList({
+    firebaseUser,
+    getPlannerRecipes,
+    plannerWeekDate,
+    userSubstitutions,
+    language,
+    onNotify: handleNotify,
+    getWeekDays,
+  });
+
   // 🔥 Загружаем рецепты сообщества из Firestore при старте
   useEffect(() => {
     getRecipes()
@@ -357,11 +368,12 @@ export default function CookifyDemo() {
   // Обработчик кнопки «Добавить рецепт»
   const handleAddRecipeClick = () => {
     if (!firebaseUser) {
-      setNotificationTitle(language === 'ru' ? 'Нужен аккаунт' : 'Account required');
-      setNotificationMessage(language === 'ru'
-        ? 'Чтобы добавить рецепт, войдите в аккаунт или зарегистрируйтесь.'
-        : 'Please sign in or create an account to add a recipe.');
-      setShowNotificationModal(true);
+      handleNotify(
+        language === 'ru' ? 'Нужен аккаунт' : 'Account required',
+        language === 'ru'
+          ? 'Чтобы добавить рецепт, войдите в аккаунт или зарегистрируйтесь.'
+          : 'Please sign in or create an account to add a recipe.'
+      );
       return;
     }
     setShowAddRecipeModal(true);
@@ -374,13 +386,6 @@ export default function CookifyDemo() {
   useEffect(() => { localStorage.setItem("cookify_font",       currentFont); }, [currentFont]);
   useEffect(() => { localStorage.setItem("cookify_fontSize",   currentFontSize); }, [currentFontSize]);
   useEffect(() => { localStorage.setItem("cookify_mealPlan",   JSON.stringify(mealPlan)); }, [mealPlan]);
-
-  // Сохранение списка покупок в localStorage
-  useEffect(() => {
-    if (firebaseUser?.uid) {
-      localStorage.setItem(`cookify_shoppingList_${firebaseUser.uid}`, JSON.stringify(shoppingList));
-    }
-  }, [shoppingList, firebaseUser]);
 
   useEffect(() => { if (language === "en") setUnitSystem("imperial"); else setUnitSystem("metric"); }, [language]);
   useEffect(() => { setOpenSubPicker(null); }, [selectedRecipe, selectedRecipeVariantKey]);
@@ -537,58 +542,6 @@ export default function CookifyDemo() {
   };
 
   const allergyList = (userData?.allergies || "").toLowerCase().split(",").map(s => s.trim()).filter(Boolean);
-
-  const generateShoppingListFromPlanner = () => {
-    const weekDays = getWeekDays(plannerWeekDate);
-    const allIngredients = [];
-    weekDays.forEach(dateKey => {
-      MEAL_CATEGORIES.forEach(cat => {
-        getPlannerRecipes(dateKey, cat).forEach(recipeWithVariant => {
-          let ingredients = recipeWithVariant.ingredients || [];
-          if (recipeWithVariant.selectedVariantKey && recipeWithVariant.variants) {
-            const variant = recipeWithVariant.variants.find(v => v.key === recipeWithVariant.selectedVariantKey);
-            if (variant && variant.ingredients) ingredients = variant.ingredients;
-          }
-          const subsKey    = getRecipeSubKey(recipeWithVariant.id, recipeWithVariant.selectedVariantKey || null);
-          const recipeSubs = userSubstitutions?.[subsKey] || {};
-          ingredients.forEach(ing => {
-            if (typeof ing === 'object' && ing.name) {
-              const effectiveName = getEffectiveIngredientName(ing, recipeSubs);
-              allIngredients.push({ name: effectiveName, quantity: ing.quantity || '', unit: ing.unit || 'шт' });
-            } else if (typeof ing === 'string') {
-              const parts       = ing.split('—').map(s => s.trim());
-              const name        = parts[0] || ing;
-              const quantityStr = parts[1] || '';
-              const match       = quantityStr.match(/(\d+(?:[.,]\d+)?)\s*([а-яА-Яa-zA-Z.\s]+)?/);
-              const quantity    = match ? match[1].replace(',', '.') : '';
-              const unit        = match && match[2] ? match[2].trim() : 'шт';
-              allIngredients.push({ name, quantity, unit });
-            }
-          });
-        });
-      });
-    });
-    const seen = new Set();
-    const uniqueIngredients = allIngredients.filter(ing => {
-      const key = (ing.name || '').toLowerCase();
-      if (seen.has(key)) return false;
-      seen.add(key); return true;
-    });
-    const newItems = uniqueIngredients.map(ing => ({
-      id: Date.now() + Math.random(), name: ing.name, quantity: ing.quantity,
-      baseQuantity: ing.quantity, unit: ing.unit,
-      category: categorizeIngredient(ing.name), checked: false, isManual: false
-    }));
-    setShoppingList(prev => {
-      const existingNames = new Set(prev.map(item => item.name.toLowerCase()));
-      return [...prev, ...newItems.filter(item => !existingNames.has(item.name.toLowerCase()))];
-    });
-    setNotificationTitle(language === "ru" ? "Готово" : "Done");
-    setNotificationMessage(language === "ru"
-      ? `Добавлено ${newItems.length} продуктов из плана меню на неделю!`
-      : `Added ${newItems.length} items from your weekly meal plan!`);
-    setShowNotificationModal(true);
-  };
 
   const filteredResults = useMemo(() => {
     let results = allRecipes;
