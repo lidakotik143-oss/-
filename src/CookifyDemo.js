@@ -240,6 +240,9 @@ export default function CookifyDemo() {
   const [notificationTitle, setNotificationTitle] = useState("");
   const [notificationMessage, setNotificationMessage] = useState("");
 
+  // ⭐ Начальное избранное из Firestore (передаётся через onLoggedIn)
+  const [initialFavorites, setInitialFavorites] = useState(null);
+
   // Shared колбэк показа модалки вариантов
   const openVariantModal = (recipe, onSelect) => {
     setVariantSelectionRecipe(recipe);
@@ -250,7 +253,7 @@ export default function CookifyDemo() {
     setShowVariantSelectionModal(true);
   };
 
-  // Shared колбэк уведомлений (для useShoppingList и handleAddRecipeClick)
+  // Shared колбэк уведомлений
   const handleNotify = (title, message) => {
     setNotificationTitle(title);
     setNotificationMessage(message);
@@ -264,10 +267,14 @@ export default function CookifyDemo() {
     registered, setRegistered,
     authLoading,
   } = useAuth({
-    onLoggedIn: ({ user, firestoreHistory, firestorePlan, substitutions }) => {
+    onLoggedIn: ({ user, firestoreHistory, firestorePlan, substitutions, firestoreFavorites }) => {
       setMealHistory(firestoreHistory);
       setWeeklyPlan(firestorePlan);
       setUserSubstitutions(substitutions);
+      // ⭐ Сохраняем избранное из Firestore — useFavorites подхватит через initialFavorites
+      if (Array.isArray(firestoreFavorites) && firestoreFavorites.length > 0) {
+        setInitialFavorites(firestoreFavorites);
+      }
       const sl = localStorage.getItem(`cookify_shoppingList_${user.uid}`);
       if (sl) setShoppingList(JSON.parse(sl));
       const savedLanguage   = localStorage.getItem("cookify_language");
@@ -284,6 +291,7 @@ export default function CookifyDemo() {
       if (savedMealPlan)   setMealPlan(JSON.parse(savedMealPlan));
     },
     onLoggedOut: () => {
+      setInitialFavorites(null);
       const savedLanguage = localStorage.getItem("cookify_language");
       const savedTheme    = localStorage.getItem("cookify_theme");
       const savedFont     = localStorage.getItem("cookify_font");
@@ -342,8 +350,8 @@ export default function CookifyDemo() {
     getWeekDays,
   });
 
-  // ✅ useFavorites
-  const { favorites, toggleFav, isFavorite } = useFavorites(firebaseUser);
+  // ✅ useFavorites — передаём initialFavorites для предзаполнения после логина
+  const { favorites, toggleFav, isFavorite } = useFavorites(firebaseUser, initialFavorites);
 
   // 🔥 Загружаем рецепты сообщества из Firestore при старте
   useEffect(() => {
@@ -484,6 +492,7 @@ export default function CookifyDemo() {
     setShowRegisterForm(false); setIsEditingProfile(false);
     setMealPlan({ breakfast: [], lunch: [], snack: [], dinner: [] });
     setMealHistory([]); setWeeklyPlan({}); setShoppingList([]); setUserSubstitutions({});
+    setInitialFavorites(null);
     localStorage.removeItem("cookify_user");         localStorage.removeItem("cookify_mealPlan");
     localStorage.removeItem("cookify_mealHistory");  localStorage.removeItem("cookify_weeklyPlan");
     localStorage.removeItem("cookify_shoppingList"); localStorage.removeItem(SUBSTITUTIONS_STORAGE_KEY);
@@ -714,7 +723,7 @@ export default function CookifyDemo() {
                       </div>
                     )}
                   </div>
-                  {/* Кнопка избранного в шапке модалки */}
+                  {/* ⭐ Кнопка избранного в шапке модалки */}
                   <button
                     onClick={(e) => { e.stopPropagation(); toggleFav(selectedRecipe.id); }}
                     className={`p-2 rounded-full transition hover:scale-110 mr-2 ${
