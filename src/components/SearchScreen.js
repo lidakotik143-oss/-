@@ -1,5 +1,8 @@
-import React from "react";
-import { FaSearch, FaPlus } from "react-icons/fa";
+import React, { useState, useEffect, useRef } from "react";
+import { FaSearch, FaPlus, FaHeart, FaRegHeart } from "react-icons/fa";
+
+// Заглушка-изображение для рецептов без фото
+const RECIPE_PLACEHOLDER = "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=120&h=80&fit=crop&auto=format";
 
 export default function SearchScreen({
   t,
@@ -32,7 +35,43 @@ export default function SearchScreen({
   setSelectedRecipeVariantKey,
   firebaseUser,
   onAddRecipeClick,
+  isFavorite,
+  toggleFav,
 }) {
+  // ── Дебаунс поискового инпута (300ms) ──────────────────────────────────────
+  const [inputValue, setInputValue] = useState(searchQuery);
+  const debounceTimer = useRef(null);
+
+  useEffect(() => {
+    setInputValue(searchQuery);
+  }, [searchQuery]);
+
+  const handleInputChange = (e) => {
+    const val = e.target.value;
+    setInputValue(val);
+    if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    debounceTimer.current = setTimeout(() => {
+      setSearchQuery(val);
+    }, 300);
+  };
+
+  // Дебаунс для поля исключений
+  const [excludeValue, setExcludeValue] = useState(excludeIngredients);
+  const excludeTimer = useRef(null);
+
+  useEffect(() => {
+    setExcludeValue(excludeIngredients);
+  }, [excludeIngredients]);
+
+  const handleExcludeChange = (e) => {
+    const val = e.target.value;
+    setExcludeValue(val);
+    if (excludeTimer.current) clearTimeout(excludeTimer.current);
+    excludeTimer.current = setTimeout(() => {
+      setExcludeIngredients(val);
+    }, 300);
+  };
+
   return (
     <div className="max-w-6xl mx-auto space-y-4">
       {/* Верхняя поисковая панель */}
@@ -41,8 +80,8 @@ export default function SearchScreen({
           <FaSearch className={`absolute left-3 top-3 ${theme.textSecondary}`} />
           <input
             type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            value={inputValue}
+            onChange={handleInputChange}
             placeholder={
               searchMode === "name"
                 ? t("Введите название блюда или тег...", "Enter dish name or tag...")
@@ -71,7 +110,6 @@ export default function SearchScreen({
             {showFilters ? t("Скрыть фильтры", "Hide filters") : t("Фильтры", "Filters")}
           </button>
 
-          {/* Кнопка добавить рецепт — для всех, но подсказка о входе если не авторизован */}
           <button
             onClick={onAddRecipeClick}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl ${fontSize.small} font-semibold transition bg-[#BC6C25] hover:bg-[#A98467] text-white`}
@@ -82,12 +120,12 @@ export default function SearchScreen({
         </div>
       </div>
 
-      {/* Поля исключений */}
+      {/* Поле исключений */}
       <div className="max-w-6xl mx-auto">
         <input
           type="text"
-          value={excludeIngredients}
-          onChange={(e) => setExcludeIngredients(e.target.value)}
+          value={excludeValue}
+          onChange={handleExcludeChange}
           placeholder={t("Исключить ингредиенты (через запятую)", "Exclude ingredients (comma-separated)")}
           className={`w-full p-2 ${theme.input} ${fontSize.body} rounded-xl mb-2`}
         />
@@ -155,51 +193,78 @@ export default function SearchScreen({
             {filteredResults.map((r) => {
               const dishTypeInfo = getDishTypeInfo(r.type);
               const kcalPerServing = r.caloriesPerServing ?? r.calories;
+              const fav = isFavorite ? isFavorite(r.id) : false;
+              const imgSrc = r.image || r.imageUrl || RECIPE_PLACEHOLDER;
               return (
                 <div
                   key={r.id}
                   onClick={() => { setSelectedRecipe(r); setSelectedRecipeVariantKey(r?.variants?.[0]?.key || null); }}
                   className={`p-4 ${theme.border} border rounded-lg cursor-pointer hover:shadow-lg transition`}
                 >
-                  <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-start gap-4">
+                    {/* Фото рецепта */}
+                    <img
+                      src={imgSrc}
+                      alt={r.title}
+                      className="w-20 h-16 object-cover rounded-xl flex-shrink-0 bg-gray-100"
+                      onError={(e) => { e.target.src = RECIPE_PLACEHOLDER; }}
+                    />
+
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <h3 className={`${fontSize.cardTitle} font-bold`}>{r.title}</h3>
-                        {r.source === 'user' && (
-                          <span className={`px-2 py-0.5 rounded-full ${fontSize.tiny} bg-[#606C38] text-white flex-shrink-0`}>
-                            {t('от сообщества', 'community')}
-                          </span>
-                        )}
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h3 className={`${fontSize.cardTitle} font-bold`}>{r.title}</h3>
+                            {r.source === 'user' && (
+                              <span className={`px-2 py-0.5 rounded-full ${fontSize.tiny} bg-[#606C38] text-white flex-shrink-0`}>
+                                {t('от сообщества', 'community')}
+                              </span>
+                            )}
+                          </div>
+                          <div className={`${fontSize.small} ${theme.textSecondary} mt-1`}>
+                            {r.time} {t("мин", "min")} • {kcalPerServing} {t("ккал/порц.", "kcal/srv")}
+                            {r.authorName && <span> • {r.authorName}</span>}
+                          </div>
+                        </div>
+
+                        {/* Кнопки: тип блюда + избранное */}
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          {r.type && (
+                            <span className={`${dishTypeInfo.color} text-white px-3 py-1 rounded-full ${fontSize.tiny} font-semibold`}>
+                              {dishTypeInfo.label}
+                            </span>
+                          )}
+                          <button
+                            onClick={(e) => { e.stopPropagation(); toggleFav && toggleFav(r.id); }}
+                            className={`p-2 rounded-full transition hover:scale-110 ${
+                              fav ? 'text-red-500' : theme.textSecondary
+                            }`}
+                            title={fav ? t('Удалить из избранного', 'Remove from favorites') : t('Добавить в избранное', 'Add to favorites')}
+                          >
+                            {fav ? <FaHeart size={16} /> : <FaRegHeart size={16} />}
+                          </button>
+                        </div>
                       </div>
-                      <div className={`${fontSize.small} ${theme.textSecondary} mt-1`}>
-                        {r.time} {t("мин", "min")} • {kcalPerServing} {t("ккал/порц.", "kcal/srv")}
-                        {r.authorName && <span> • {r.authorName}</span>}
+
+                      <div className={`mt-2 ${fontSize.small}`}>
+                        <strong>{t("Ингредиенты:", "Ingredients:")}</strong>{" "}
+                        {(r.ingredients || []).map((ing, i) => {
+                          const ingName = typeof ing === 'object' ? ing.name : ing;
+                          const low = ingName.toLowerCase();
+                          const isAllergy = allergyList.some((a) => a && low.includes(a));
+                          const isExcluded = excludeIngredients.toLowerCase().split(",").map((s) => s.trim()).filter(Boolean).some((e) => e && low.includes(e));
+                          const cls = isAllergy || isExcluded ? "text-red-600 font-semibold" : "";
+                          const displayText = typeof ing === 'object' ? `${ing.name}${ing.quantity ? ` — ${ing.quantity}` : ''}${ing.unit ? ` ${ing.unit}` : ''}`.trim() : ing;
+                          return <span key={i} className={`${cls} mr-1`}>{displayText}{i < r.ingredients.length - 1 ? "," : ""}</span>;
+                        })}
+                      </div>
+
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {(r.tags || []).map((tag, i) => (
+                          <span key={i} className={`px-2 py-1 ${theme.accent} text-white rounded-full ${fontSize.tiny}`}>{tag}</span>
+                        ))}
                       </div>
                     </div>
-                    {r.type && (
-                      <span className={`${dishTypeInfo.color} text-white px-3 py-1 rounded-full ${fontSize.tiny} font-semibold flex-shrink-0`}>
-                        {dishTypeInfo.label}
-                      </span>
-                    )}
-                  </div>
-
-                  <div className={`mt-3 ${fontSize.small}`}>
-                    <strong>{t("Ингредиенты:", "Ingredients:")}</strong>{" "}
-                    {(r.ingredients || []).map((ing, i) => {
-                      const ingName = typeof ing === 'object' ? ing.name : ing;
-                      const low = ingName.toLowerCase();
-                      const isAllergy = allergyList.some((a) => a && low.includes(a));
-                      const isExcluded = excludeIngredients.toLowerCase().split(",").map((s) => s.trim()).filter(Boolean).some((e) => e && low.includes(e));
-                      const cls = isAllergy || isExcluded ? "text-red-600 font-semibold" : "";
-                      const displayText = typeof ing === 'object' ? `${ing.name}${ing.quantity ? ` — ${ing.quantity}` : ''}${ing.unit ? ` ${ing.unit}` : ''}`.trim() : ing;
-                      return <span key={i} className={`${cls} mr-1`}>{displayText}{i < r.ingredients.length - 1 ? "," : ""}</span>;
-                    })}
-                  </div>
-
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {(r.tags || []).map((tag, i) => (
-                      <span key={i} className={`px-2 py-1 ${theme.accent} text-white rounded-full ${fontSize.tiny}`}>{tag}</span>
-                    ))}
                   </div>
                 </div>
               );
