@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { FaTimes, FaPlus, FaSearch } from "react-icons/fa";
+import { FaTimes, FaPlus, FaSearch, FaPencilAlt } from "react-icons/fa";
 import { useApp } from "../../context/AppContext";
 
 export default function AddMealModal({ onClose }) {
@@ -8,7 +8,10 @@ export default function AddMealModal({ onClose }) {
     MEAL_CATEGORIES, MEAL_LABELS,
     allRecipes,
     addMealCategory, setAddMealCategory,
-    addMealToHistory
+    addMealToHistory,
+    firebaseUser,
+    setShowAddRecipeModal,
+    onAddRecipeClick,
   } = useApp();
 
   const [query, setQuery] = useState("");
@@ -22,6 +25,11 @@ export default function AddMealModal({ onClose }) {
       (r.type || "").toLowerCase().includes(q)
     );
   }, [allRecipes, query]);
+
+  const handleCreateRecipe = () => {
+    onClose();
+    onAddRecipeClick();
+  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" onClick={onClose}>
@@ -40,7 +48,9 @@ export default function AddMealModal({ onClose }) {
               <button
                 key={cat}
                 onClick={() => setAddMealCategory(cat)}
-                className={`px-4 py-2 rounded-xl ${fontSize.small} transition ${addMealCategory === cat ? `${theme.accent} text-white shadow-lg` : `${theme.border} border hover:shadow`}`}
+                className={`px-4 py-2 rounded-xl ${fontSize.small} transition ${
+                  addMealCategory === cat ? `${theme.accent} text-white shadow-lg` : `${theme.border} border hover:shadow`
+                }`}
               >
                 {MEAL_LABELS[cat]}
               </button>
@@ -67,11 +77,27 @@ export default function AddMealModal({ onClose }) {
               {filtered.length} {t("рецептов", "recipes")}
             </span>
           </h3>
+
           <div className="grid gap-2 max-h-96 overflow-y-auto">
             {filtered.length === 0 ? (
-              <p className={`text-center py-8 ${theme.textSecondary} ${fontSize.body}`}>
-                {t("Ничего не найдено", "Nothing found")}
-              </p>
+              <div className={`flex flex-col items-center py-10 gap-4`}>
+                <p className={`${theme.textSecondary} ${fontSize.body}`}>
+                  {t(
+                    `По запросу «${query}» ничего не найдено`,
+                    `No results for "${query}"`
+                  )}
+                </p>
+                <p className={`${theme.textSecondary} ${fontSize.small} opacity-70`}>
+                  {t("Попробуйте другое название или создайте свой рецепт:", "Try a different name or create your own recipe:")}
+                </p>
+                <button
+                  onClick={handleCreateRecipe}
+                  className={`flex items-center gap-2 px-6 py-3 rounded-xl ${theme.accent} ${theme.accentHover} text-white font-semibold ${fontSize.body} transition shadow-md hover:shadow-lg`}
+                >
+                  <FaPencilAlt />
+                  {t("Создать рецепт «", "Create recipe “")}{query}{t("»", "”")}
+                </button>
+              </div>
             ) : (
               filtered.map(r => (
                 <div
