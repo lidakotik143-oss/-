@@ -25,14 +25,13 @@ import AddRecipeModal from "./components/AddRecipeModal";
 // 🌐 Context
 import { AppContext } from './context/AppContext';
 
-// 🔥 Firebase
+// ✅ Кастомный хук авторизации
+import { useAuth } from './hooks/useAuth';
+
+// 🔥 Firebase (только то, что осталось в Demo)
 import { auth } from './firebase.js';
-import { onAuthStateChanged } from 'firebase/auth';
 import {
-  getUserProfile,
-  getMealHistory,
   saveMealHistory,
-  getWeeklyPlan,
   saveWeeklyPlan,
   getRecipes,
 } from './firebase.js';
@@ -236,11 +235,7 @@ export default function CookifyDemo() {
   const [currentFontSize, setCurrentFontSize] = useState("small");
   const [showCustomization, setShowCustomization] = useState(false);
   const [showRegisterForm, setShowRegisterForm] = useState(false);
-  const [registered, setRegistered] = useState(false);
-  const [userData, setUserData] = useState(null);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
-  const [firebaseUser, setFirebaseUser] = useState(null);
-  const [authLoading, setAuthLoading] = useState(true);
 
   // 🔥 Рецепты из Firestore (пользовательские)
   const [communityRecipes, setCommunityRecipes] = useState([]);
@@ -284,6 +279,51 @@ export default function CookifyDemo() {
   const [notificationTitle, setNotificationTitle] = useState("");
   const [notificationMessage, setNotificationMessage] = useState("");
 
+  // ✅ Используем хук useAuth — вся firebase-логика авторизации теперь здесь
+  const {
+    firebaseUser,
+    setFirebaseUser,
+    userData,
+    setUserData,
+    registered,
+    setRegistered,
+    authLoading,
+  } = useAuth({
+    // Вызывается когда пользователь вошёл — применяем его настройки
+    onLoggedIn: ({ user, firestoreHistory, firestorePlan, substitutions }) => {
+      setMealHistory(firestoreHistory);
+      setWeeklyPlan(firestorePlan);
+      setUserSubstitutions(substitutions);
+
+      const savedLanguage   = localStorage.getItem("cookify_language");
+      const savedUnitSystem = localStorage.getItem("cookify_unitSystem");
+      const savedTheme      = localStorage.getItem("cookify_theme");
+      const savedFont       = localStorage.getItem("cookify_font");
+      const savedFontSize   = localStorage.getItem("cookify_fontSize");
+      const savedMealPlan   = localStorage.getItem("cookify_mealPlan");
+      const savedShoppingList = localStorage.getItem(`cookify_shoppingList_${user.uid}`);
+
+      if (savedLanguage)    setLanguage(savedLanguage);
+      if (savedUnitSystem)  setUnitSystem(savedUnitSystem);
+      if (savedTheme)       setCurrentTheme(savedTheme);
+      if (savedFont)        setCurrentFont(savedFont);
+      if (savedFontSize)    setCurrentFontSize(savedFontSize);
+      if (savedMealPlan)    setMealPlan(JSON.parse(savedMealPlan));
+      if (savedShoppingList) setShoppingList(JSON.parse(savedShoppingList));
+    },
+    // Вызывается когда пользователь вышел — применяем анонимные настройки
+    onLoggedOut: () => {
+      const savedLanguage = localStorage.getItem("cookify_language");
+      const savedTheme    = localStorage.getItem("cookify_theme");
+      const savedFont     = localStorage.getItem("cookify_font");
+      const savedFontSize = localStorage.getItem("cookify_fontSize");
+      if (savedLanguage) setLanguage(savedLanguage);
+      if (savedTheme)    setCurrentTheme(savedTheme);
+      if (savedFont)     setCurrentFont(savedFont);
+      if (savedFontSize) setCurrentFontSize(savedFontSize);
+    },
+  });
+
   // 🔥 Загружаем рецепты сообщества из Firestore при старте
   useEffect(() => {
     getRecipes()
@@ -317,70 +357,7 @@ export default function CookifyDemo() {
     setShowAddRecipeModal(true);
   };
 
-  // 🔥 Firebase Auth слушатель
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        setFirebaseUser(user);
-        setRegistered(true);
-        try {
-          const profile = await getUserProfile(user.uid);
-          if (profile) {
-            setUserData({ ...profile, email: user.email, uid: user.uid });
-          } else {
-            setUserData({ email: user.email, uid: user.uid, login: user.email });
-          }
-        } catch (e) {
-          setUserData({ email: user.email, uid: user.uid, login: user.email });
-        }
-
-        try {
-          const [firestoreHistory, firestorePlan] = await Promise.all([
-            getMealHistory(user.uid),
-            getWeeklyPlan(user.uid)
-          ]);
-          setMealHistory(firestoreHistory);
-          setWeeklyPlan(firestorePlan);
-        } catch (e) {
-          const savedMealHistory = localStorage.getItem(`cookify_mealHistory_${user.uid}`);
-          const savedWeeklyPlan = localStorage.getItem(`cookify_weeklyPlan_${user.uid}`);
-          if (savedMealHistory) setMealHistory(JSON.parse(savedMealHistory));
-          if (savedWeeklyPlan) setWeeklyPlan(JSON.parse(savedWeeklyPlan));
-        }
-
-        const savedLanguage = localStorage.getItem("cookify_language");
-        const savedUnitSystem = localStorage.getItem("cookify_unitSystem");
-        const savedTheme = localStorage.getItem("cookify_theme");
-        const savedFont = localStorage.getItem("cookify_font");
-        const savedFontSize = localStorage.getItem("cookify_fontSize");
-        const savedMealPlan = localStorage.getItem("cookify_mealPlan");
-        const savedShoppingList = localStorage.getItem(`cookify_shoppingList_${user.uid}`);
-        if (savedLanguage) setLanguage(savedLanguage);
-        if (savedUnitSystem) setUnitSystem(savedUnitSystem);
-        if (savedTheme) setCurrentTheme(savedTheme);
-        if (savedFont) setCurrentFont(savedFont);
-        if (savedFontSize) setCurrentFontSize(savedFontSize);
-        if (savedMealPlan) setMealPlan(JSON.parse(savedMealPlan));
-        if (savedShoppingList) setShoppingList(JSON.parse(savedShoppingList));
-        setUserSubstitutions(loadUserSubstitutions());
-      } else {
-        setFirebaseUser(null);
-        setRegistered(false);
-        setUserData(null);
-        const savedLanguage = localStorage.getItem("cookify_language");
-        const savedTheme = localStorage.getItem("cookify_theme");
-        const savedFont = localStorage.getItem("cookify_font");
-        const savedFontSize = localStorage.getItem("cookify_fontSize");
-        if (savedLanguage) setLanguage(savedLanguage);
-        if (savedTheme) setCurrentTheme(savedTheme);
-        if (savedFont) setCurrentFont(savedFont);
-        if (savedFontSize) setCurrentFontSize(savedFontSize);
-      }
-      setAuthLoading(false);
-    });
-    return () => unsubscribe();
-  }, []);
-
+  // Сохранение настроек в localStorage
   useEffect(() => { localStorage.setItem("cookify_language", language); }, [language]);
   useEffect(() => { localStorage.setItem("cookify_unitSystem", unitSystem); }, [unitSystem]);
   useEffect(() => { localStorage.setItem("cookify_theme", currentTheme); }, [currentTheme]);
@@ -388,6 +365,7 @@ export default function CookifyDemo() {
   useEffect(() => { localStorage.setItem("cookify_fontSize", currentFontSize); }, [currentFontSize]);
   useEffect(() => { localStorage.setItem("cookify_mealPlan", JSON.stringify(mealPlan)); }, [mealPlan]);
 
+  // Автосохранение истории питания в Firestore (с дебаунсом 800ms)
   useEffect(() => {
     if (!firebaseUser?.uid) return;
     const uid = firebaseUser.uid;
@@ -399,6 +377,7 @@ export default function CookifyDemo() {
     return () => clearTimeout(timeout);
   }, [mealHistory, firebaseUser]);
 
+  // Автосохранение плана меню в Firestore (с дебаунсом 800ms)
   useEffect(() => {
     if (!firebaseUser?.uid) return;
     const uid = firebaseUser.uid;
@@ -410,6 +389,7 @@ export default function CookifyDemo() {
     return () => clearTimeout(timeout);
   }, [weeklyPlan, firebaseUser]);
 
+  // Сохранение списка покупок в localStorage
   useEffect(() => {
     if (firebaseUser?.uid) {
       localStorage.setItem(`cookify_shoppingList_${firebaseUser.uid}`, JSON.stringify(shoppingList));
@@ -848,183 +828,40 @@ export default function CookifyDemo() {
   }, [allRecipes, searchQuery, searchMode, excludeIngredients, selectedFilters]);
 
   // =================== ЗНАЧЕНИЕ КОНТЕКСТА ===================
-  // Все глобальные данные и хелперы, которые нужны дочерним компонентам.
-  // Компоненты используют useApp() вместо получения этого через пропсы.
   const contextValue = {
-    // UI настройки
-    theme,
-    font,
-    fontSize,
-    language,
-    setLanguage,
-    unitSystem,
-    setUnitSystem,
-    toggleUnitSystem,
-    currentTheme,
-    setCurrentTheme,
-    currentFont,
-    setCurrentFont,
-    currentFontSize,
-    setCurrentFontSize,
-    showCustomization,
-    setShowCustomization,
-    THEMES,
-    FONTS,
-    FONT_SIZES,
-
-    // Хелпер перевода
-    t,
-
-    // Пользователь
-    firebaseUser,
-    userData,
-    setUserData,
-    registered,
-    setRegistered,
-    isEditingProfile,
-    setIsEditingProfile,
-    showRegisterForm,
-    setShowRegisterForm,
-    handleRegister,
-    handleStartEditProfile,
-    handleLogout,
-    handleAvatarUpload,
-    getDisplayWeight,
-    getDisplayHeight,
-    convertWeight,
-    convertHeight,
-    GOALS,
-    LIFESTYLE,
-    allergyList,
-
-    // Навигация
-    activeScreen,
-    setActiveScreen,
-    accountTab,
-    setAccountTab,
-
-    // Рецепты
-    allRecipes,
-    DISH_TYPE_LABELS,
-    DIET_LABELS,
-    DIFFICULTY_LABELS,
-    getDishTypeInfo,
-    normalize,
-    TYPE_OPTIONS,
-    DIET_OPTIONS,
-    DIFFICULTY_OPTIONS,
-    TAG_OPTIONS,
-    CUISINE_OPTIONS,
-    getSortedRecipesForPlanner,
-    onAddRecipeClick: handleAddRecipeClick,
-
-    // Поиск
-    searchQuery,
-    setSearchQuery,
-    searchMode,
-    setSearchMode,
-    excludeIngredients,
-    setExcludeIngredients,
-    showFilters,
-    setShowFilters,
-    selectedFilters,
-    setSelectedFilters,
-    filteredResults,
-
-    // Просмотр рецепта
-    selectedRecipe,
-    setSelectedRecipe,
-    selectedRecipeVariantKey,
-    setSelectedRecipeVariantKey,
-    currentServings,
-    setCurrentServings,
-    userSubstitutions,
-    setUserSubstitutions,
-    openSubPicker,
-    setOpenSubPicker,
-
-    // История питания
-    mealHistory,
-    setMealHistory,
-    addMealToHistory,
-    removeMealFromHistory,
-    viewPeriod,
-    setViewPeriod,
-    selectedDate,
-    setSelectedDate,
-    selectedWeekDay,
-    setSelectedWeekDay,
-    getFilteredHistory,
-    getMealsForDay,
-    calculateDayCalories,
-    calculatePeriodNutrition,
-    calculatePeriodStats,
-    getPeriodDisplayText,
-    todayNutrition,
-    showAddMealModal,
-    setShowAddMealModal,
-    addMealCategory,
-    setAddMealCategory,
-
-    // Планировщик
-    weeklyPlan,
-    setWeeklyPlan,
-    plannerWeekDate,
-    setPlannerWeekDate,
-    showPlannerModal,
-    setShowPlannerModal,
-    plannerModalDate,
-    setPlannerModalDate,
-    plannerModalCategory,
-    setPlannerModalCategory,
-    addRecipeToPlanner,
-    removeRecipeFromPlanner,
-    getPlannerRecipes,
-    calculatePlannerDayCalories,
-
-    // Список покупок
-    shoppingList,
-    setShoppingList,
-    generateShoppingListFromPlanner,
-
-    // Даты
-    MEAL_CATEGORIES,
-    MEAL_LABELS,
-    WEEKDAY_NAMES,
-    WEEKDAY_SHORT,
-    MONTH_NAMES,
-    getWeekDays,
-    getWeekRange,
-    formatDate,
-    addDays,
-    addWeeks,
-    addMonths,
-    setMonthYear,
-
-    // Уведомления
-    showNotificationModal,
-    setShowNotificationModal,
-    notificationTitle,
-    setNotificationTitle,
-    notificationMessage,
-    setNotificationMessage,
-
-    // Модалка вариантов
-    showVariantSelectionModal,
-    setShowVariantSelectionModal,
-    variantSelectionRecipe,
-    setVariantSelectionRecipe,
-    variantSelectionCallback,
-    setVariantSelectionCallback,
-
-    // Добавление рецепта
-    showAddRecipeModal,
-    setShowAddRecipeModal,
-
-    // Устаревший план приёма пищи (оставлен для совместимости)
-    mealPlan,
-    setMealPlan,
-    addToMealPlan,
+    theme, font, fontSize, language, setLanguage, unitSystem, setUnitSystem, toggleUnitSystem,
+    currentTheme, setCurrentTheme, currentFont, setCurrentFont, currentFontSize, setCurrentFontSize,
+    showCustomization, setShowCustomization, THEMES, FONTS, FONT_SIZES, t,
+    firebaseUser, userData, setUserData, registered, setRegistered,
+    isEditingProfile, setIsEditingProfile, showRegisterForm, setShowRegisterForm,
+    handleRegister, handleStartEditProfile, handleLogout, handleAvatarUpload,
+    getDisplayWeight, getDisplayHeight, convertWeight, convertHeight, GOALS, LIFESTYLE, allergyList,
+    activeScreen, setActiveScreen, accountTab, setAccountTab,
+    allRecipes, DISH_TYPE_LABELS, DIET_LABELS, DIFFICULTY_LABELS, getDishTypeInfo,
+    normalize, TYPE_OPTIONS, DIET_OPTIONS, DIFFICULTY_OPTIONS, TAG_OPTIONS, CUISINE_OPTIONS,
+    getSortedRecipesForPlanner, onAddRecipeClick: handleAddRecipeClick,
+    searchQuery, setSearchQuery, searchMode, setSearchMode, excludeIngredients, setExcludeIngredients,
+    showFilters, setShowFilters, selectedFilters, setSelectedFilters, filteredResults,
+    selectedRecipe, setSelectedRecipe, selectedRecipeVariantKey, setSelectedRecipeVariantKey,
+    currentServings, setCurrentServings, userSubstitutions, setUserSubstitutions, openSubPicker, setOpenSubPicker,
+    mealHistory, setMealHistory, addMealToHistory, removeMealFromHistory,
+    viewPeriod, setViewPeriod, selectedDate, setSelectedDate, selectedWeekDay, setSelectedWeekDay,
+    getFilteredHistory, getMealsForDay, calculateDayCalories, calculatePeriodNutrition,
+    calculatePeriodStats, getPeriodDisplayText, todayNutrition,
+    showAddMealModal, setShowAddMealModal, addMealCategory, setAddMealCategory,
+    weeklyPlan, setWeeklyPlan, plannerWeekDate, setPlannerWeekDate,
+    showPlannerModal, setShowPlannerModal, plannerModalDate, setPlannerModalDate,
+    plannerModalCategory, setPlannerModalCategory, addRecipeToPlanner, removeRecipeFromPlanner,
+    getPlannerRecipes, calculatePlannerDayCalories,
+    shoppingList, setShoppingList, generateShoppingListFromPlanner,
+    MEAL_CATEGORIES, MEAL_LABELS, WEEKDAY_NAMES, WEEKDAY_SHORT, MONTH_NAMES,
+    getWeekDays, getWeekRange, formatDate, addDays, addWeeks, addMonths, setMonthYear,
+    showNotificationModal, setShowNotificationModal, notificationTitle, setNotificationTitle,
+    notificationMessage, setNotificationMessage,
+    showVariantSelectionModal, setShowVariantSelectionModal, variantSelectionRecipe,
+    setVariantSelectionRecipe, variantSelectionCallback, setVariantSelectionCallback,
+    showAddRecipeModal, setShowAddRecipeModal,
+    mealPlan, setMealPlan, addToMealPlan,
   };
 
   if (authLoading) {
@@ -1161,7 +998,7 @@ export default function CookifyDemo() {
                         <button onClick={() => setCurrentServings(currentServings + 1)} className={`w-6 h-6 flex items-center justify-center rounded-full ${theme.accent} text-white hover:opacity-80 transition`}><FaPlus size={10} /></button>
                       </div>
                     </div>
-  </div>
+                  </div>
                   <div className="grid grid-cols-3 gap-2 mb-3">
                     <div className={`${theme.cardBg} rounded-lg p-2 text-center border ${theme.border}`}><div className={`${fontSize.tiny} ${theme.textSecondary}`}>{t("Белки", "Protein")}</div><div className={`${fontSize.small} font-bold ${theme.text}`}>{totalProtein}{t("г", "g")}</div></div>
                     <div className={`${theme.cardBg} rounded-lg p-2 text-center border ${theme.border}`}><div className={`${fontSize.tiny} ${theme.textSecondary}`}>{t("Жиры", "Fat")}</div><div className={`${fontSize.small} font-bold ${theme.text}`}>{totalFat}{t("г", "g")}</div></div>
