@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { FaSlidersH, FaChevronUp, FaChevronDown } from "react-icons/fa";
+import { FaSlidersH, FaChevronUp, FaChevronDown, FaHome, FaUser } from "react-icons/fa";
 import { useApp } from "../../context/AppContext";
 
 const Toggle = ({ checked, onChange, theme }) => (
@@ -10,144 +10,167 @@ const Toggle = ({ checked, onChange, theme }) => (
       checked ? theme.accent : "bg-gray-300"
     }`}
   >
-    <span
-      className={`inline-block w-4 h-4 bg-white rounded-full shadow transform transition-transform duration-300 ${
-        checked ? "translate-x-6" : "translate-x-1"
-      }`}
-    />
+    <span className={`inline-block w-4 h-4 bg-white rounded-full shadow transform transition-transform duration-300 ${
+      checked ? "translate-x-6" : "translate-x-1"
+    }`} />
   </button>
 );
 
+// Кнопки ↑↓ для перестановки
+const OrderButtons = ({ id, order, setOrder, theme }) => {
+  const idx = order.indexOf(id);
+  const move = (dir) => {
+    const next = [...order];
+    const target = idx + dir;
+    if (target < 0 || target >= next.length) return;
+    [next[idx], next[target]] = [next[target], next[idx]];
+    setOrder(next);
+  };
+  return (
+    <div className="flex flex-col gap-0.5 ml-2">
+      <button onClick={() => move(-1)} disabled={idx === 0}
+        className={`w-6 h-6 flex items-center justify-center rounded border ${theme.border} text-xs disabled:opacity-25 hover:opacity-70 transition`}>▲</button>
+      <button onClick={() => move(1)} disabled={idx === order.length - 1}
+        className={`w-6 h-6 flex items-center justify-center rounded border ${theme.border} text-xs disabled:opacity-25 hover:opacity-70 transition`}>▼</button>
+    </div>
+  );
+};
+
 export default function AdvancedSettingsPanel() {
-  const { t, theme, fontSize, featureFlags, setFeatureFlags } = useApp();
+  const { t, theme, fontSize, featureFlags, setFeatureFlags, homeWidgetsOrder, setHomeWidgetsOrder, DEFAULT_HOME_ORDER } = useApp();
   const [open, setOpen] = useState(false);
+  const [section, setSection] = useState("account"); // "account" | "home"
 
-  const toggle = (key) =>
-    setFeatureFlags(prev => ({ ...prev, [key]: !prev[key] }));
+  const toggleFlag = (key) => setFeatureFlags(prev => ({ ...prev, [key]: !prev[key] }));
 
-  const items = [
-    {
-      key: "showCalorieBalance",
-      icon: "🎯",
-      label: t("Баланс калорий за сегодня", "Today's calorie balance"),
-      desc:  t("Виджет дефицит / профицит на странице аккаунта", "Deficit / surplus widget on account page"),
-    },
-    {
-      key: "showTopDishes",
-      icon: "🏆",
-      label: t("Топ блюд за неделю", "Top dishes this week"),
-      desc:  t("Рейтинг самых частых блюд во вкладке История", "Most frequent dishes in History tab"),
-    },
-    {
-      key: "showNutritionDashboard",
-      icon: "📊",
-      label: t("Дашборд БЖУ", "Nutrition dashboard"),
-      desc:  t("График белков, жиров и углеводов в истории питания", "Protein, fat and carbs chart in meal history"),
-    },
-    {
-      key: "showHistoryTab",
-      icon: "📅",
-      label: t("Вкладка «История питания»", "Meal history tab"),
-      desc:  t("Лог всех приёмов пищи по дням / неделям / месяцам", "Log of all meals by day / week / month"),
-    },
-    {
-      key: "showPlannerTab",
-      icon: "📋",
-      label: t("Вкладка «Планировщик меню»", "Meal planner tab"),
-      desc:  t("Составление меню на неделю вперёд", "Plan your weekly menu in advance"),
-    },
-    {
-      key: "showShoppingTab",
-      icon: "🛒",
-      label: t("Вкладка «Список покупок»", "Shopping list tab"),
-      desc:  t("Автоматический список продуктов из планировщика", "Auto shopping list from the planner"),
-    },
-    {
-      key: "showFavoritesTab",
-      icon: "❤️",
-      label: t("Вкладка «Избранное»", "Favorites tab"),
-      desc:  t("Сохранённые рецепты", "Saved recipes"),
-    },
-    {
-      key: "showWaterTracker",
-      icon: "💧",
-      label: t("Трекер воды", "Water tracker"),
-      desc:  t("Контроль суточного потребления воды", "Daily water intake tracker"),
-    },
+  // ── Секция «Аккаунт» ─────────────────────────────────────────
+  const accountItems = [
+    { key: "showCalorieBalance",     icon: "🎯", label: t("Баланс калорий за сегодня", "Today's calorie balance"),    desc: t("Виджет дефицит / профицит", "Deficit / surplus widget") },
+    { key: "showTopDishes",          icon: "🏆", label: t("Топ блюд за неделю",          "Top dishes this week"),         desc: t("Рейтинг частых блюд",          "Most frequent dishes") },
+    { key: "showNutritionDashboard", icon: "📊", label: t("Дашборд БЖУ",                  "Nutrition dashboard"),          desc: t("График белков, жиров и углеводов", "Protein, fat & carbs chart") },
+    { key: "showHistoryTab",         icon: "📅", label: t("Вкладка «История питания»",   "Meal history tab"),             desc: t("Лог приёмов пищи",              "Meal log") },
+    { key: "showPlannerTab",         icon: "📋", label: t("Вкладка «Планировщик меню»", "Meal planner tab"),             desc: t("Недельное меню заранее",        "Weekly menu in advance") },
+    { key: "showShoppingTab",        icon: "🛒", label: t("Вкладка «Список покупок»",   "Shopping list tab"),            desc: t("Автоматический список из планировщика", "Auto list from planner") },
+    { key: "showFavoritesTab",       icon: "❤️", label: t("Вкладка «Избранное»",         "Favorites tab"),                desc: t("Сохранённые рецепты",           "Saved recipes") },
+    { key: "showWaterTracker",       icon: "💧", label: t("Трекер воды",                 "Water tracker"),                desc: t("Контроль суточного потребления воды", "Daily water intake") },
   ];
 
-  const enabledCount = items.filter(i => featureFlags[i.key]).length;
+  // ── Секция «Главный экран» ────────────────────────────────────
+  const homeItems = [
+    { id: "welcome",  flagKey: "home_showWelcome",   icon: "👋", label: t("Приветствие",         "Welcome block"),     desc: t("Имя и переключатель языка", "Name & language switcher") },
+    { id: "nutrition",flagKey: "home_showNutrition", icon: "🥗", label: t("Питание за сегодня",  "Today's Nutrition"), desc: t("Только для авторизованных",  "For logged-in users only") },
+    { id: "navCards", flagKey: "home_showNavCards",  icon: "🗂️", label: t("Навигационные карточки", "Nav cards"),       desc: t("Для незарегистрированных",   "For guests only") },
+  ];
+
+  const enabledAccount = accountItems.filter(i => featureFlags[i.key]).length;
+  const enabledHome    = homeItems.filter(i => featureFlags[i.flagKey]).length;
 
   return (
     <div className={`${theme.cardBg} p-6 rounded-xl shadow`}>
       {/* Шапка */}
-      <button
-        onClick={() => setOpen(o => !o)}
-        className="flex items-center justify-between w-full"
-      >
+      <button onClick={() => setOpen(o => !o)} className="flex items-center justify-between w-full">
         <div className="flex items-center gap-2">
           <FaSlidersH className={theme.accentText} />
           <span className={`${fontSize.cardTitle} font-semibold`}>
             {t("Расширенные настройки", "Advanced settings")}
-          </span>
-          <span className={`ml-2 px-2 py-0.5 rounded-full ${fontSize.tiny} ${theme.accent} text-white`}>
-            {enabledCount}/{items.length}
           </span>
         </div>
         {open ? <FaChevronUp /> : <FaChevronDown />}
       </button>
 
       {open && (
-        <div className="mt-5 space-y-1">
+        <div className="mt-5">
           <p className={`${fontSize.small} ${theme.textSecondary} mb-4`}>
-            {t(
-              "Включите или выключите любые модули приложения. Изменения сохраняются автоматически.",
-              "Enable or disable any app modules. Changes are saved automatically."
-            )}
+            {t("Управляйте видимостью и порядком модулей. Изменения сохраняются автоматически.",
+               "Control visibility and order of modules. Changes are saved automatically.")}
           </p>
 
-          {items.map(item => (
-            <div
-              key={item.key}
-              className={`flex items-center justify-between p-3 rounded-xl transition ${
-                featureFlags[item.key] ? `${theme.border} border` : "opacity-50"
-              }`}
-            >
-              <div className="flex items-start gap-3 flex-1 min-w-0">
-                <span className="text-xl flex-shrink-0 mt-0.5">{item.icon}</span>
-                <div className="min-w-0">
-                  <div className={`${fontSize.small} font-semibold truncate`}>{item.label}</div>
-                  <div className={`${fontSize.tiny} ${theme.textSecondary} mt-0.5`}>{item.desc}</div>
-                </div>
-              </div>
-              <div className="ml-4 flex-shrink-0">
-                <Toggle
-                  checked={!!featureFlags[item.key]}
-                  onChange={() => toggle(item.key)}
-                  theme={theme}
-                />
-              </div>
-            </div>
-          ))}
+          {/* Переключатель секций */}
+          <div className={`flex gap-2 mb-5 p-1 rounded-xl border ${theme.border}`}>
+            <button onClick={() => setSection("account")}
+              className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg ${fontSize.small} transition ${
+                section === "account" ? `${theme.accent} text-white` : `${theme.textSecondary}`
+              }`}>
+              <FaUser size={12} /> {t("Аккаунт", "Account")}
+              <span className={`px-1.5 py-0.5 rounded-full text-xs ${
+                section === "account" ? "bg-white/30 text-white" : `${theme.accent} text-white`
+              }`}>{enabledAccount}/{accountItems.length}</span>
+            </button>
+            <button onClick={() => setSection("home")}
+              className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg ${fontSize.small} transition ${
+                section === "home" ? `${theme.accent} text-white` : `${theme.textSecondary}`
+              }`}>
+              <FaHome size={12} /> {t("Главный экран", "Home screen")}
+              <span className={`px-1.5 py-0.5 rounded-full text-xs ${
+                section === "home" ? "bg-white/30 text-white" : `${theme.accent} text-white`
+              }`}>{enabledHome}/{homeItems.length}</span>
+            </button>
+          </div>
 
-          {/* Кнопка сброса */}
-          <button
-            onClick={() =>
-              setFeatureFlags({
-                showCalorieBalance:     true,
-                showTopDishes:          true,
-                showNutritionDashboard: true,
-                showHistoryTab:         true,
-                showPlannerTab:         true,
-                showShoppingTab:        true,
-                showFavoritesTab:       true,
-                showWaterTracker:       true,
-              })
-            }
-            className={`mt-4 w-full py-2 rounded-xl ${fontSize.small} border ${theme.border} ${theme.textSecondary} hover:opacity-80 transition`}
-          >
-            {t("↺ Включить всё", "↺ Enable all")}
-          </button>
+          {/* ── Секция аккаунт ── */}
+          {section === "account" && (
+            <div className="space-y-1">
+              {accountItems.map(item => (
+                <div key={item.key}
+                  className={`flex items-center justify-between p-3 rounded-xl transition ${
+                    featureFlags[item.key] ? `border ${theme.border}` : "opacity-50"
+                  }`}>
+                  <div className="flex items-start gap-3 flex-1 min-w-0">
+                    <span className="text-xl flex-shrink-0 mt-0.5">{item.icon}</span>
+                    <div className="min-w-0">
+                      <div className={`${fontSize.small} font-semibold truncate`}>{item.label}</div>
+                      <div className={`${fontSize.tiny} ${theme.textSecondary} mt-0.5`}>{item.desc}</div>
+                    </div>
+                  </div>
+                  <div className="ml-4 flex-shrink-0">
+                    <Toggle checked={!!featureFlags[item.key]} onChange={() => toggleFlag(item.key)} theme={theme} />
+                  </div>
+                </div>
+              ))}
+              <button
+                onClick={() => setFeatureFlags(prev => ({ ...prev, showCalorieBalance:true,showTopDishes:true,showNutritionDashboard:true,showHistoryTab:true,showPlannerTab:true,showShoppingTab:true,showFavoritesTab:true,showWaterTracker:true }))}
+                className={`mt-4 w-full py-2 rounded-xl ${fontSize.small} border ${theme.border} ${theme.textSecondary} hover:opacity-80 transition`}>
+                {t("↺ Включить всё", "↺ Enable all")}
+              </button>
+            </div>
+          )}
+
+          {/* ── Секция главный экран ── */}
+          {section === "home" && (
+            <div className="space-y-1">
+              <p className={`${fontSize.tiny} ${theme.textSecondary} mb-3`}>
+                {t("Кнопки ▲▼ меняют порядок виджетов на главном экране.",
+                   "Use ▲▼ buttons to reorder home screen widgets.")}
+              </p>
+              {homeWidgetsOrder.map((id) => {
+                const item = homeItems.find(h => h.id === id);
+                if (!item) return null;
+                return (
+                  <div key={id}
+                    className={`flex items-center justify-between p-3 rounded-xl transition ${
+                      featureFlags[item.flagKey] ? `border ${theme.border}` : "opacity-50"
+                    }`}>
+                    <div className="flex items-start gap-3 flex-1 min-w-0">
+                      <span className="text-xl flex-shrink-0 mt-0.5">{item.icon}</span>
+                      <div className="min-w-0">
+                        <div className={`${fontSize.small} font-semibold truncate`}>{item.label}</div>
+                        <div className={`${fontSize.tiny} ${theme.textSecondary} mt-0.5`}>{item.desc}</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 ml-3 flex-shrink-0">
+                      <Toggle checked={!!featureFlags[item.flagKey]} onChange={() => toggleFlag(item.flagKey)} theme={theme} />
+                      <OrderButtons id={id} order={homeWidgetsOrder} setOrder={setHomeWidgetsOrder} theme={theme} />
+                    </div>
+                  </div>
+                );
+              })}
+              <button
+                onClick={() => { setHomeWidgetsOrder(DEFAULT_HOME_ORDER); setFeatureFlags(prev => ({ ...prev, home_showWelcome:true, home_showNutrition:true, home_showNavCards:true })); }}
+                className={`mt-4 w-full py-2 rounded-xl ${fontSize.small} border ${theme.border} ${theme.textSecondary} hover:opacity-80 transition`}>
+                {t("↺ Сбросить порядок и включить всё", "↺ Reset order & enable all")}
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>

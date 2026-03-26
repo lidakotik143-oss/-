@@ -199,14 +199,37 @@ const setMonthYear = (dateStr, month, year) => {
 
 // =================== ДЕФОЛТНЫЕ ФЛАГИ ФИЧ ===================
 const DEFAULT_FEATURE_FLAGS = {
-  showCalorieBalance:    true,  // Виджет дефицит/профицит калорий
-  showTopDishes:         true,  // Топ блюд за неделю
-  showNutritionDashboard:true,  // Дашборд БЖУ в истории
-  showHistoryTab:        true,  // Вкладка «История питания»
-  showPlannerTab:        true,  // Вкладка «Планировщик меню»
-  showShoppingTab:       true,  // Вкладка «Список покупок»
-  showFavoritesTab:      true,  // Вкладка «Избранное»
-  showWaterTracker:      true,  // Трекер воды
+  // Вкладки аккаунта
+  showCalorieBalance:    true,
+  showTopDishes:         true,
+  showNutritionDashboard:true,
+  showHistoryTab:        true,
+  showPlannerTab:        true,
+  showShoppingTab:       true,
+  showFavoritesTab:      true,
+  showWaterTracker:      true,
+  // Виджеты главного экрана (видимость)
+  home_showWelcome:      true,
+  home_showNutrition:    true,
+  home_showNavCards:     true,
+};
+
+// Порядок виджетов главного экрана по умолчанию
+const DEFAULT_HOME_ORDER = ["welcome", "nutrition", "navCards"];
+const HOME_WIDGETS_ORDER_KEY = "cookify_homeWidgetsOrder";
+
+const loadHomeWidgetsOrder = () => {
+  try {
+    const saved = localStorage.getItem(HOME_WIDGETS_ORDER_KEY);
+    if (!saved) return DEFAULT_HOME_ORDER;
+    const parsed = JSON.parse(saved);
+    // Добавляем новые виджеты в конец, если их нет в сохранённом порядке
+    const merged = [...parsed];
+    DEFAULT_HOME_ORDER.forEach(id => { if (!merged.includes(id)) merged.push(id); });
+    return merged;
+  } catch {
+    return DEFAULT_HOME_ORDER;
+  }
 };
 
 const FEATURE_FLAGS_KEY = "cookify_featureFlags";
@@ -215,7 +238,6 @@ const loadFeatureFlags = () => {
   try {
     const saved = localStorage.getItem(FEATURE_FLAGS_KEY);
     if (!saved) return DEFAULT_FEATURE_FLAGS;
-    // Мёржим с дефолтами, чтобы новые флаги автоматически появлялись
     return { ...DEFAULT_FEATURE_FLAGS, ...JSON.parse(saved) };
   } catch {
     return DEFAULT_FEATURE_FLAGS;
@@ -234,8 +256,8 @@ export default function CookifyDemo() {
   const [showRegisterForm, setShowRegisterForm] = useState(false);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
 
-  // ⚙️ Флаги фич — загружаем из localStorage при старте
   const [featureFlags, setFeatureFlags] = useState(loadFeatureFlags);
+  const [homeWidgetsOrder, setHomeWidgetsOrder] = useState(loadHomeWidgetsOrder);
 
   const [communityRecipes, setCommunityRecipes] = useState([]);
   const [showAddRecipeModal, setShowAddRecipeModal] = useState(false);
@@ -268,10 +290,8 @@ export default function CookifyDemo() {
   const [notificationTitle, setNotificationTitle] = useState("");
   const [notificationMessage, setNotificationMessage] = useState("");
 
-  // ⭐ Начальное избранное из Firestore (передаётся через onLoggedIn)
   const [initialFavorites, setInitialFavorites] = useState(null);
 
-  // Shared колбэк показа модалки вариантов
   const openVariantModal = (recipe, onSelect) => {
     setVariantSelectionRecipe(recipe);
     setVariantSelectionCallback(() => (key) => {
@@ -281,14 +301,12 @@ export default function CookifyDemo() {
     setShowVariantSelectionModal(true);
   };
 
-  // Shared колбэк уведомлений
   const handleNotify = (title, message) => {
     setNotificationTitle(title);
     setNotificationMessage(message);
     setShowNotificationModal(true);
   };
 
-  // ✅ useAuth
   const {
     firebaseUser, setFirebaseUser,
     userData, setUserData,
@@ -330,7 +348,6 @@ export default function CookifyDemo() {
     },
   });
 
-  // ✅ useMealPlan
   const {
     mealHistory, setMealHistory,
     addMealToHistory, removeMealFromHistory,
@@ -341,7 +358,6 @@ export default function CookifyDemo() {
     calculatePeriodStats, todayNutrition,
   } = useMealPlan(firebaseUser, openVariantModal);
 
-  // Объединённый список рецептов (нужен до useWeeklyPlanner)
   const allRecipes = useMemo(() => [
     ...SAMPLE_RECIPES,
     ...communityRecipes.map(r => ({
@@ -352,7 +368,6 @@ export default function CookifyDemo() {
     }))
   ], [communityRecipes]);
 
-  // ✅ useWeeklyPlanner
   const {
     weeklyPlan, setWeeklyPlan,
     plannerWeekDate, setPlannerWeekDate,
@@ -363,7 +378,6 @@ export default function CookifyDemo() {
     getPlannerRecipes, calculatePlannerDayCalories,
   } = useWeeklyPlanner(firebaseUser, allRecipes, openVariantModal);
 
-  // ✅ useShoppingList
   const {
     shoppingList, setShoppingList,
     generateShoppingListFromPlanner,
@@ -377,17 +391,14 @@ export default function CookifyDemo() {
     getWeekDays,
   });
 
-  // ✅ useFavorites — передаём initialFavorites для предзаполнения после логина
   const { favorites, toggleFav, isFavorite } = useFavorites(firebaseUser, initialFavorites);
 
-  // 🔥 Загружаем рецепты сообщества из Firestore при старте
   useEffect(() => {
     getRecipes()
       .then(r => setCommunityRecipes(r))
       .catch(() => setCommunityRecipes([]));
   }, []);
 
-  // Обработчик кнопки «Добавить рецепт»
   const handleAddRecipeClick = () => {
     if (!firebaseUser) {
       handleNotify(
@@ -401,18 +412,14 @@ export default function CookifyDemo() {
     setShowAddRecipeModal(true);
   };
 
-  // Сохранение настроек в localStorage
   useEffect(() => { localStorage.setItem("cookify_language",  language); }, [language]);
   useEffect(() => { localStorage.setItem("cookify_unitSystem", unitSystem); }, [unitSystem]);
   useEffect(() => { localStorage.setItem("cookify_theme",      currentTheme); }, [currentTheme]);
   useEffect(() => { localStorage.setItem("cookify_font",       currentFont); }, [currentFont]);
   useEffect(() => { localStorage.setItem("cookify_fontSize",   currentFontSize); }, [currentFontSize]);
   useEffect(() => { localStorage.setItem("cookify_mealPlan",   JSON.stringify(mealPlan)); }, [mealPlan]);
-
-  // ⚙️ Сохраняем флаги фич при любом изменении
-  useEffect(() => {
-    localStorage.setItem(FEATURE_FLAGS_KEY, JSON.stringify(featureFlags));
-  }, [featureFlags]);
+  useEffect(() => { localStorage.setItem(FEATURE_FLAGS_KEY,    JSON.stringify(featureFlags)); }, [featureFlags]);
+  useEffect(() => { localStorage.setItem(HOME_WIDGETS_ORDER_KEY, JSON.stringify(homeWidgetsOrder)); }, [homeWidgetsOrder]);
 
   useEffect(() => { if (language === "en") setUnitSystem("imperial"); else setUnitSystem("metric"); }, [language]);
   useEffect(() => { setOpenSubPicker(null); }, [selectedRecipe, selectedRecipeVariantKey]);
@@ -630,8 +637,8 @@ export default function CookifyDemo() {
     theme, font, fontSize, language, setLanguage, unitSystem, setUnitSystem, toggleUnitSystem,
     currentTheme, setCurrentTheme, currentFont, setCurrentFont, currentFontSize, setCurrentFontSize,
     showCustomization, setShowCustomization, THEMES, FONTS, FONT_SIZES, t,
-    // ⚙️ Флаги фич
     featureFlags, setFeatureFlags,
+    homeWidgetsOrder, setHomeWidgetsOrder, DEFAULT_HOME_ORDER,
     firebaseUser, userData, setUserData, registered, setRegistered,
     isEditingProfile, setIsEditingProfile, showRegisterForm, setShowRegisterForm,
     handleRegister, handleStartEditProfile, handleLogout, handleAvatarUpload,
@@ -662,7 +669,6 @@ export default function CookifyDemo() {
     setVariantSelectionRecipe, variantSelectionCallback, setVariantSelectionCallback,
     showAddRecipeModal, setShowAddRecipeModal,
     mealPlan, setMealPlan, addToMealPlan,
-    // ⭐ Избранное
     favorites, toggleFav, isFavorite,
   };
 
