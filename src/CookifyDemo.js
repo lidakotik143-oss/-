@@ -1,6 +1,6 @@
 // =================== БЛОК 1: Импорты и примерные данные ===================
 import React, { useState, useEffect, useMemo, useRef } from "react";
-import { FaTimes, FaPlus, FaMinus, FaHeart, FaRegHeart } from "react-icons/fa";
+import { FaTimes, FaPlus, FaMinus, FaHeart, FaRegHeart, FaPlay, FaPause, FaRedo } from "react-icons/fa";
 import { RECIPES_DATABASE } from './recipesData';
 
 import {
@@ -35,6 +35,7 @@ import { useWeeklyPlanner } from './hooks/useWeeklyPlanner';
 import { useShoppingList }  from './hooks/useShoppingList';
 import { useFavorites }     from './hooks/useFavorites';
 import { useWater }         from './hooks/useWater';
+import { useCookingTimer }  from './hooks/useCookingTimer';
 
 // 🔥 Firebase
 import { auth } from './firebase.js';
@@ -201,7 +202,6 @@ const setMonthYear = (dateStr, month, year) => {
 
 // =================== ДЕФОЛТНЫЕ ФЛАГИ ФИЧ ===================
 const DEFAULT_FEATURE_FLAGS = {
-  // Вкладки аккаунта
   showCalorieBalance:    true,
   showTopDishes:         true,
   showNutritionDashboard:true,
@@ -210,11 +210,9 @@ const DEFAULT_FEATURE_FLAGS = {
   showShoppingTab:       true,
   showFavoritesTab:      true,
   showWaterTracker:      true,
-  // Виджеты главного экрана — существующие
   home_showWelcome:      true,
   home_showNutrition:    true,
   home_showNavCards:     true,
-  // Виджеты главного экрана — новые
   home_showWater:          true,
   home_showCalorieBalance: true,
   home_showTopDishes:      true,
@@ -222,7 +220,6 @@ const DEFAULT_FEATURE_FLAGS = {
   home_showPlannerPreview: true,
 };
 
-// Порядок виджетов главного экрана по умолчанию
 const DEFAULT_HOME_ORDER = [
   "welcome",
   "calorieBalance",
@@ -235,7 +232,6 @@ const DEFAULT_HOME_ORDER = [
 ];
 const HOME_WIDGETS_ORDER_KEY = "cookify_homeWidgetsOrder";
 
-// Порядок виджетов экрана аккаунта по умолчанию
 const DEFAULT_ACCOUNT_ORDER = [
   "showCalorieBalance",
   "showTopDishes",
@@ -285,6 +281,63 @@ const loadFeatureFlags = () => {
     return DEFAULT_FEATURE_FLAGS;
   }
 };
+
+// =================== Компонент таймера (встраивается в модалку) ===================
+function CookingTimerBlock({ timeMinutes, timeInfo, t, fontSize, theme }) {
+  const { isRunning, isDone, start, pause, reset, formatted, progress } = useCookingTimer(timeMinutes);
+
+  const circumference = 2 * Math.PI * 28; // r=28
+  const strokeDash    = circumference - (progress / 100) * circumference;
+
+  return (
+    <div className={`mt-3 pt-3 border-t ${theme.border}`}>
+      {/* Круговой прогресс + цифры */}
+      <div className="flex items-center justify-between gap-4">
+        <div className="relative flex-shrink-0" style={{ width: 72, height: 72 }}>
+          <svg width="72" height="72" className="-rotate-90">
+            <circle cx="36" cy="36" r="28" fill="none" stroke="#e5e7eb" strokeWidth="5" />
+            <circle
+              cx="36" cy="36" r="28" fill="none"
+              stroke={isDone ? '#10B981' : timeInfo.color}
+              strokeWidth="5"
+              strokeDasharray={circumference}
+              strokeDashoffset={strokeDash}
+              strokeLinecap="round"
+              style={{ transition: 'stroke-dashoffset 0.8s linear' }}
+            />
+          </svg>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className={`font-bold ${fontSize.tiny} tabular-nums`} style={{ color: isDone ? '#10B981' : timeInfo.color }}>
+              {isDone ? '✓' : formatted}
+            </span>
+          </div>
+        </div>
+
+        <div className="flex-1">
+          {isDone ? (
+            <div className={`${fontSize.small} font-semibold`} style={{ color: '#10B981' }}>
+              🎉 {t('Готово!', 'Done!')}
+            </div>
+          ) : (
+            <div className={`${fontSize.tiny} ${theme.textSecondary} mb-2`}>
+              {isRunning ? t('Идёт приготовление…', 'Cooking in progress…') : t('Нажмите ▶ чтобы начать', 'Press ▶ to start')}
+            </div>
+          )}
+
+          {/* Кнопки управления */}
+          <div className="flex gap-2">
+            {!isDone && (
+              isRunning
+                ? <button onClick={pause}  className={`flex items-center gap-1 px-3 py-1 rounded-full ${theme.accent} text-white ${fontSize.tiny} hover:opacity-80 transition`}><FaPause size={10}/> {t('Пауза','Pause')}</button>
+                : <button onClick={start}  className={`flex items-center gap-1 px-3 py-1 rounded-full ${theme.accent} text-white ${fontSize.tiny} hover:opacity-80 transition`}><FaPlay  size={10}/> {t('Начать','Start')}</button>
+            )}
+            <button onClick={reset} className={`flex items-center gap-1 px-3 py-1 rounded-full border ${theme.border} ${fontSize.tiny} hover:opacity-70 transition`}><FaRedo size={10}/> {t('Сброс','Reset')}</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 // =================== БЛОК 2: Компонент приложения ===================
 export default function CookifyDemo() {
@@ -437,7 +490,6 @@ export default function CookifyDemo() {
 
   const { favorites, toggleFav, isFavorite } = useFavorites(firebaseUser, initialFavorites);
 
-  // ── Трекер воды (вынесен в хук, расшарен через контекст) ──────────────────
   const {
     waterIntake, dailyGoal, setDailyGoal,
     useAutoCalculation, setUseAutoCalculation,
@@ -731,7 +783,6 @@ export default function CookifyDemo() {
     showAddRecipeModal, setShowAddRecipeModal,
     mealPlan, setMealPlan, addToMealPlan,
     favorites, toggleFav, isFavorite,
-    // ── Вода ────────────────────────────────────────────────────────────────
     waterIntake, dailyGoal, setDailyGoal,
     useAutoCalculation, setUseAutoCalculation,
     todayIntake, addWater, removeWaterEntry,
@@ -848,6 +899,7 @@ export default function CookifyDemo() {
                   <button onClick={closeModal} className={`${theme.textSecondary} hover:${theme.text} transition`}><FaTimes size={24} /></button>
                 </div>
 
+                {/* ── Блок времени + таймер ── */}
                 <div className={`${theme.cardBg} border-2 rounded-xl p-4 mb-6 shadow-md`} style={{ borderColor: timeInfo.color }}>
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-3">
@@ -875,7 +927,16 @@ export default function CookifyDemo() {
                   <div className="w-full bg-gray-200 rounded-full h-2.5 mb-2">
                     <div className="h-2.5 rounded-full transition-all duration-500" style={{ width: `${progressPercentage}%`, backgroundColor: timeInfo.color }}></div>
                   </div>
-                  <div className={`${fontSize.tiny} ${theme.textSecondary} text-center`}>{t(`${timeMinutes <= 15 ? 'Быстрое приготовление!' : timeMinutes <= 40 ? 'Умеренное время' : 'Требуется терпение'}`, `${timeMinutes <= 15 ? 'Quick cooking!' : timeMinutes <= 40 ? 'Moderate time' : 'Takes patience'}`)}</div>
+                  <div className={`${fontSize.tiny} ${theme.textSecondary} text-center mb-1`}>{t(`${timeMinutes <= 15 ? 'Быстрое приготовление!' : timeMinutes <= 40 ? 'Умеренное время' : 'Требуется терпение'}`, `${timeMinutes <= 15 ? 'Quick cooking!' : timeMinutes <= 40 ? 'Moderate time' : 'Takes patience'}`)}</div>
+
+                  {/* 🍳 Таймер обратного отсчёта */}
+                  <CookingTimerBlock
+                    timeMinutes={timeMinutes}
+                    timeInfo={timeInfo}
+                    t={t}
+                    fontSize={fontSize}
+                    theme={theme}
+                  />
                 </div>
 
                 <div className={`${theme.textSecondary} ${fontSize.small} mb-4`}>{t("Сложность:", "Difficulty:")} {selectedRecipe.difficulty}</div>
