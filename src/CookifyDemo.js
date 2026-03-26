@@ -20,6 +20,7 @@ import Header from "./components/Header";
 import HomeScreen from "./components/HomeScreen";
 import SearchScreen from "./components/SearchScreen";
 import AccountScreen from "./components/AccountScreen";
+import SettingsScreen from "./components/SettingsScreen";
 import AddRecipeModal from "./components/AddRecipeModal";
 import NotificationModal from "./components/NotificationModal";
 import RecipeVariantModal from "./components/RecipeVariantModal";
@@ -223,7 +224,6 @@ const loadHomeWidgetsOrder = () => {
     const saved = localStorage.getItem(HOME_WIDGETS_ORDER_KEY);
     if (!saved) return DEFAULT_HOME_ORDER;
     const parsed = JSON.parse(saved);
-    // Добавляем новые виджеты в конец, если их нет в сохранённом порядке
     const merged = [...parsed];
     DEFAULT_HOME_ORDER.forEach(id => { if (!merged.includes(id)) merged.push(id); });
     return merged;
@@ -965,6 +965,8 @@ export default function CookifyDemo() {
             favorites={favorites} toggleFav={toggleFav} isFavorite={isFavorite}
           />
         )}
+
+        {activeScreen === "settings" && <SettingsScreen />}
 
         {showAddRecipeModal && firebaseUser && (
           <AddRecipeModal
