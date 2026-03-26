@@ -289,11 +289,11 @@ const loadFeatureFlags = () => {
 // =================== БЛОК 2: Компонент приложения ===================
 export default function CookifyDemo() {
   const [activeScreen, setActiveScreen] = useState("home");
-  const [language, setLanguage] = useState("ru");
-  const [unitSystem, setUnitSystem] = useState("metric");
-  const [currentTheme, setCurrentTheme] = useState("olive");
-  const [currentFont, setCurrentFont] = useState("inter");
-  const [currentFontSize, setCurrentFontSize] = useState("small");
+  const [language, setLanguage] = useState(() => localStorage.getItem("cookify_language") || "ru");
+  const [unitSystem, setUnitSystem] = useState(() => localStorage.getItem("cookify_unitSystem") || "metric");
+  const [currentTheme, setCurrentTheme] = useState(() => localStorage.getItem("cookify_theme") || "olive");
+  const [currentFont, setCurrentFont] = useState(() => localStorage.getItem("cookify_font") || "inter");
+  const [currentFontSize, setCurrentFontSize] = useState(() => localStorage.getItem("cookify_fontSize") || "small");
   const [showCustomization, setShowCustomization] = useState(false);
   const [showRegisterForm, setShowRegisterForm] = useState(false);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
