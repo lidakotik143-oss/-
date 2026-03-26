@@ -219,6 +219,19 @@ const DEFAULT_FEATURE_FLAGS = {
 const DEFAULT_HOME_ORDER = ["welcome", "nutrition", "navCards"];
 const HOME_WIDGETS_ORDER_KEY = "cookify_homeWidgetsOrder";
 
+// Порядок виджетов экрана аккаунта по умолчанию
+const DEFAULT_ACCOUNT_ORDER = [
+  "showCalorieBalance",
+  "showTopDishes",
+  "showNutritionDashboard",
+  "showHistoryTab",
+  "showPlannerTab",
+  "showShoppingTab",
+  "showFavoritesTab",
+  "showWaterTracker"
+];
+const ACCOUNT_WIDGETS_ORDER_KEY = "cookify_accountWidgetsOrder";
+
 const loadHomeWidgetsOrder = () => {
   try {
     const saved = localStorage.getItem(HOME_WIDGETS_ORDER_KEY);
@@ -229,6 +242,19 @@ const loadHomeWidgetsOrder = () => {
     return merged;
   } catch {
     return DEFAULT_HOME_ORDER;
+  }
+};
+
+const loadAccountWidgetsOrder = () => {
+  try {
+    const saved = localStorage.getItem(ACCOUNT_WIDGETS_ORDER_KEY);
+    if (!saved) return DEFAULT_ACCOUNT_ORDER;
+    const parsed = JSON.parse(saved);
+    const merged = [...parsed];
+    DEFAULT_ACCOUNT_ORDER.forEach(id => { if (!merged.includes(id)) merged.push(id); });
+    return merged;
+  } catch {
+    return DEFAULT_ACCOUNT_ORDER;
   }
 };
 
@@ -258,6 +284,7 @@ export default function CookifyDemo() {
 
   const [featureFlags, setFeatureFlags] = useState(loadFeatureFlags);
   const [homeWidgetsOrder, setHomeWidgetsOrder] = useState(loadHomeWidgetsOrder);
+  const [accountWidgetsOrder, setAccountWidgetsOrder] = useState(loadAccountWidgetsOrder);
 
   const [communityRecipes, setCommunityRecipes] = useState([]);
   const [showAddRecipeModal, setShowAddRecipeModal] = useState(false);
@@ -420,6 +447,7 @@ export default function CookifyDemo() {
   useEffect(() => { localStorage.setItem("cookify_mealPlan",   JSON.stringify(mealPlan)); }, [mealPlan]);
   useEffect(() => { localStorage.setItem(FEATURE_FLAGS_KEY,    JSON.stringify(featureFlags)); }, [featureFlags]);
   useEffect(() => { localStorage.setItem(HOME_WIDGETS_ORDER_KEY, JSON.stringify(homeWidgetsOrder)); }, [homeWidgetsOrder]);
+  useEffect(() => { localStorage.setItem(ACCOUNT_WIDGETS_ORDER_KEY, JSON.stringify(accountWidgetsOrder)); }, [accountWidgetsOrder]);
 
   useEffect(() => { if (language === "en") setUnitSystem("imperial"); else setUnitSystem("metric"); }, [language]);
   useEffect(() => { setOpenSubPicker(null); }, [selectedRecipe, selectedRecipeVariantKey]);
@@ -639,6 +667,7 @@ export default function CookifyDemo() {
     showCustomization, setShowCustomization, THEMES, FONTS, FONT_SIZES, t,
     featureFlags, setFeatureFlags,
     homeWidgetsOrder, setHomeWidgetsOrder, DEFAULT_HOME_ORDER,
+    accountWidgetsOrder, setAccountWidgetsOrder, DEFAULT_ACCOUNT_ORDER,
     firebaseUser, userData, setUserData, registered, setRegistered,
     isEditingProfile, setIsEditingProfile, showRegisterForm, setShowRegisterForm,
     handleRegister, handleStartEditProfile, handleLogout, handleAvatarUpload,

@@ -16,7 +16,6 @@ const Toggle = ({ checked, onChange, theme }) => (
   </button>
 );
 
-// Кнопки ↑↓ для перестановки
 const OrderButtons = ({ id, order, setOrder, theme }) => {
   const idx = order.indexOf(id);
   const move = (dir) => {
@@ -37,13 +36,16 @@ const OrderButtons = ({ id, order, setOrder, theme }) => {
 };
 
 export default function AdvancedSettingsPanel() {
-  const { t, theme, fontSize, featureFlags, setFeatureFlags, homeWidgetsOrder, setHomeWidgetsOrder, DEFAULT_HOME_ORDER } = useApp();
+  const {
+    t, theme, fontSize, featureFlags, setFeatureFlags,
+    homeWidgetsOrder, setHomeWidgetsOrder, DEFAULT_HOME_ORDER,
+    accountWidgetsOrder, setAccountWidgetsOrder, DEFAULT_ACCOUNT_ORDER,
+  } = useApp();
   const [open, setOpen] = useState(false);
-  const [section, setSection] = useState("account"); // "account" | "home"
+  const [section, setSection] = useState("account");
 
   const toggleFlag = (key) => setFeatureFlags(prev => ({ ...prev, [key]: !prev[key] }));
 
-  // ── Секция «Аккаунт» ─────────────────────────────────────────
   const accountItems = [
     { key: "showCalorieBalance",     icon: "🎯", label: t("Баланс калорий за сегодня", "Today's calorie balance"),    desc: t("Виджет дефицит / профицит", "Deficit / surplus widget") },
     { key: "showTopDishes",          icon: "🏆", label: t("Топ блюд за неделю",          "Top dishes this week"),         desc: t("Рейтинг частых блюд",          "Most frequent dishes") },
@@ -55,7 +57,6 @@ export default function AdvancedSettingsPanel() {
     { key: "showWaterTracker",       icon: "💧", label: t("Трекер воды",                 "Water tracker"),                desc: t("Контроль суточного потребления воды", "Daily water intake") },
   ];
 
-  // ── Секция «Главный экран» ────────────────────────────────────
   const homeItems = [
     { id: "welcome",  flagKey: "home_showWelcome",   icon: "👋", label: t("Приветствие",         "Welcome block"),     desc: t("Имя и переключатель языка", "Name & language switcher") },
     { id: "nutrition",flagKey: "home_showNutrition", icon: "🥗", label: t("Питание за сегодня",  "Today's Nutrition"), desc: t("Только для авторизованных",  "For logged-in users only") },
@@ -67,7 +68,6 @@ export default function AdvancedSettingsPanel() {
 
   return (
     <div className={`${theme.cardBg} p-6 rounded-xl shadow`}>
-      {/* Шапка */}
       <button onClick={() => setOpen(o => !o)} className="flex items-center justify-between w-full">
         <div className="flex items-center gap-2">
           <FaSlidersH className={theme.accentText} />
@@ -85,7 +85,6 @@ export default function AdvancedSettingsPanel() {
                "Control visibility and order of modules. Changes are saved automatically.")}
           </p>
 
-          {/* Переключатель секций */}
           <div className={`flex gap-2 mb-5 p-1 rounded-xl border ${theme.border}`}>
             <button onClick={() => setSection("account")}
               className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg ${fontSize.small} transition ${
@@ -107,30 +106,42 @@ export default function AdvancedSettingsPanel() {
             </button>
           </div>
 
-          {/* ── Секция аккаунт ── */}
+          {/* ── Секция аккаунт — с кнопками ▲▼ ── */}
           {section === "account" && (
             <div className="space-y-1">
-              {accountItems.map(item => (
-                <div key={item.key}
-                  className={`flex items-center justify-between p-3 rounded-xl transition ${
-                    featureFlags[item.key] ? `border ${theme.border}` : "opacity-50"
-                  }`}>
-                  <div className="flex items-start gap-3 flex-1 min-w-0">
-                    <span className="text-xl flex-shrink-0 mt-0.5">{item.icon}</span>
-                    <div className="min-w-0">
-                      <div className={`${fontSize.small} font-semibold truncate`}>{item.label}</div>
-                      <div className={`${fontSize.tiny} ${theme.textSecondary} mt-0.5`}>{item.desc}</div>
+              <p className={`${fontSize.tiny} ${theme.textSecondary} mb-3`}>
+                {t("Кнопки ▲▼ меняют порядок виджетов на экране аккаунта.",
+                   "Use ▲▼ buttons to reorder account screen widgets.")}
+              </p>
+              {accountWidgetsOrder.map((key) => {
+                const item = accountItems.find(a => a.key === key);
+                if (!item) return null;
+                return (
+                  <div key={key}
+                    className={`flex items-center justify-between p-3 rounded-xl transition ${
+                      featureFlags[key] ? `border ${theme.border}` : "opacity-50"
+                    }`}>
+                    <div className="flex items-start gap-3 flex-1 min-w-0">
+                      <span className="text-xl flex-shrink-0 mt-0.5">{item.icon}</span>
+                      <div className="min-w-0">
+                        <div className={`${fontSize.small} font-semibold truncate`}>{item.label}</div>
+                        <div className={`${fontSize.tiny} ${theme.textSecondary} mt-0.5`}>{item.desc}</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 ml-3 flex-shrink-0">
+                      <Toggle checked={!!featureFlags[key]} onChange={() => toggleFlag(key)} theme={theme} />
+                      <OrderButtons id={key} order={accountWidgetsOrder} setOrder={setAccountWidgetsOrder} theme={theme} />
                     </div>
                   </div>
-                  <div className="ml-4 flex-shrink-0">
-                    <Toggle checked={!!featureFlags[item.key]} onChange={() => toggleFlag(item.key)} theme={theme} />
-                  </div>
-                </div>
-              ))}
+                );
+              })}
               <button
-                onClick={() => setFeatureFlags(prev => ({ ...prev, showCalorieBalance:true,showTopDishes:true,showNutritionDashboard:true,showHistoryTab:true,showPlannerTab:true,showShoppingTab:true,showFavoritesTab:true,showWaterTracker:true }))}
+                onClick={() => {
+                  setFeatureFlags(prev => ({ ...prev, showCalorieBalance:true, showTopDishes:true, showNutritionDashboard:true, showHistoryTab:true, showPlannerTab:true, showShoppingTab:true, showFavoritesTab:true, showWaterTracker:true }));
+                  setAccountWidgetsOrder(DEFAULT_ACCOUNT_ORDER);
+                }}
                 className={`mt-4 w-full py-2 rounded-xl ${fontSize.small} border ${theme.border} ${theme.textSecondary} hover:opacity-80 transition`}>
-                {t("↺ Включить всё", "↺ Enable all")}
+                {t("↺ Включить всё и сбросить порядок", "↺ Enable all & reset order")}
               </button>
             </div>
           )}
