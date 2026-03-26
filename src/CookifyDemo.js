@@ -1,5 +1,5 @@
 // =================== БЛОК 1: Импорты и примерные данные ===================
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { FaTimes, FaPlus, FaMinus, FaHeart, FaRegHeart } from "react-icons/fa";
 import { RECIPES_DATABASE } from './recipesData';
 
@@ -303,6 +303,7 @@ export default function CookifyDemo() {
   const [accountWidgetsOrder, setAccountWidgetsOrder] = useState(loadAccountWidgetsOrder);
 
   const [communityRecipes, setCommunityRecipes] = useState([]);
+  const communityRecipesRef = useRef([]);
   const [showAddRecipeModal, setShowAddRecipeModal] = useState(false);
 
   const [selectedRecipe, setSelectedRecipe] = useState(null);
@@ -448,7 +449,12 @@ export default function CookifyDemo() {
 
   useEffect(() => {
     getRecipes()
-      .then(r => setCommunityRecipes(r))
+      .then(r => {
+        if (JSON.stringify(r) !== JSON.stringify(communityRecipesRef.current)) {
+          communityRecipesRef.current = r;
+          setCommunityRecipes(r);
+        }
+      })
       .catch(() => setCommunityRecipes([]));
   }, []);
 
