@@ -1,14 +1,16 @@
 import React from "react";
 import { FaArrowUp, FaArrowDown, FaBullseye } from "react-icons/fa";
 import { useApp } from "../../context/AppContext";
+import { calculateDailyGoals } from "../../utils/nutrition";
 
 export default function CalorieBalanceWidget() {
   const { t, theme, fontSize, userData, todayNutrition } = useApp();
 
-  const goal = parseInt(userData?.calorieGoal || 0);
+  const dailyGoals = calculateDailyGoals(userData);
+  const goal = dailyGoals.calories || 0;
   const eaten = Math.round(todayNutrition?.totalCalories || 0);
 
-  // Если норма не задана — предлагаем задать
+  // Если профиль не заполнен — норму нельзя рассчитать
   if (!goal) {
     return (
       <div className={`${theme.cardBg} p-4 rounded-2xl shadow border ${theme.border} flex items-center justify-between gap-4`}>
@@ -17,7 +19,7 @@ export default function CalorieBalanceWidget() {
           <div>
             <div className={`${fontSize.body} font-semibold`}>{t("Дефицит / профицит калорий", "Calorie balance")}</div>
             <div className={`${fontSize.small} ${theme.textSecondary}`}>
-              {t("Задайте норму ккал в профиле →", "Set your calorie goal in profile →")}
+              {t("Заполните профиль для расчёта нормы →", "Complete your profile to calculate goal →")}
             </div>
           </div>
         </div>
@@ -34,12 +36,9 @@ export default function CalorieBalanceWidget() {
   const percent    = Math.min(Math.round((eaten / goal) * 100), 200);
   const barWidth   = Math.min(percent, 100);
 
-  // Цвет зависит от контекста:
-  // дефицит — зелёный (хорошо для похудения)
-  // профицит — красный
-  const barColor    = isOnTarget ? "bg-green-500" : isDeficit ? "bg-green-400" : percent > 110 ? "bg-red-500" : "bg-yellow-400";
-  const textColor   = isOnTarget ? "text-green-600" : isDeficit ? "text-green-600" : percent > 110 ? "text-red-500" : "text-yellow-600";
-  const bgBadge     = isOnTarget ? "bg-green-100" : isDeficit ? "bg-green-100" : percent > 110 ? "bg-red-100" : "bg-yellow-100";
+  const barColor  = isOnTarget ? "bg-green-500" : isDeficit ? "bg-green-400" : percent > 110 ? "bg-red-500" : "bg-yellow-400";
+  const textColor = isOnTarget ? "text-green-600" : isDeficit ? "text-green-600" : percent > 110 ? "text-red-500" : "text-yellow-600";
+  const bgBadge   = isOnTarget ? "bg-green-100" : isDeficit ? "bg-green-100" : percent > 110 ? "bg-red-100" : "bg-yellow-100";
 
   const label = isOnTarget
     ? t("Точно в цели! ✅", "Exactly on target! ✅")
@@ -57,7 +56,6 @@ export default function CalorieBalanceWidget() {
 
   return (
     <div className={`${theme.cardBg} p-5 rounded-2xl shadow border ${theme.border}`}>
-      {/* Шапка */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <FaBullseye className={`text-xl ${textColor}`} />
@@ -65,7 +63,6 @@ export default function CalorieBalanceWidget() {
             {t("Баланс калорий за сегодня", "Today's calorie balance")}
           </span>
         </div>
-        {/* Бейдж */}
         <span className={`flex items-center gap-1.5 px-3 py-1 rounded-full ${fontSize.small} font-bold ${textColor} ${bgBadge}`}>
           {!isOnTarget && (isDeficit
             ? <FaArrowDown size={12} />
@@ -75,7 +72,6 @@ export default function CalorieBalanceWidget() {
         </span>
       </div>
 
-      {/* Прогресс-бар */}
       <div className="w-full bg-gray-200 rounded-full h-3 mb-2 overflow-hidden">
         <div
           className={`h-3 rounded-full transition-all duration-700 ${barColor}`}
@@ -83,7 +79,6 @@ export default function CalorieBalanceWidget() {
         />
       </div>
 
-      {/* Подпись */}
       <div className="flex items-center justify-between">
         <span className={`${fontSize.small} ${theme.textSecondary}`}>{sublabel}</span>
         <span className={`${fontSize.small} ${theme.textSecondary}`}>
