@@ -7,6 +7,7 @@ import { useApp } from '../context/AppContext';
 import ProfileCard from "./account/ProfileCard";
 import ProfileEditForm from "./account/ProfileEditForm";
 import CustomizationPanel from "./account/CustomizationPanel";
+import AdvancedSettingsPanel from "./account/AdvancedSettingsPanel";
 import AddMealModal from "./account/AddMealModal";
 import PlannerModal from "./account/PlannerModal";
 import HistoryTab from "./account/HistoryTab";
@@ -58,7 +59,7 @@ function FirebaseAuthPanel({ t, theme, fontSize, language }) {
     finally { setLoading(false); }
   };
 
-  const inputCls  = `w-full px-4 py-2.5 rounded-xl border ${theme.border} ${theme.input} focus:outline-none focus:ring-2 focus:ring-[#606C38] ${fontSize.body}`;
+  const inputCls   = `w-full px-4 py-2.5 rounded-xl border ${theme.border} ${theme.input} focus:outline-none focus:ring-2 focus:ring-[#606C38] ${fontSize.body}`;
   const btnPrimary = `w-full py-3 rounded-xl ${theme.accent} ${theme.accentHover} text-white font-semibold transition ${fontSize.body} ${loading ? 'opacity-60 cursor-not-allowed' : ''}`;
   const btnOutline = `w-full py-3 rounded-xl border-2 ${theme.border} ${theme.text} font-semibold transition hover:opacity-80 ${fontSize.body}`;
 
@@ -194,6 +195,20 @@ export default function AccountScreen(props) {
     showPlannerModal, setShowPlannerModal, language, userData,
   } = props;
 
+  const { featureFlags } = useApp();
+
+  // Вкладки, отфильтрованные по флагам
+  const allTabs = [
+    featureFlags.showHistoryTab  && { id: "history",   icon: <FaCalendarAlt />, label: t("История питания", "Meal history") },
+    featureFlags.showPlannerTab  && { id: "planner",   icon: <FaUtensils />,    label: t("План меню", "Menu plan") },
+    featureFlags.showShoppingTab && { id: "shopping",  icon: <FaShoppingCart />,label: t("Покупки", "Shopping") },
+    featureFlags.showFavoritesTab&& { id: "favorites", icon: <FaHeart />,       label: t("Избранное", "Favorites") },
+    featureFlags.showWaterTracker&& { id: "water",     icon: <FaTint />,        label: t("Вода", "Water") },
+  ].filter(Boolean);
+
+  // Если текущая вкладка выключена, переключаемся на первую доступную
+  const activeTab = allTabs.find(t => t.id === accountTab)?.id || allTabs[0]?.id || "history";
+
   return (
     <div className="max-w-5xl mx-auto space-y-6">
       {!registered ? (
@@ -203,33 +218,30 @@ export default function AccountScreen(props) {
           <ProfileCard {...props} />
 
           {/* ✨ Виджет баланса калорий */}
-          <CalorieBalanceWidget />
+          {featureFlags.showCalorieBalance && <CalorieBalanceWidget />}
 
           {/* Вкладки */}
-          <div className={`${theme.cardBg} p-3 rounded-xl shadow flex gap-2 overflow-x-auto`}>
-            {[
-              { id: "history",   icon: <FaCalendarAlt />, label: t("История питания", "Meal history") },
-              { id: "planner",   icon: <FaUtensils />,    label: t("План меню", "Menu plan") },
-              { id: "shopping",  icon: <FaShoppingCart />,label: t("Покупки", "Shopping") },
-              { id: "favorites", icon: <FaHeart />,       label: t("Избранное", "Favorites") },
-              { id: "water",     icon: <FaTint />,        label: t("Вода", "Water") },
-            ].map(tab => (
-              <button key={tab.id} onClick={() => setAccountTab(tab.id)}
-                className={`flex-1 min-w-fit px-4 py-2 rounded-xl ${fontSize.small} transition flex items-center justify-center gap-2 ${
-                  accountTab === tab.id ? `${theme.accent} text-white` : `${theme.border} border`
-                }`}>
-                {tab.icon} {tab.label}
-              </button>
-            ))}
-          </div>
+          {allTabs.length > 0 && (
+            <div className={`${theme.cardBg} p-3 rounded-xl shadow flex gap-2 overflow-x-auto`}>
+              {allTabs.map(tab => (
+                <button key={tab.id} onClick={() => setAccountTab(tab.id)}
+                  className={`flex-1 min-w-fit px-4 py-2 rounded-xl ${fontSize.small} transition flex items-center justify-center gap-2 ${
+                    activeTab === tab.id ? `${theme.accent} text-white` : `${theme.border} border`
+                  }`}>
+                  {tab.icon} {tab.label}
+                </button>
+              ))}
+            </div>
+          )}
 
-          {accountTab === "history"   && <HistoryTab {...props} />}
-          {accountTab === "planner"   && <PlannerTab {...props} />}
-          {accountTab === "shopping"  && <ShoppingListTab {...props} />}
-          {accountTab === "favorites" && <FavoritesTab />}
-          {accountTab === "water"     && <WaterTracker theme={theme} fontSize={fontSize} language={language} userData={userData} />}
+          {activeTab === "history"   && featureFlags.showHistoryTab   && <HistoryTab {...props} />}
+          {activeTab === "planner"   && featureFlags.showPlannerTab   && <PlannerTab {...props} />}
+          {activeTab === "shopping"  && featureFlags.showShoppingTab  && <ShoppingListTab {...props} />}
+          {activeTab === "favorites" && featureFlags.showFavoritesTab && <FavoritesTab />}
+          {activeTab === "water"     && featureFlags.showWaterTracker && <WaterTracker theme={theme} fontSize={fontSize} language={language} userData={userData} />}
 
           <CustomizationPanel {...props} />
+          <AdvancedSettingsPanel />
         </>
       )}
 
