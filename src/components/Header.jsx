@@ -1,5 +1,5 @@
 import React from 'react';
-import { FaHome, FaSearch, FaUser } from 'react-icons/fa';
+import { FaHome, FaSearch, FaUser, FaCog } from 'react-icons/fa';
 
 export default function Header({ 
   activeScreen, 
@@ -12,9 +12,10 @@ export default function Header({
   const t = (ru, en) => (language === "ru" ? ru : en);
 
   const navItems = [
-    { key: 'home', icon: <FaHome />, labelRu: 'Главная', labelEn: 'Home' },
-    { key: 'search', icon: <FaSearch />, labelRu: 'Поиск', labelEn: 'Search' },
-    { key: 'account', icon: <FaUser />, labelRu: 'Аккаунт', labelEn: 'Account' },
+    { key: 'home',     icon: <FaHome />,   labelRu: 'Главная',  labelEn: 'Home' },
+    { key: 'search',   icon: <FaSearch />, labelRu: 'Поиск',    labelEn: 'Search' },
+    { key: 'account',  icon: <FaUser />,   labelRu: 'Аккаунт',  labelEn: 'Account' },
+    { key: 'settings', icon: <FaCog />,    labelRu: 'Настройки',labelEn: 'Settings' },
   ];
 
   return (

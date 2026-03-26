@@ -6,8 +6,6 @@ import { setUserProfile } from '../firebase.js';
 import { useApp } from '../context/AppContext';
 import ProfileCard from "./account/ProfileCard";
 import ProfileEditForm from "./account/ProfileEditForm";
-import CustomizationPanel from "./account/CustomizationPanel";
-import AdvancedSettingsPanel from "./account/AdvancedSettingsPanel";
 import AddMealModal from "./account/AddMealModal";
 import PlannerModal from "./account/PlannerModal";
 import HistoryTab from "./account/HistoryTab";
@@ -197,16 +195,14 @@ export default function AccountScreen(props) {
 
   const { featureFlags } = useApp();
 
-  // Вкладки, отфильтрованные по флагам
   const allTabs = [
-    featureFlags.showHistoryTab  && { id: "history",   icon: <FaCalendarAlt />, label: t("История питания", "Meal history") },
-    featureFlags.showPlannerTab  && { id: "planner",   icon: <FaUtensils />,    label: t("План меню", "Menu plan") },
-    featureFlags.showShoppingTab && { id: "shopping",  icon: <FaShoppingCart />,label: t("Покупки", "Shopping") },
-    featureFlags.showFavoritesTab&& { id: "favorites", icon: <FaHeart />,       label: t("Избранное", "Favorites") },
-    featureFlags.showWaterTracker&& { id: "water",     icon: <FaTint />,        label: t("Вода", "Water") },
+    featureFlags.showHistoryTab   && { id: "history",   icon: <FaCalendarAlt />, label: t("История питания", "Meal history") },
+    featureFlags.showPlannerTab   && { id: "planner",   icon: <FaUtensils />,    label: t("План меню", "Menu plan") },
+    featureFlags.showShoppingTab  && { id: "shopping",  icon: <FaShoppingCart />,label: t("Покупки", "Shopping") },
+    featureFlags.showFavoritesTab && { id: "favorites", icon: <FaHeart />,       label: t("Избранное", "Favorites") },
+    featureFlags.showWaterTracker && { id: "water",     icon: <FaTint />,        label: t("Вода", "Water") },
   ].filter(Boolean);
 
-  // Если текущая вкладка выключена, переключаемся на первую доступную
   const activeTab = allTabs.find(t => t.id === accountTab)?.id || allTabs[0]?.id || "history";
 
   return (
@@ -217,10 +213,8 @@ export default function AccountScreen(props) {
         <>
           <ProfileCard {...props} />
 
-          {/* ✨ Виджет баланса калорий */}
           {featureFlags.showCalorieBalance && <CalorieBalanceWidget />}
 
-          {/* Вкладки */}
           {allTabs.length > 0 && (
             <div className={`${theme.cardBg} p-3 rounded-xl shadow flex gap-2 overflow-x-auto`}>
               {allTabs.map(tab => (
@@ -239,9 +233,6 @@ export default function AccountScreen(props) {
           {activeTab === "shopping"  && featureFlags.showShoppingTab  && <ShoppingListTab {...props} />}
           {activeTab === "favorites" && featureFlags.showFavoritesTab && <FavoritesTab />}
           {activeTab === "water"     && featureFlags.showWaterTracker && <WaterTracker theme={theme} fontSize={fontSize} language={language} userData={userData} />}
-
-          <CustomizationPanel {...props} />
-          <AdvancedSettingsPanel />
         </>
       )}
 
