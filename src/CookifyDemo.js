@@ -34,6 +34,7 @@ import { useMealPlan }      from './hooks/useMealPlan';
 import { useWeeklyPlanner } from './hooks/useWeeklyPlanner';
 import { useShoppingList }  from './hooks/useShoppingList';
 import { useFavorites }     from './hooks/useFavorites';
+import { useWater }         from './hooks/useWater';
 
 // 🔥 Firebase
 import { auth } from './firebase.js';
@@ -209,14 +210,29 @@ const DEFAULT_FEATURE_FLAGS = {
   showShoppingTab:       true,
   showFavoritesTab:      true,
   showWaterTracker:      true,
-  // Виджеты главного экрана (видимость)
+  // Виджеты главного экрана — существующие
   home_showWelcome:      true,
   home_showNutrition:    true,
   home_showNavCards:     true,
+  // Виджеты главного экрана — новые
+  home_showWater:          true,
+  home_showCalorieBalance: true,
+  home_showTopDishes:      true,
+  home_showShoppingPreview:true,
+  home_showPlannerPreview: true,
 };
 
 // Порядок виджетов главного экрана по умолчанию
-const DEFAULT_HOME_ORDER = ["welcome", "nutrition", "navCards"];
+const DEFAULT_HOME_ORDER = [
+  "welcome",
+  "calorieBalance",
+  "nutrition",
+  "water",
+  "topDishes",
+  "shoppingPreview",
+  "plannerPreview",
+  "navCards",
+];
 const HOME_WIDGETS_ORDER_KEY = "cookify_homeWidgetsOrder";
 
 // Порядок виджетов экрана аккаунта по умолчанию
@@ -419,6 +435,16 @@ export default function CookifyDemo() {
   });
 
   const { favorites, toggleFav, isFavorite } = useFavorites(firebaseUser, initialFavorites);
+
+  // ── Трекер воды (вынесен в хук, расшарен через контекст) ──────────────────
+  const {
+    waterIntake, dailyGoal, setDailyGoal,
+    useAutoCalculation, setUseAutoCalculation,
+    todayIntake, addWater, removeWaterEntry,
+    getTodayEntries: getWaterTodayEntries,
+    getWeeklyStats: getWaterWeeklyStats,
+    calculateWaterGoal,
+  } = useWater(firebaseUser, userData);
 
   useEffect(() => {
     getRecipes()
@@ -699,6 +725,13 @@ export default function CookifyDemo() {
     showAddRecipeModal, setShowAddRecipeModal,
     mealPlan, setMealPlan, addToMealPlan,
     favorites, toggleFav, isFavorite,
+    // ── Вода ────────────────────────────────────────────────────────────────
+    waterIntake, dailyGoal, setDailyGoal,
+    useAutoCalculation, setUseAutoCalculation,
+    todayIntake, addWater, removeWaterEntry,
+    getTodayEntries: getWaterTodayEntries,
+    getWeeklyStats: getWaterWeeklyStats,
+    calculateWaterGoal,
   };
 
   if (authLoading) {
