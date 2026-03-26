@@ -57,14 +57,37 @@ export default function AdvancedSettingsPanel() {
     { key: "showWaterTracker",       icon: "💧", label: t("Трекер воды",                 "Water tracker"),                desc: t("Контроль суточного потребления воды", "Daily water intake") },
   ];
 
+  // id совпадает с ключом в DEFAULT_HOME_ORDER и widgetMap в HomeScreen
   const homeItems = [
-    { id: "welcome",  flagKey: "home_showWelcome",   icon: "👋", label: t("Приветствие",         "Welcome block"),     desc: t("Имя и переключатель языка", "Name & language switcher") },
-    { id: "nutrition",flagKey: "home_showNutrition", icon: "🥗", label: t("Питание за сегодня",  "Today's Nutrition"), desc: t("Только для авторизованных",  "For logged-in users only") },
-    { id: "navCards", flagKey: "home_showNavCards",  icon: "🗂️", label: t("Навигационные карточки", "Nav cards"),       desc: t("Для незарегистрированных",   "For guests only") },
+    { id: "welcome",          flagKey: "home_showWelcome",          icon: "👋", label: t("Приветствие",              "Welcome block"),          desc: t("Имя и переключатель языка",             "Name & language switcher") },
+    { id: "calorieBalance",   flagKey: "home_showCalorieBalance",   icon: "⚖️", label: t("Баланс калорий",           "Calorie balance"),         desc: t("Цель / съедено / остаток на сегодня",    "Goal / eaten / remaining today") },
+    { id: "nutrition",        flagKey: "home_showNutrition",        icon: "🥗", label: t("Питание за сегодня",       "Today's nutrition"),       desc: t("Только для авторизованных",              "For logged-in users only") },
+    { id: "water",            flagKey: "home_showWater",            icon: "💧", label: t("Трекер воды",              "Water tracker"),           desc: t("Прогресс питья и быстрые кнопки +мл",   "Drinking progress & quick +ml buttons") },
+    { id: "topDishes",        flagKey: "home_showTopDishes",        icon: "🏆", label: t("Топ блюд за 7 дней",      "Top dishes (7 days)"),     desc: t("3 самых частых блюда из истории",        "3 most frequent meals from history") },
+    { id: "shoppingPreview",  flagKey: "home_showShoppingPreview",  icon: "🛒", label: t("Список покупок",           "Shopping list preview"),   desc: t("Первые 5 пунктов + переход к полному",   "First 5 items + link to full list") },
+    { id: "plannerPreview",   flagKey: "home_showPlannerPreview",   icon: "📅", label: t("План питания на сегодня",  "Today's meal plan"),       desc: t("Блюда из планировщика на текущий день",  "Planner meals for today") },
+    { id: "navCards",         flagKey: "home_showNavCards",         icon: "🗂️", label: t("Навигационные карточки",  "Nav cards"),               desc: t("Для незарегистрированных",               "For guests only") },
   ];
 
   const enabledAccount = accountItems.filter(i => featureFlags[i.key]).length;
   const enabledHome    = homeItems.filter(i => featureFlags[i.flagKey]).length;
+
+  const resetAllHomeFlags = () => {
+    const patch = {};
+    homeItems.forEach(i => { patch[i.flagKey] = true; });
+    setFeatureFlags(prev => ({ ...prev, ...patch }));
+    setHomeWidgetsOrder(DEFAULT_HOME_ORDER);
+  };
+
+  const resetAllAccountFlags = () => {
+    setFeatureFlags(prev => ({
+      ...prev,
+      showCalorieBalance: true, showTopDishes: true, showNutritionDashboard: true,
+      showHistoryTab: true, showPlannerTab: true, showShoppingTab: true,
+      showFavoritesTab: true, showWaterTracker: true,
+    }));
+    setAccountWidgetsOrder(DEFAULT_ACCOUNT_ORDER);
+  };
 
   return (
     <div className={`${theme.cardBg} p-6 rounded-xl shadow`}>
@@ -85,6 +108,7 @@ export default function AdvancedSettingsPanel() {
                "Control visibility and order of modules. Changes are saved automatically.")}
           </p>
 
+          {/* ── Табы ── */}
           <div className={`flex gap-2 mb-5 p-1 rounded-xl border ${theme.border}`}>
             <button onClick={() => setSection("account")}
               className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg ${fontSize.small} transition ${
@@ -106,7 +130,7 @@ export default function AdvancedSettingsPanel() {
             </button>
           </div>
 
-          {/* ── Секция аккаунт — с кнопками ▲▼ ── */}
+          {/* ── Секция «Аккаунт» ── */}
           {section === "account" && (
             <div className="space-y-1">
               <p className={`${fontSize.tiny} ${theme.textSecondary} mb-3`}>
@@ -136,17 +160,14 @@ export default function AdvancedSettingsPanel() {
                 );
               })}
               <button
-                onClick={() => {
-                  setFeatureFlags(prev => ({ ...prev, showCalorieBalance:true, showTopDishes:true, showNutritionDashboard:true, showHistoryTab:true, showPlannerTab:true, showShoppingTab:true, showFavoritesTab:true, showWaterTracker:true }));
-                  setAccountWidgetsOrder(DEFAULT_ACCOUNT_ORDER);
-                }}
+                onClick={resetAllAccountFlags}
                 className={`mt-4 w-full py-2 rounded-xl ${fontSize.small} border ${theme.border} ${theme.textSecondary} hover:opacity-80 transition`}>
                 {t("↺ Включить всё и сбросить порядок", "↺ Enable all & reset order")}
               </button>
             </div>
           )}
 
-          {/* ── Секция главный экран ── */}
+          {/* ── Секция «Главный экран» ── */}
           {section === "home" && (
             <div className="space-y-1">
               <p className={`${fontSize.tiny} ${theme.textSecondary} mb-3`}>
@@ -176,7 +197,7 @@ export default function AdvancedSettingsPanel() {
                 );
               })}
               <button
-                onClick={() => { setHomeWidgetsOrder(DEFAULT_HOME_ORDER); setFeatureFlags(prev => ({ ...prev, home_showWelcome:true, home_showNutrition:true, home_showNavCards:true })); }}
+                onClick={resetAllHomeFlags}
                 className={`mt-4 w-full py-2 rounded-xl ${fontSize.small} border ${theme.border} ${theme.textSecondary} hover:opacity-80 transition`}>
                 {t("↺ Сбросить порядок и включить всё", "↺ Reset order & enable all")}
               </button>
