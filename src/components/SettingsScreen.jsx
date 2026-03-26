@@ -1,10 +1,15 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import CustomizationPanel from './account/CustomizationPanel';
 import AdvancedSettingsPanel from './account/AdvancedSettingsPanel';
 
-export default function SettingsScreen(props) {
-  const { t, theme, fontSize } = useApp();
+export default function SettingsScreen() {
+  const { t, theme, fontSize, setShowCustomization } = useApp();
+
+  // Автоматически разворачиваем CustomizationPanel при открытии экрана
+  useEffect(() => {
+    setShowCustomization(true);
+  }, []);
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
@@ -21,7 +26,7 @@ export default function SettingsScreen(props) {
         </div>
       </div>
 
-      <CustomizationPanel {...props} />
+      <CustomizationPanel />
       <AdvancedSettingsPanel />
     </div>
   );
