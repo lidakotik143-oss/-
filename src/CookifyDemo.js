@@ -197,6 +197,31 @@ const setMonthYear = (dateStr, month, year) => {
   return getDateKey(d);
 };
 
+// =================== ДЕФОЛТНЫЕ ФЛАГИ ФИЧ ===================
+const DEFAULT_FEATURE_FLAGS = {
+  showCalorieBalance:    true,  // Виджет дефицит/профицит калорий
+  showTopDishes:         true,  // Топ блюд за неделю
+  showNutritionDashboard:true,  // Дашборд БЖУ в истории
+  showHistoryTab:        true,  // Вкладка «История питания»
+  showPlannerTab:        true,  // Вкладка «Планировщик меню»
+  showShoppingTab:       true,  // Вкладка «Список покупок»
+  showFavoritesTab:      true,  // Вкладка «Избранное»
+  showWaterTracker:      true,  // Трекер воды
+};
+
+const FEATURE_FLAGS_KEY = "cookify_featureFlags";
+
+const loadFeatureFlags = () => {
+  try {
+    const saved = localStorage.getItem(FEATURE_FLAGS_KEY);
+    if (!saved) return DEFAULT_FEATURE_FLAGS;
+    // Мёржим с дефолтами, чтобы новые флаги автоматически появлялись
+    return { ...DEFAULT_FEATURE_FLAGS, ...JSON.parse(saved) };
+  } catch {
+    return DEFAULT_FEATURE_FLAGS;
+  }
+};
+
 // =================== БЛОК 2: Компонент приложения ===================
 export default function CookifyDemo() {
   const [activeScreen, setActiveScreen] = useState("home");
@@ -208,6 +233,9 @@ export default function CookifyDemo() {
   const [showCustomization, setShowCustomization] = useState(false);
   const [showRegisterForm, setShowRegisterForm] = useState(false);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
+
+  // ⚙️ Флаги фич — загружаем из localStorage при старте
+  const [featureFlags, setFeatureFlags] = useState(loadFeatureFlags);
 
   const [communityRecipes, setCommunityRecipes] = useState([]);
   const [showAddRecipeModal, setShowAddRecipeModal] = useState(false);
@@ -271,7 +299,6 @@ export default function CookifyDemo() {
       setMealHistory(firestoreHistory);
       setWeeklyPlan(firestorePlan);
       setUserSubstitutions(substitutions);
-      // ⭐ Сохраняем избранное из Firestore — useFavorites подхватит через initialFavorites
       if (Array.isArray(firestoreFavorites) && firestoreFavorites.length > 0) {
         setInitialFavorites(firestoreFavorites);
       }
@@ -382,6 +409,11 @@ export default function CookifyDemo() {
   useEffect(() => { localStorage.setItem("cookify_fontSize",   currentFontSize); }, [currentFontSize]);
   useEffect(() => { localStorage.setItem("cookify_mealPlan",   JSON.stringify(mealPlan)); }, [mealPlan]);
 
+  // ⚙️ Сохраняем флаги фич при любом изменении
+  useEffect(() => {
+    localStorage.setItem(FEATURE_FLAGS_KEY, JSON.stringify(featureFlags));
+  }, [featureFlags]);
+
   useEffect(() => { if (language === "en") setUnitSystem("imperial"); else setUnitSystem("metric"); }, [language]);
   useEffect(() => { setOpenSubPicker(null); }, [selectedRecipe, selectedRecipeVariantKey]);
   useEffect(() => { if (selectedRecipe) setCurrentServings(selectedRecipe.servings ?? 2); }, [selectedRecipe]);
@@ -442,7 +474,6 @@ export default function CookifyDemo() {
     reader.readAsDataURL(file);
   };
 
-  // ✅ ИСПРАВЛЕНО: handleRegister теперь сохраняет профиль в Firestore
   const handleRegister = (e) => {
     e.preventDefault();
     const form = new FormData(e.target);
@@ -459,11 +490,9 @@ export default function CookifyDemo() {
     setRegistered(true);
     setShowRegisterForm(false);
     setIsEditingProfile(false);
-    // Сохраняем в localStorage (резервная копия)
     if (data.login) {
       localStorage.setItem(`cookify_userdata_${data.login}`, JSON.stringify(data));
     }
-    // ✅ Сохраняем профиль в Firestore — чтобы данные не пропадали при обновлении страницы
     if (firebaseUser?.uid) {
       setUserProfile(firebaseUser.uid, data).catch(err => {
         console.error('Ошибка сохранения профиля в Firestore:', err);
@@ -601,6 +630,8 @@ export default function CookifyDemo() {
     theme, font, fontSize, language, setLanguage, unitSystem, setUnitSystem, toggleUnitSystem,
     currentTheme, setCurrentTheme, currentFont, setCurrentFont, currentFontSize, setCurrentFontSize,
     showCustomization, setShowCustomization, THEMES, FONTS, FONT_SIZES, t,
+    // ⚙️ Флаги фич
+    featureFlags, setFeatureFlags,
     firebaseUser, userData, setUserData, registered, setRegistered,
     isEditingProfile, setIsEditingProfile, showRegisterForm, setShowRegisterForm,
     handleRegister, handleStartEditProfile, handleLogout, handleAvatarUpload,
@@ -731,7 +762,6 @@ export default function CookifyDemo() {
                       </div>
                     )}
                   </div>
-                  {/* ⭐ Кнопка избранного в шапке модалки */}
                   <button
                     onClick={(e) => { e.stopPropagation(); toggleFav(selectedRecipe.id); }}
                     className={`p-2 rounded-full transition hover:scale-110 mr-2 ${
