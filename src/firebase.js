@@ -25,10 +25,12 @@ export async function getRecipes() {
 }
 
 export async function addRecipe(recipe, user) {
+  // authorName — только displayName или нейтральное «Пользователь», почта НЕ сохраняется
+  const displayName = (user.displayName || '').trim();
   return await addDoc(collection(db, 'recipes'), {
     ...recipe,
     authorId: user.uid,
-    authorName: user.displayName || user.email,
+    authorName: displayName || 'Пользователь',
     createdAt: new Date().toISOString()
   });
 }
@@ -52,7 +54,6 @@ export async function setUserProfile(uid, data) {
 }
 
 // ─── ИСТОРИЯ ПИТАНИЯ (личная) ─────────────────────────────────────────────────
-// Хранится в Firestore: users/{uid}/mealHistory (один документ — весь массив)
 
 export async function getMealHistory(uid) {
   const snap = await getDoc(doc(db, 'users', uid, 'data', 'mealHistory'));
@@ -67,7 +68,6 @@ export async function saveMealHistory(uid, entries) {
 }
 
 // ─── ПЛАН МЕНЮ НА НЕДЕЛЮ (личный) ─────────────────────────────────────────
-// Хранится в Firestore: users/{uid}/data/weeklyPlan
 
 export async function getWeeklyPlan(uid) {
   const snap = await getDoc(doc(db, 'users', uid, 'data', 'weeklyPlan'));

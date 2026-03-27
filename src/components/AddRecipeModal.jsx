@@ -8,7 +8,6 @@ const DIETS = ['', 'веган', 'вегетарианское', 'низкока
 const DIFFICULTIES = ['легкий', 'средний', 'сложный'];
 const CUISINES = ['русская', 'итальянская', 'китайская', 'японская', 'французская', 'американская', 'индийская', 'мексиканская', 'другая'];
 
-// Единицы измерения — опциональные
 const UNITS = [
   { value: '', label_ru: '— без единицы', label_en: '— no unit' },
   { value: 'шт', label_ru: 'шт (штук)', label_en: 'pcs' },
@@ -24,7 +23,6 @@ const UNITS = [
   { value: 'капля', label_ru: 'капля', label_en: 'drop' },
 ];
 
-// Компонент одной строки ингредиента
 function IngredientRow({ ing, idx, onChange, onRemove, canRemove, theme, fontSize, language }) {
   const t = (ru, en) => language === 'ru' ? ru : en;
   const [suggestions, setSuggestions] = useState([]);
@@ -53,7 +51,6 @@ function IngredientRow({ ing, idx, onChange, onRemove, canRemove, theme, fontSiz
 
   return (
     <div className={`rounded-xl border ${theme.border} p-3 space-y-2 relative`}>
-      {/* Строка 1: название */}
       <div className="relative">
         <FaSearch className={`absolute left-3 top-1/2 -translate-y-1/2 ${theme.textSecondary} pointer-events-none`} size={12} />
         <input
@@ -65,7 +62,6 @@ function IngredientRow({ ing, idx, onChange, onRemove, canRemove, theme, fontSiz
           placeholder={t('Название ингредиента...', 'Ingredient name...')}
           className={`${inputCls} pl-8`}
         />
-        {/* дропдаун */}
         {showSug && suggestions.length > 0 && (
           <ul className={`absolute z-50 left-0 right-0 top-full mt-1 rounded-xl border ${theme.border} ${theme.cardBg} shadow-xl max-h-44 overflow-y-auto`}>
             {suggestions.map(key => (
@@ -91,7 +87,6 @@ function IngredientRow({ ing, idx, onChange, onRemove, canRemove, theme, fontSiz
         )}
       </div>
 
-      {/* Строка 2: кол-во в граммах + опцион. единица + удалить */}
       <div className="flex gap-2 items-center">
         <div className="flex-1">
           <input
@@ -179,14 +174,15 @@ export default function AddRecipeModal({ onClose, onAdded, theme, fontSize, lang
           .filter(i => i.name.trim())
           .map(i => ({
             name: i.name.trim(),
-            quantity: i.quantity,          // в граммах
-            unit: i.unit || 'г',            // если единица не выбрана — по умолчанию 'г'
+            quantity: i.quantity,
+            unit: i.unit || 'г',
             productId: null
           })),
         instructions: instructions.filter(s => s.trim()),
         variants: [],
         source: 'user',
       };
+      // authorName и authorId сохраняются в firebase.js — почта туда не попадает
       await addRecipe(recipe, firebaseUser);
       onAdded();
       onClose();

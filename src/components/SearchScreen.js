@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
-import { FaSearch, FaPlus, FaHeart, FaRegHeart } from "react-icons/fa";
+import { FaSearch, FaPlus, FaHeart, FaRegHeart, FaTrash } from "react-icons/fa";
+import { deleteRecipe, getRecipes } from "../firebase.js";
 
 // Заглушка-изображение для рецептов без фото
 const RECIPE_PLACEHOLDER = "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=120&h=80&fit=crop&auto=format";
@@ -37,6 +38,7 @@ export default function SearchScreen({
   onAddRecipeClick,
   isFavorite,
   toggleFav,
+  onRecipeDeleted,
 }) {
   // ── Дебаунс поискового инпута (300ms) ──────────────────────────────────────
   const [inputValue, setInputValue] = useState(searchQuery);
@@ -70,6 +72,23 @@ export default function SearchScreen({
     excludeTimer.current = setTimeout(() => {
       setExcludeIngredients(val);
     }, 300);
+  };
+
+  const [deletingId, setDeletingId] = useState(null);
+
+  const handleDelete = async (e, recipe) => {
+    e.stopPropagation();
+    if (!firebaseUser) return;
+    if (!window.confirm(t('Удалить рецепт «' + recipe.title + '»?', 'Delete recipe "' + recipe.title + '"?'))) return;
+    setDeletingId(recipe.id);
+    try {
+      await deleteRecipe(recipe.id, firebaseUser.uid);
+      if (onRecipeDeleted) onRecipeDeleted();
+    } catch (err) {
+      alert(t('Ошибка при удалении', 'Delete error'));
+    } finally {
+      setDeletingId(null);
+    }
   };
 
   return (
@@ -195,6 +214,7 @@ export default function SearchScreen({
               const kcalPerServing = r.caloriesPerServing ?? r.calories;
               const fav = isFavorite ? isFavorite(r.id) : false;
               const imgSrc = r.image || r.imageUrl || RECIPE_PLACEHOLDER;
+              const isOwner = firebaseUser && r.authorId === firebaseUser.uid;
               return (
                 <div
                   key={r.id}
@@ -220,14 +240,20 @@ export default function SearchScreen({
                                 {t('от сообщества', 'community')}
                               </span>
                             )}
+                            {isOwner && (
+                              <span className={`px-2 py-0.5 rounded-full ${fontSize.tiny} bg-[#BC6C25] text-white flex-shrink-0`}>
+                                {t('мой рецепт', 'my recipe')}
+                              </span>
+                            )}
                           </div>
                           <div className={`${fontSize.small} ${theme.textSecondary} mt-1`}>
                             {r.time} {t("мин", "min")} • {kcalPerServing} {t("ккал/порц.", "kcal/srv")}
-                            {r.authorName && <span> • {r.authorName}</span>}
+                            {/* authorName показывается только если это не почта */}
+                            {r.authorName && !r.authorName.includes('@') && <span> • {r.authorName}</span>}
                           </div>
                         </div>
 
-                        {/* Кнопки: тип блюда + избранное */}
+                        {/* Кнопки: тип блюда + избранное + удаление */}
                         <div className="flex items-center gap-2 flex-shrink-0">
                           {r.type && (
                             <span className={`${dishTypeInfo.color} text-white px-3 py-1 rounded-full ${fontSize.tiny} font-semibold`}>
@@ -243,6 +269,18 @@ export default function SearchScreen({
                           >
                             {fav ? <FaHeart size={16} /> : <FaRegHeart size={16} />}
                           </button>
+                          {isOwner && (
+                            <button
+                              onClick={(e) => handleDelete(e, r)}
+                              disabled={deletingId === r.id}
+                              className={`p-2 rounded-full transition hover:scale-110 text-red-400 hover:text-red-600 ${
+                                deletingId === r.id ? 'opacity-50 cursor-not-allowed' : ''
+                              }`}
+                              title={t('Удалить рецепт', 'Delete recipe')}
+                            >
+                              <FaTrash size={14} />
+                            </button>
+                          )}
                         </div>
                       </div>
 
