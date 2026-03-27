@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect, useRef } from "react";
 import { FaTimes, FaPlus, FaSearch, FaPencilAlt, FaAppleAlt } from "react-icons/fa";
 import { useApp } from "../../context/AppContext";
 import { PRODUCTS_BY_NAME } from "../../data/productsNutritionById";
+import { rankFilterKeys, rankFilterRecipes } from "../../utils/searchRank";
 
 export default function AddMealModal({ onClose }) {
   const {
@@ -16,7 +17,6 @@ export default function AddMealModal({ onClose }) {
   const [tab, setTab] = useState("recipe");
   const [query, setQuery] = useState("");
 
-  // Форма продукта
   const [ingName, setIngName]         = useState("");
   const [ingWeight, setIngWeight]     = useState("");
   const [ingCalories, setIngCalories] = useState("");
@@ -26,22 +26,19 @@ export default function AddMealModal({ onClose }) {
   const [ingError, setIngError]       = useState("");
   const [suggestions, setSuggestions] = useState([]);
   const [showSug, setShowSug]         = useState(false);
-  const [autoFilled, setAutoFilled]   = useState(false); // заполнено из базы?
-  const [dbProduct, setDbProduct]     = useState(null);  // ссылка на продукт из БД
+  const [autoFilled, setAutoFilled]   = useState(false);
+  const [dbProduct, setDbProduct]     = useState(null);
   const nameRef = useRef(null);
 
-  // Подсказки: ищем по PRODUCTS_BY_NAME
+  // Подсказки: сортировка по приоритету (начинается → слово начинается → содержит)
   useEffect(() => {
     const q = ingName.trim().toLowerCase();
     if (!q || q.length < 2 || autoFilled) { setSuggestions([]); return; }
-    const matches = Object.keys(PRODUCTS_BY_NAME)
-      .filter(k => k.includes(q))
-      .slice(0, 8);
+    const matches = rankFilterKeys(Object.keys(PRODUCTS_BY_NAME), q).slice(0, 8);
     setSuggestions(matches);
     setShowSug(matches.length > 0);
   }, [ingName, autoFilled]);
 
-  // Пересчёт при изменении веса (если загружен продукт из БД)
   useEffect(() => {
     if (!dbProduct || !ingWeight) return;
     const w = parseFloat(ingWeight);
@@ -60,7 +57,6 @@ export default function AddMealModal({ onClose }) {
     setAutoFilled(true);
     setShowSug(false);
     setSuggestions([]);
-    // Если вес уже введён — сразу заполнить КБЖУ
     if (ingWeight) {
       const w = parseFloat(ingWeight);
       if (!isNaN(w) && w > 0) {
@@ -79,14 +75,9 @@ export default function AddMealModal({ onClose }) {
     setIngError(""); setAutoFilled(false); setDbProduct(null);
   };
 
+  // Рецепты: сортировка по релевантности
   const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return allRecipes;
-    return allRecipes.filter(r =>
-      (r.title || "").toLowerCase().includes(q) ||
-      (r.tags || []).some(tag => tag.toLowerCase().includes(q)) ||
-      (r.type || "").toLowerCase().includes(q)
-    );
+    return rankFilterRecipes(allRecipes, query);
   }, [allRecipes, query]);
 
   const handleCreateRecipe = () => { onClose(); onAddRecipeClick(); };
@@ -97,7 +88,7 @@ export default function AddMealModal({ onClose }) {
     setIngError("");
     const kcal = ingCalories ? parseFloat(ingCalories) : 0;
     const weight = ingWeight ? parseFloat(ingWeight) : null;
-    const label = weight ? `${ingName.trim()} (${weight} г)` : ingName.trim();
+    const label = weight ? `${ingName.trim()} (${weight} г)` : ingName.trim();
     const pseudoRecipe = {
       id: `ingredient_${Date.now()}`,
       title: label,
@@ -160,7 +151,6 @@ export default function AddMealModal({ onClose }) {
           {tabBtn("ingredient", `🥑 ${t("Продукт", "Product")}`)}
         </div>
 
-        {/* ── вкладка Рецепт ── */}
         {tab === "recipe" && (
           <div>
             <div className="mb-4 relative">
@@ -211,14 +201,12 @@ export default function AddMealModal({ onClose }) {
           </div>
         )}
 
-        {/* ── вкладка Продукт ── */}
         {tab === "ingredient" && (
           <div className="space-y-4">
             <p className={`${fontSize.small} ${theme.textSecondary}`}>
               {t("Добавьте отдельный продукт — например, один огурец или кусочек сыра", "Add a single product — e.g. one cucumber or a slice of cheese")}
             </p>
 
-            {/* Название + подсказки */}
             <div className="relative">
               <label className={`block ${fontSize.small} font-semibold mb-1`}>
                 {t("Название продукта", "Product name")} *
@@ -237,7 +225,6 @@ export default function AddMealModal({ onClose }) {
                     className={`w-full pl-9 pr-3 py-2.5 rounded-xl border ${theme.border} ${theme.input} focus:outline-none focus:ring-2 focus:ring-[#606C38] ${fontSize.body}`}
                     autoFocus
                   />
-                  {/* Дропдаун подсказок */}
                   {showSug && suggestions.length > 0 && (
                     <ul className={`absolute z-50 left-0 right-0 top-full mt-1 rounded-xl border ${theme.border} ${theme.cardBg} shadow-xl max-h-48 overflow-y-auto`}>
                       {suggestions.map(name => (
@@ -265,7 +252,6 @@ export default function AddMealModal({ onClose }) {
                   </button>
                 )}
               </div>
-              {/* Бэдж "Из базы" */}
               {autoFilled && (
                 <p className={`mt-1.5 ${fontSize.tiny} text-green-600 font-semibold`}>
                   ✅ {t("КБЖУ загружено из базы продуктов — введите вес для пересчёта", "Nutrition loaded from database — enter weight to recalculate")}
