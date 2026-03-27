@@ -712,20 +712,50 @@ export default function CookifyDemo() {
 
   const allergyList = (userData?.allergies || "").toLowerCase().split(",").map(s => s.trim()).filter(Boolean);
 
+  // =================== ВСПОМОГАТЕЛЬНАЯ ФУНКЦИЯ СКОРИНГА ===================
+  // Возвращает числовой score: меньше = релевантнее
+  // 0 — точное совпадение с началом строки ("помидор".startsWith("пом"))
+  // 1 — совпадение с началом слова внутри строки ("черри помидор" → "пом")
+  // 2 — совпадение в середине строки (contains)
+  const relevanceScore = (text, query) => {
+    const t = normalize(text);
+    const q = normalize(query);
+    if (!q) return 3;
+    if (t.startsWith(q)) return 0;
+    // начало любого слова
+    if (t.split(/[\s\-,]+/).some(word => word.startsWith(q))) return 1;
+    if (t.includes(q)) return 2;
+    return 3; // не должно случаться после filter
+  };
+
   const filteredResults = useMemo(() => {
     let results = allRecipes;
     const query   = normalize(searchQuery);
     const exclude = excludeIngredients.toLowerCase().split(",").map(s => s.trim()).filter(Boolean);
+
     if (searchMode === "name") {
-      if (query) results = results.filter(r =>
-        normalize(r.title).includes(query) ||
-        (r.tags || []).some(tag => normalize(tag).includes(query)) ||
-        normalize(r.cuisine || "").includes(query) ||
-        normalize(r.type    || "").includes(query)
-      );
+      if (query) {
+        results = results.filter(r =>
+          normalize(r.title).includes(query) ||
+          (r.tags || []).some(tag => normalize(tag).includes(query)) ||
+          normalize(r.cuisine || "").includes(query) ||
+          normalize(r.type    || "").includes(query)
+        );
+        // Сортировка: title.startsWith > word.startsWith > title.includes > другое
+        results = [...results].sort((a, b) => {
+          const sa = normalize(a.title).startsWith(query) ? 0
+            : normalize(a.title).split(/[\s\-,]+/).some(w => w.startsWith(query)) ? 1
+            : normalize(a.title).includes(query) ? 2 : 3;
+          const sb = normalize(b.title).startsWith(query) ? 0
+            : normalize(b.title).split(/[\s\-,]+/).some(w => w.startsWith(query)) ? 1
+            : normalize(b.title).includes(query) ? 2 : 3;
+          return sa - sb;
+        });
+      }
     } else {
       if (query) {
         const queryIngredients = query.split(",").map(s => s.trim()).filter(Boolean);
+        // Фильтр: все запрошенные ингредиенты должны присутствовать
         results = results.filter(r =>
           queryIngredients.every(qi =>
             (r.ingredients || []).some(ing => {
@@ -734,8 +764,21 @@ export default function CookifyDemo() {
             })
           )
         );
+        // Сортировка по лучшему совпадению первого ингредиента запроса
+        const primaryQuery = queryIngredients[0];
+        results = [...results].sort((a, b) => {
+          const scoreIng = (recipe) => {
+            const names = (recipe.ingredients || []).map(ing =>
+              typeof ing === 'object' ? ing.name : ing
+            );
+            // берём минимальный score среди всех ингредиентов рецепта
+            return Math.min(...names.map(n => relevanceScore(n, primaryQuery)));
+          };
+          return scoreIng(a) - scoreIng(b);
+        });
       }
     }
+
     if (exclude.length > 0) {
       results = results.filter(r =>
         !(r.ingredients || []).some(ing => {
