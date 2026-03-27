@@ -499,6 +499,15 @@ export default function CookifyDemo() {
     calculateWaterGoal,
   } = useWater(firebaseUser, userData);
 
+  const refreshCommunityRecipes = () => {
+    getRecipes()
+      .then(r => {
+        communityRecipesRef.current = r;
+        setCommunityRecipes(r);
+      })
+      .catch(() => setCommunityRecipes([]));
+  };
+
   useEffect(() => {
     getRecipes()
       .then(r => {
@@ -1054,6 +1063,8 @@ export default function CookifyDemo() {
             setSelectedRecipeVariantKey={setSelectedRecipeVariantKey} userSubstitutions={userSubstitutions}
             onAddRecipeClick={handleAddRecipeClick}
             isFavorite={isFavorite} toggleFav={toggleFav}
+            firebaseUser={firebaseUser}
+            onRecipeDeleted={refreshCommunityRecipes}
           />
         )}
 
