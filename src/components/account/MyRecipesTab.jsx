@@ -115,7 +115,7 @@ function IngredientRow({ ing, idx, onChange, onRemove, canRemove, theme, fontSiz
 }
 
 // ── EditRecipeModal (все поля как в AddRecipeModal) ───────────────────────────
-function EditRecipeModal({ recipe, theme, fontSize, language, onClose, onSaved }) {
+export function EditRecipeModal({ recipe, theme, fontSize, language, onClose, onSaved }) {
   const t = (ru, en) => language === 'ru' ? ru : en;
 
   // Парсим ингредиенты из формата объектов в массив { name, quantity, unit }
