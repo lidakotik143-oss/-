@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { FaCalendarAlt, FaUtensils, FaShoppingCart, FaTint, FaHeart, FaRegHeart } from "react-icons/fa";
+import { FaCalendarAlt, FaUtensils, FaShoppingCart, FaTint, FaHeart, FaRegHeart, FaChefHat } from "react-icons/fa";
 import { auth } from '../firebase.js';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 import { setUserProfile } from '../firebase.js';
@@ -11,6 +11,7 @@ import PlannerModal from "./account/PlannerModal";
 import HistoryTab from "./account/HistoryTab";
 import PlannerTab from "./account/PlannerTab";
 import ShoppingListTab from "./account/ShoppingListTab";
+import MyRecipesTab from "./account/MyRecipesTab";
 import WaterTracker from "./WaterTracker";
 import CalorieBalanceWidget from "./account/CalorieBalanceWidget";
 
@@ -193,17 +194,24 @@ export default function AccountScreen(props) {
     showPlannerModal, setShowPlannerModal, language, userData,
   } = props;
 
-  const { featureFlags } = useApp();
+  const { featureFlags, allRecipes, firebaseUser } = useApp();
+
+  // Считаем рецепты текущего пользователя для условного показа вкладки
+  const myRecipesCount = firebaseUser?.uid
+    ? (allRecipes || []).filter(r => String(r.authorId) === String(firebaseUser.uid)).length
+    : 0;
+  const showMyRecipesTab = registered && firebaseUser && myRecipesCount > 0;
 
   const allTabs = [
-    featureFlags.showHistoryTab   && { id: "history",   icon: <FaCalendarAlt />, label: t("История питания", "Meal history") },
-    featureFlags.showPlannerTab   && { id: "planner",   icon: <FaUtensils />,    label: t("План меню", "Menu plan") },
-    featureFlags.showShoppingTab  && { id: "shopping",  icon: <FaShoppingCart />,label: t("Покупки", "Shopping") },
-    featureFlags.showFavoritesTab && { id: "favorites", icon: <FaHeart />,       label: t("Избранное", "Favorites") },
-    featureFlags.showWaterTracker && { id: "water",     icon: <FaTint />,        label: t("Вода", "Water") },
+    featureFlags.showHistoryTab   && { id: "history",    icon: <FaCalendarAlt />, label: t("История питания", "Meal history") },
+    featureFlags.showPlannerTab   && { id: "planner",    icon: <FaUtensils />,    label: t("План меню", "Menu plan") },
+    featureFlags.showShoppingTab  && { id: "shopping",   icon: <FaShoppingCart />,label: t("Покупки", "Shopping") },
+    featureFlags.showFavoritesTab && { id: "favorites",  icon: <FaHeart />,       label: t("Избранное", "Favorites") },
+    featureFlags.showWaterTracker && { id: "water",      icon: <FaTint />,        label: t("Вода", "Water") },
+    showMyRecipesTab              && { id: "myrecipes",  icon: <FaChefHat />,     label: t("Мои рецепты", "My Recipes") },
   ].filter(Boolean);
 
-  const activeTab = allTabs.find(t => t.id === accountTab)?.id || allTabs[0]?.id || "history";
+  const activeTab = allTabs.find(tab => tab.id === accountTab)?.id || allTabs[0]?.id || "history";
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
@@ -233,6 +241,7 @@ export default function AccountScreen(props) {
           {activeTab === "shopping"  && featureFlags.showShoppingTab  && <ShoppingListTab {...props} />}
           {activeTab === "favorites" && featureFlags.showFavoritesTab && <FavoritesTab />}
           {activeTab === "water"     && featureFlags.showWaterTracker && <WaterTracker theme={theme} fontSize={fontSize} language={language} userData={userData} />}
+          {activeTab === "myrecipes" && showMyRecipesTab              && <MyRecipesTab />}
         </>
       )}
 
