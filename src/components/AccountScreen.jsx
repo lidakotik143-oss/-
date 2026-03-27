@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { FaCalendarAlt, FaUtensils, FaShoppingCart, FaTint, FaHeart, FaRegHeart, FaChefHat } from "react-icons/fa";
+import { FaCalendarAlt, FaUtensils, FaShoppingCart, FaTint, FaHeart, FaRegHeart, FaBookOpen } from "react-icons/fa";
 import { auth } from '../firebase.js';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 import { setUserProfile } from '../firebase.js';
@@ -85,9 +85,7 @@ function FirebaseAuthPanel({ t, theme, fontSize, language }) {
           </div>
           <div>
             <label className={`block ${fontSize.small} font-medium ${theme.textSecondary} mb-1`}>{t('Пароль', 'Password')}</label>
-            <div className="relative">
-              <input type={showPass ? 'text' : 'password'} required value={password} onChange={e => setPassword(e.target.value)} placeholder={t('Введите пароль', 'Enter password')} className={`${inputCls} pr-10`} />
-            </div>
+            <input type={showPass ? 'text' : 'password'} required value={password} onChange={e => setPassword(e.target.value)} placeholder={t('Введите пароль', 'Enter password')} className={`${inputCls} pr-10`} />
           </div>
           {error && <p className="text-red-500 text-sm text-center">{error}</p>}
           <button type="submit" disabled={loading} className={btnPrimary}>{loading ? t('Вход...', 'Signing in...') : t('Войти', 'Sign In')}</button>
@@ -124,10 +122,8 @@ function FirebaseAuthPanel({ t, theme, fontSize, language }) {
 function FavoritesTab() {
   const {
     t, theme, fontSize, language,
-    allRecipes,
-    favorites, isFavorite, toggleFav,
-    setSelectedRecipe, setSelectedRecipeVariantKey,
-    getDishTypeInfo,
+    allRecipes, favorites, isFavorite, toggleFav,
+    setSelectedRecipe, setSelectedRecipeVariantKey, getDishTypeInfo,
   } = useApp();
 
   const favoriteRecipes = (allRecipes || []).filter(r => isFavorite(r.id));
@@ -196,19 +192,18 @@ export default function AccountScreen(props) {
 
   const { featureFlags, allRecipes, firebaseUser } = useApp();
 
-  // Считаем рецепты текущего пользователя для условного показа вкладки
   const myRecipesCount = firebaseUser?.uid
     ? (allRecipes || []).filter(r => String(r.authorId) === String(firebaseUser.uid)).length
     : 0;
   const showMyRecipesTab = registered && firebaseUser && myRecipesCount > 0;
 
   const allTabs = [
-    featureFlags.showHistoryTab   && { id: "history",    icon: <FaCalendarAlt />, label: t("История питания", "Meal history") },
-    featureFlags.showPlannerTab   && { id: "planner",    icon: <FaUtensils />,    label: t("План меню", "Menu plan") },
-    featureFlags.showShoppingTab  && { id: "shopping",   icon: <FaShoppingCart />,label: t("Покупки", "Shopping") },
-    featureFlags.showFavoritesTab && { id: "favorites",  icon: <FaHeart />,       label: t("Избранное", "Favorites") },
-    featureFlags.showWaterTracker && { id: "water",      icon: <FaTint />,        label: t("Вода", "Water") },
-    showMyRecipesTab              && { id: "myrecipes",  icon: <FaChefHat />,     label: t("Мои рецепты", "My Recipes") },
+    featureFlags.showHistoryTab   && { id: "history",   icon: <FaCalendarAlt />, label: t("История питания", "Meal history") },
+    featureFlags.showPlannerTab   && { id: "planner",   icon: <FaUtensils />,    label: t("План меню", "Menu plan") },
+    featureFlags.showShoppingTab  && { id: "shopping",  icon: <FaShoppingCart />,label: t("Покупки", "Shopping") },
+    featureFlags.showFavoritesTab && { id: "favorites", icon: <FaHeart />,       label: t("Избранное", "Favorites") },
+    featureFlags.showWaterTracker && { id: "water",     icon: <FaTint />,        label: t("Вода", "Water") },
+    showMyRecipesTab              && { id: "myrecipes", icon: <FaBookOpen />,    label: t("Мои рецепты", "My Recipes") },
   ].filter(Boolean);
 
   const activeTab = allTabs.find(tab => tab.id === accountTab)?.id || allTabs[0]?.id || "history";
@@ -220,9 +215,7 @@ export default function AccountScreen(props) {
       ) : (
         <>
           <ProfileCard {...props} />
-
           {featureFlags.showCalorieBalance && <CalorieBalanceWidget />}
-
           {allTabs.length > 0 && (
             <div className={`${theme.cardBg} p-3 rounded-xl shadow flex gap-2 overflow-x-auto`}>
               {allTabs.map(tab => (
@@ -235,7 +228,6 @@ export default function AccountScreen(props) {
               ))}
             </div>
           )}
-
           {activeTab === "history"   && featureFlags.showHistoryTab   && <HistoryTab {...props} />}
           {activeTab === "planner"   && featureFlags.showPlannerTab   && <PlannerTab {...props} />}
           {activeTab === "shopping"  && featureFlags.showShoppingTab  && <ShoppingListTab {...props} />}
@@ -244,7 +236,6 @@ export default function AccountScreen(props) {
           {activeTab === "myrecipes" && showMyRecipesTab              && <MyRecipesTab />}
         </>
       )}
-
       {showRegisterForm && (
         <ProfileEditForm {...props} onClose={() => { setShowRegisterForm(false); setIsEditingProfile(false); }} />
       )}
