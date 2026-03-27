@@ -1,6 +1,7 @@
 // =================== БЛОК 1: Импорты и примерные данные ===================
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { FaTimes, FaPlus, FaMinus, FaHeart, FaRegHeart, FaPlay, FaPause, FaRedo, FaEdit, FaTrash } from "react-icons/fa";
+import Fuse from 'fuse.js';
 import { RECIPES_DATABASE } from './recipesData';
 
 import {
@@ -712,70 +713,52 @@ export default function CookifyDemo() {
 
   const allergyList = (userData?.allergies || "").toLowerCase().split(",").map(s => s.trim()).filter(Boolean);
 
-  // =================== ВСПОМОГАТЕЛЬНАЯ ФУНКЦИЯ СКОРИНГА ===================
-  // Возвращает числовой score: меньше = релевантнее
-  // 0 — точное совпадение с началом строки ("помидор".startsWith("пом"))
-  // 1 — совпадение с началом слова внутри строки ("черри помидор" → "пом")
-  // 2 — совпадение в середине строки (contains)
-  const relevanceScore = (text, query) => {
-    const t = normalize(text);
-    const q = normalize(query);
-    if (!q) return 3;
-    if (t.startsWith(q)) return 0;
-    // начало любого слова
-    if (t.split(/[\s\-,]+/).some(word => word.startsWith(q))) return 1;
-    if (t.includes(q)) return 2;
-    return 3; // не должно случаться после filter
-  };
+  // =================== FUSE.JS: индексы для fuzzy-поиска ===================
+  // Пересоздаём индексы при изменении списка рецептов
+  const recipeNameFuse = useMemo(() => new Fuse(allRecipes, {
+    keys: ['title', 'tags', 'cuisine', 'type'],
+    threshold: 0.4,
+    distance: 100,
+    minMatchCharLength: 2,
+    shouldSort: true,
+  }), [allRecipes]);
+
+  const recipeIngredientFuse = useMemo(() => new Fuse(allRecipes, {
+    keys: ['ingredients.name'],
+    threshold: 0.35,
+    distance: 100,
+    minMatchCharLength: 2,
+    shouldSort: true,
+  }), [allRecipes]);
 
   const filteredResults = useMemo(() => {
     let results = allRecipes;
-    const query   = normalize(searchQuery);
+    const query   = (searchQuery || '').trim();
     const exclude = excludeIngredients.toLowerCase().split(",").map(s => s.trim()).filter(Boolean);
 
     if (searchMode === "name") {
-      if (query) {
-        results = results.filter(r =>
-          normalize(r.title).includes(query) ||
-          (r.tags || []).some(tag => normalize(tag).includes(query)) ||
-          normalize(r.cuisine || "").includes(query) ||
-          normalize(r.type    || "").includes(query)
-        );
-        // Сортировка: title.startsWith > word.startsWith > title.includes > другое
-        results = [...results].sort((a, b) => {
-          const sa = normalize(a.title).startsWith(query) ? 0
-            : normalize(a.title).split(/[\s\-,]+/).some(w => w.startsWith(query)) ? 1
-            : normalize(a.title).includes(query) ? 2 : 3;
-          const sb = normalize(b.title).startsWith(query) ? 0
-            : normalize(b.title).split(/[\s\-,]+/).some(w => w.startsWith(query)) ? 1
-            : normalize(b.title).includes(query) ? 2 : 3;
-          return sa - sb;
-        });
+      if (query && query.length >= 2) {
+        // fuzzy-поиск по названию, тегам, кухне, типу
+        const fuseResults = recipeNameFuse.search(query);
+        results = fuseResults.map(r => r.item);
       }
     } else {
-      if (query) {
+      if (query && query.length >= 2) {
+        // По ингредиентам: каждый термин через запятую ищем fuzzy отдельно
         const queryIngredients = query.split(",").map(s => s.trim()).filter(Boolean);
-        // Фильтр: все запрошенные ингредиенты должны присутствовать
-        results = results.filter(r =>
-          queryIngredients.every(qi =>
-            (r.ingredients || []).some(ing => {
-              const name = typeof ing === 'object' ? ing.name : ing;
-              return normalize(name).includes(qi);
-            })
-          )
-        );
-        // Сортировка по лучшему совпадению первого ингредиента запроса
-        const primaryQuery = queryIngredients[0];
-        results = [...results].sort((a, b) => {
-          const scoreIng = (recipe) => {
-            const names = (recipe.ingredients || []).map(ing =>
-              typeof ing === 'object' ? ing.name : ing
-            );
-            // берём минимальный score среди всех ингредиентов рецепта
-            return Math.min(...names.map(n => relevanceScore(n, primaryQuery)));
-          };
-          return scoreIng(a) - scoreIng(b);
-        });
+        // Для каждого ингредиента ищем совпадающие рецепты и пересекаем
+        let matched = null;
+        for (const qi of queryIngredients) {
+          const found = new Set(
+            recipeIngredientFuse.search(qi).map(r => r.item.id ?? r.item.title)
+          );
+          if (matched === null) {
+            matched = found;
+          } else {
+            matched = new Set([...matched].filter(id => found.has(id)));
+          }
+        }
+        results = allRecipes.filter(r => matched && matched.has(r.id ?? r.title));
       }
     }
 
@@ -802,7 +785,7 @@ export default function CookifyDemo() {
       });
     }
     return results;
-  }, [allRecipes, searchQuery, searchMode, excludeIngredients, selectedFilters]);
+  }, [allRecipes, searchQuery, searchMode, excludeIngredients, selectedFilters, recipeNameFuse, recipeIngredientFuse]);
 
   // =================== ЗНАЧЕНИЕ КОНТЕКСТА ===================
   const contextValue = {
@@ -905,7 +888,6 @@ export default function CookifyDemo() {
           const totalCarbs   = Math.round((nutritionInfo.total.carbs    || 0) * servingsMultiplier);
           const fav          = isFavorite(selectedRecipe.id);
 
-          // Проверяем, является ли рецепт своим
           const isMyRecipe = firebaseUser?.uid && String(selectedRecipe.authorId) === String(firebaseUser.uid);
 
           const handleDeleteRecipe = async () => {
@@ -962,7 +944,6 @@ export default function CookifyDemo() {
                     )}
                   </div>
 
-                  {/* Кнопки: избранное + редактировать + удалить + закрыть */}
                   <div className="flex items-center gap-1 ml-3 flex-shrink-0">
                     <button
                       onClick={(e) => { e.stopPropagation(); toggleFav(selectedRecipe.id); }}
@@ -998,7 +979,6 @@ export default function CookifyDemo() {
                   </div>
                 </div>
 
-                {/* ── Блок времени + таймер ── */}
                 <div className={`${theme.cardBg} border-2 rounded-xl p-4 mb-6 shadow-md`} style={{ borderColor: timeInfo.color }}>
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-3">
@@ -1028,7 +1008,6 @@ export default function CookifyDemo() {
                   </div>
                   <div className={`${fontSize.tiny} ${theme.textSecondary} text-center mb-1`}>{t(`${timeMinutes <= 15 ? 'Быстрое приготовление!' : timeMinutes <= 40 ? 'Умеренное время' : 'Требуется терпение'}`, `${timeMinutes <= 15 ? 'Quick cooking!' : timeMinutes <= 40 ? 'Moderate time' : 'Takes patience'}`)}</div>
 
-                  {/* 🍳 Таймер обратного отсчёта */}
                   <CookingTimerBlock
                     timeMinutes={timeMinutes}
                     timeInfo={timeInfo}
