@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { FaTimes, FaPlus, FaTrash, FaSearch } from 'react-icons/fa';
+import Fuse from 'fuse.js';
 import { addRecipe, updateRecipe } from '../firebase.js';
 import { PRODUCTS_BY_NAME } from '../data/productsNutritionById.js';
 
@@ -23,33 +24,25 @@ const UNITS = [
   { value: 'капля', label_ru: 'капля', label_en: 'drop' },
 ];
 
-// Умный поиск: сортируем по отображаемому названию (prod.name), а не по ключу базы
+// Список продуктов для Fuse (создаётся один раз вне компонента)
+const PRODUCTS_LIST = Object.entries(PRODUCTS_BY_NAME).map(([key, val]) => ({
+  key,
+  name: val.name || key,
+  calories: val.calories,
+}));
+
+const productsFuse = new Fuse(PRODUCTS_LIST, {
+  keys: ['name'],
+  threshold: 0.4,
+  distance: 100,
+  minMatchCharLength: 2,
+  shouldSort: true,
+});
+
 function smartSearch(query, limit = 7) {
-  const q = query.trim().toLowerCase();
+  const q = query.trim();
   if (!q || q.length < 2) return [];
-  const allKeys = Object.keys(PRODUCTS_BY_NAME);
-
-  // Фильтруем по имени или ключу
-  const matched = allKeys.filter(k => {
-    const name = (PRODUCTS_BY_NAME[k].name || k).toLowerCase();
-    return name.includes(q) || k.includes(q);
-  });
-
-  // Сортировка: отображаемое имя начинается с запроса → 0
-  // начало любого слова в имени начинается с запроса → 1
-  // содержит запрос в середине → 2
-  matched.sort((a, b) => {
-    const nameA = (PRODUCTS_BY_NAME[a].name || a).toLowerCase();
-    const nameB = (PRODUCTS_BY_NAME[b].name || b).toLowerCase();
-    const score = (name) => {
-      if (name.startsWith(q)) return 0;
-      if (name.split(/[\s\-,]+/).some(w => w.startsWith(q))) return 1;
-      return 2;
-    };
-    return score(nameA) - score(nameB);
-  });
-
-  return matched.slice(0, limit);
+  return productsFuse.search(q, { limit }).map(r => r.item.key);
 }
 
 function IngredientRow({ ing, idx, onChange, onRemove, canRemove, theme, fontSize, language }) {
