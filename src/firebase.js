@@ -25,13 +25,22 @@ export async function getRecipes() {
 }
 
 export async function addRecipe(recipe, user) {
-  // authorName — только displayName или нейтральное «Пользователь», почта НЕ сохраняется
   const displayName = (user.displayName || '').trim();
   return await addDoc(collection(db, 'recipes'), {
     ...recipe,
     authorId: user.uid,
     authorName: displayName || 'Пользователь',
     createdAt: new Date().toISOString()
+  });
+}
+
+export async function updateRecipe(recipeId, recipe, user) {
+  const ref = doc(db, 'recipes', recipeId);
+  const snap = await getDoc(ref);
+  if (snap.data()?.authorId !== user.uid) throw new Error('Нет прав');
+  return await updateDoc(ref, {
+    ...recipe,
+    updatedAt: new Date().toISOString()
   });
 }
 
@@ -42,7 +51,7 @@ export async function deleteRecipe(recipeId, userId) {
   return await deleteDoc(ref);
 }
 
-// ─── ПРОФИЛЬ ПОЛЬЗОВАТЕЛЯ (личный) ─────────────────────────────────────────
+// ─── ПРОФИЛЬ ПОЛЬЗОВАТЕЛЯ (личный) ───────────────────────────────────────
 
 export async function getUserProfile(uid) {
   const snap = await getDoc(doc(db, 'users', uid));
@@ -53,7 +62,7 @@ export async function setUserProfile(uid, data) {
   return await setDoc(doc(db, 'users', uid), data, { merge: true });
 }
 
-// ─── ИСТОРИЯ ПИТАНИЯ (личная) ─────────────────────────────────────────────────
+// ─── ИСТОРИЯ ПИТАНИЯ (личная) ─────────────────────────────────────────────
 
 export async function getMealHistory(uid) {
   const snap = await getDoc(doc(db, 'users', uid, 'data', 'mealHistory'));
@@ -67,7 +76,7 @@ export async function saveMealHistory(uid, entries) {
   );
 }
 
-// ─── ПЛАН МЕНЮ НА НЕДЕЛЮ (личный) ─────────────────────────────────────────
+// ─── ПЛАН МЕНЮ НА НЕДЕЛЮ (личный) ──────────────────────────────────────
 
 export async function getWeeklyPlan(uid) {
   const snap = await getDoc(doc(db, 'users', uid, 'data', 'weeklyPlan'));
@@ -81,7 +90,7 @@ export async function saveWeeklyPlan(uid, plan) {
   );
 }
 
-// ─── ТРЕКЕР ВОДЫ (личный) ──────────────────────────────────────────────────
+// ─── ТРЕКЕР ВОДЫ (личный) ────────────────────────────────────────────
 
 export async function getWaterLog(uid, date) {
   const snap = await getDoc(doc(db, 'users', uid, 'waterLog', date));
@@ -92,7 +101,7 @@ export async function setWaterLog(uid, date, amount) {
   return await setDoc(doc(db, 'users', uid, 'waterLog', date), { amount });
 }
 
-// ─── ИЗБРАННОЕ (личное) ─────────────────────────────────────────────────────
+// ─── ИЗБРАННОЕ (личное) ────────────────────────────────────────────────
 
 export async function getFavorites(uid) {
   const snap = await getDoc(doc(db, 'users', uid));
