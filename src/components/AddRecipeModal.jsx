@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { FaTimes, FaPlus, FaTrash, FaSearch } from 'react-icons/fa';
-import { addRecipe } from '../firebase.js';
+import { addRecipe, updateRecipe } from '../firebase.js';
 import { PRODUCTS_BY_NAME } from '../data/productsNutritionById.js';
 
 const TYPES = ['завтрак', 'обед', 'ужин', 'перекус', 'десерт'];
@@ -23,14 +23,33 @@ const UNITS = [
   { value: 'капля', label_ru: 'капля', label_en: 'drop' },
 ];
 
-// Умный поиск: сначала начинающиеся с запроса, потом содержащие
+// Умный поиск: сортируем по отображаемому названию (prod.name), а не по ключу базы
 function smartSearch(query, limit = 7) {
   const q = query.trim().toLowerCase();
   if (!q || q.length < 2) return [];
   const allKeys = Object.keys(PRODUCTS_BY_NAME);
-  const startsWith = allKeys.filter(k => k.startsWith(q));
-  const contains = allKeys.filter(k => !k.startsWith(q) && k.includes(q));
-  return [...startsWith, ...contains].slice(0, limit);
+
+  // Фильтруем по имени или ключу
+  const matched = allKeys.filter(k => {
+    const name = (PRODUCTS_BY_NAME[k].name || k).toLowerCase();
+    return name.includes(q) || k.includes(q);
+  });
+
+  // Сортировка: отображаемое имя начинается с запроса → 0
+  // начало любого слова в имени начинается с запроса → 1
+  // содержит запрос в середине → 2
+  matched.sort((a, b) => {
+    const nameA = (PRODUCTS_BY_NAME[a].name || a).toLowerCase();
+    const nameB = (PRODUCTS_BY_NAME[b].name || b).toLowerCase();
+    const score = (name) => {
+      if (name.startsWith(q)) return 0;
+      if (name.split(/[\s\-,]+/).some(w => w.startsWith(q))) return 1;
+      return 2;
+    };
+    return score(nameA) - score(nameB);
+  });
+
+  return matched.slice(0, limit);
 }
 
 function IngredientRow({ ing, idx, onChange, onRemove, canRemove, theme, fontSize, language }) {
@@ -131,10 +150,20 @@ function IngredientRow({ ing, idx, onChange, onRemove, canRemove, theme, fontSiz
   );
 }
 
-export default function AddRecipeModal({ onClose, onAdded, theme, fontSize, language, firebaseUser }) {
+export default function AddRecipeModal({ onClose, onAdded, theme, fontSize, language, firebaseUser, editingRecipe }) {
   const t = (ru, en) => language === 'ru' ? ru : en;
 
-  const [form, setForm] = useState({
+  const [form, setForm] = useState(() => editingRecipe ? {
+    title: editingRecipe.title || '',
+    time: editingRecipe.time || '',
+    calories: editingRecipe.caloriesPerServing || editingRecipe.calories || '',
+    servings: editingRecipe.servings || '2',
+    type: editingRecipe.type || 'ужин',
+    diet: editingRecipe.diet || '',
+    cuisine: editingRecipe.cuisine || 'русская',
+    difficulty: editingRecipe.difficulty || 'легкий',
+    tags: (editingRecipe.tags || []).join(', '),
+  } : {
     title: '',
     time: '',
     calories: '',
@@ -145,8 +174,19 @@ export default function AddRecipeModal({ onClose, onAdded, theme, fontSize, lang
     difficulty: 'легкий',
     tags: '',
   });
-  const [ingredients, setIngredients] = useState([{ name: '', quantity: '', unit: '' }]);
-  const [instructions, setInstructions] = useState(['']);
+
+  const [ingredients, setIngredients] = useState(() =>
+    editingRecipe?.ingredients?.length
+      ? editingRecipe.ingredients.map(i => ({
+          name: typeof i === 'object' ? (i.name || '') : i,
+          quantity: typeof i === 'object' ? (i.quantity || '') : '',
+          unit: typeof i === 'object' ? (i.unit || '') : '',
+        }))
+      : [{ name: '', quantity: '', unit: '' }]
+  );
+  const [instructions, setInstructions] = useState(() =>
+    editingRecipe?.instructions?.length ? editingRecipe.instructions : ['']
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -188,10 +228,14 @@ export default function AddRecipeModal({ onClose, onAdded, theme, fontSize, lang
             productId: null
           })),
         instructions: instructions.filter(s => s.trim()),
-        variants: [],
+        variants: editingRecipe?.variants || [],
         source: 'user',
       };
-      await addRecipe(recipe, firebaseUser);
+      if (editingRecipe?.id) {
+        await updateRecipe(editingRecipe.id, recipe, firebaseUser);
+      } else {
+        await addRecipe(recipe, firebaseUser);
+      }
       onAdded();
       onClose();
     } catch (err) {
@@ -210,7 +254,7 @@ export default function AddRecipeModal({ onClose, onAdded, theme, fontSize, lang
 
         <div className={`flex items-center justify-between p-5 border-b ${theme.border}`}>
           <h2 className={`${fontSize.subheading} font-bold ${theme.headerText}`}>
-            {t('Добавить рецепт', 'Add Recipe')}
+            {editingRecipe ? t('Редактировать рецепт', 'Edit Recipe') : t('Добавить рецепт', 'Add Recipe')}
           </h2>
           <button onClick={onClose} className={`${theme.textSecondary} hover:${theme.text} transition`}><FaTimes size={20} /></button>
         </div>
