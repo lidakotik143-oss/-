@@ -1,6 +1,6 @@
 // =================== БЛОК 1: Импорты и примерные данные ===================
 import React, { useState, useEffect, useMemo, useRef } from "react";
-import { FaTimes, FaPlus, FaMinus, FaHeart, FaRegHeart, FaPlay, FaPause, FaRedo } from "react-icons/fa";
+import { FaTimes, FaPlus, FaMinus, FaHeart, FaRegHeart, FaPlay, FaPause, FaRedo, FaEdit, FaTrash } from "react-icons/fa";
 import { RECIPES_DATABASE } from './recipesData';
 
 import {
@@ -39,7 +39,7 @@ import { useCookingTimer }  from './hooks/useCookingTimer';
 
 // 🔥 Firebase
 import { auth } from './firebase.js';
-import { getRecipes, setUserProfile } from './firebase.js';
+import { getRecipes, setUserProfile, deleteRecipe } from './firebase.js';
 
 // 🔧 Временные точечные исправления некорректных типов блюд из базы рецептов
 const RECIPE_TYPE_FIXES = {
@@ -358,6 +358,7 @@ export default function CookifyDemo() {
   const [communityRecipes, setCommunityRecipes] = useState([]);
   const communityRecipesRef = useRef([]);
   const [showAddRecipeModal, setShowAddRecipeModal] = useState(false);
+  const [editingRecipe, setEditingRecipe] = useState(null);
 
   const [selectedRecipe, setSelectedRecipe] = useState(null);
   const [selectedRecipeVariantKey, setSelectedRecipeVariantKey] = useState(null);
@@ -529,6 +530,13 @@ export default function CookifyDemo() {
       );
       return;
     }
+    setEditingRecipe(null);
+    setShowAddRecipeModal(true);
+  };
+
+  const handleEditRecipeClick = (recipe) => {
+    if (!firebaseUser) return;
+    setEditingRecipe(recipe);
     setShowAddRecipeModal(true);
   };
 
@@ -854,6 +862,20 @@ export default function CookifyDemo() {
           const totalCarbs   = Math.round((nutritionInfo.total.carbs    || 0) * servingsMultiplier);
           const fav          = isFavorite(selectedRecipe.id);
 
+          // Проверяем, является ли рецепт своим
+          const isMyRecipe = firebaseUser?.uid && String(selectedRecipe.authorId) === String(firebaseUser.uid);
+
+          const handleDeleteRecipe = async () => {
+            if (!window.confirm(t(`Удалить рецепт «${selectedRecipe.title}»?`, `Delete "${selectedRecipe.title}"?`))) return;
+            try {
+              await deleteRecipe(selectedRecipe.id, firebaseUser.uid);
+              closeModal();
+              refreshCommunityRecipes();
+            } catch {
+              alert(t('Ошибка при удалении', 'Delete error'));
+            }
+          };
+
           const updateSubstitution = (subId, value) => {
             setUserSubstitutions(prev => {
               const all = { ...(prev || {}) };
@@ -896,16 +918,41 @@ export default function CookifyDemo() {
                       </div>
                     )}
                   </div>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); toggleFav(selectedRecipe.id); }}
-                    className={`p-2 rounded-full transition hover:scale-110 mr-2 ${
-                      fav ? 'text-red-500' : theme.textSecondary
-                    }`}
-                    title={fav ? t('Удалить из избранного', 'Remove from favorites') : t('В избранное', 'Add to favorites')}
-                  >
-                    {fav ? <FaHeart size={20} /> : <FaRegHeart size={20} />}
-                  </button>
-                  <button onClick={closeModal} className={`${theme.textSecondary} hover:${theme.text} transition`}><FaTimes size={24} /></button>
+
+                  {/* Кнопки: избранное + редактировать + удалить + закрыть */}
+                  <div className="flex items-center gap-1 ml-3 flex-shrink-0">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); toggleFav(selectedRecipe.id); }}
+                      className={`p-2 rounded-full transition hover:scale-110 ${fav ? 'text-red-500' : theme.textSecondary}`}
+                      title={fav ? t('Удалить из избранного', 'Remove from favorites') : t('В избранное', 'Add to favorites')}
+                    >
+                      {fav ? <FaHeart size={20} /> : <FaRegHeart size={20} />}
+                    </button>
+
+                    {isMyRecipe && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); closeModal(); handleEditRecipeClick(selectedRecipe); }}
+                        className={`p-2 rounded-full text-blue-500 hover:text-blue-700 hover:bg-blue-50 transition`}
+                        title={t('Редактировать', 'Edit')}
+                      >
+                        <FaEdit size={18} />
+                      </button>
+                    )}
+
+                    {isMyRecipe && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleDeleteRecipe(); }}
+                        className={`p-2 rounded-full text-red-400 hover:text-red-600 hover:bg-red-50 transition`}
+                        title={t('Удалить', 'Delete')}
+                      >
+                        <FaTrash size={18} />
+                      </button>
+                    )}
+
+                    <button onClick={closeModal} className={`p-2 ${theme.textSecondary} hover:${theme.text} transition`}>
+                      <FaTimes size={24} />
+                    </button>
+                  </div>
                 </div>
 
                 {/* ── Блок времени + таймер ── */}
@@ -1111,8 +1158,9 @@ export default function CookifyDemo() {
         {showAddRecipeModal && firebaseUser && (
           <AddRecipeModal
             theme={theme} fontSize={fontSize} language={language} firebaseUser={firebaseUser}
-            onClose={() => setShowAddRecipeModal(false)}
+            onClose={() => { setShowAddRecipeModal(false); setEditingRecipe(null); }}
             onAdded={() => { getRecipes().then(r => setCommunityRecipes(r)).catch(() => {}); }}
+            editingRecipe={editingRecipe}
           />
         )}
       </div>
