@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { FaSearch, FaPlus, FaHeart, FaRegHeart, FaTrash } from "react-icons/fa";
-import { deleteRecipe, getRecipes } from "../firebase.js";
+import { deleteRecipe } from "../firebase.js";
 
-// Заглушка-изображение для рецептов без фото
 const RECIPE_PLACEHOLDER = "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=120&h=80&fit=crop&auto=format";
 
 export default function SearchScreen({
@@ -40,41 +39,38 @@ export default function SearchScreen({
   toggleFav,
   onRecipeDeleted,
 }) {
-  // ── Дебаунс поискового инпута (300ms) ──────────────────────────────────────
   const [inputValue, setInputValue] = useState(searchQuery);
   const debounceTimer = useRef(null);
 
-  useEffect(() => {
-    setInputValue(searchQuery);
-  }, [searchQuery]);
+  useEffect(() => { setInputValue(searchQuery); }, [searchQuery]);
 
   const handleInputChange = (e) => {
     const val = e.target.value;
     setInputValue(val);
     if (debounceTimer.current) clearTimeout(debounceTimer.current);
-    debounceTimer.current = setTimeout(() => {
-      setSearchQuery(val);
-    }, 300);
+    debounceTimer.current = setTimeout(() => setSearchQuery(val), 300);
   };
 
-  // Дебаунс для поля исключений
   const [excludeValue, setExcludeValue] = useState(excludeIngredients);
   const excludeTimer = useRef(null);
 
-  useEffect(() => {
-    setExcludeValue(excludeIngredients);
-  }, [excludeIngredients]);
+  useEffect(() => { setExcludeValue(excludeIngredients); }, [excludeIngredients]);
 
   const handleExcludeChange = (e) => {
     const val = e.target.value;
     setExcludeValue(val);
     if (excludeTimer.current) clearTimeout(excludeTimer.current);
-    excludeTimer.current = setTimeout(() => {
-      setExcludeIngredients(val);
-    }, 300);
+    excludeTimer.current = setTimeout(() => setExcludeIngredients(val), 300);
   };
 
   const [deletingId, setDeletingId] = useState(null);
+
+  // Проверяем владельца через authorId или uid, игнорируя статические рецепты (без id в Firestore)
+  const isOwnerOf = (r) => {
+    if (!firebaseUser?.uid) return false;
+    if (!r.authorId) return false; // статичные рецепты без authorId
+    return String(r.authorId) === String(firebaseUser.uid);
+  };
 
   const handleDelete = async (e, recipe) => {
     e.stopPropagation();
@@ -93,7 +89,6 @@ export default function SearchScreen({
 
   return (
     <div className="max-w-6xl mx-auto space-y-4">
-      {/* Верхняя поисковая панель */}
       <div className={`sticky top-4 ${theme.cardBg} z-20 p-4 rounded-2xl shadow flex flex-col md:flex-row gap-3 items-center`}>
         <div className="relative flex-1 w-full">
           <FaSearch className={`absolute left-3 top-3 ${theme.textSecondary}`} />
@@ -109,26 +104,21 @@ export default function SearchScreen({
             className={`w-full pl-10 pr-4 py-2 ${theme.input} ${fontSize.body} rounded-xl focus:outline-none focus:ring-2 focus:ring-[#606C38]`}
           />
         </div>
-
         <div className="flex gap-2 flex-wrap justify-end">
           <button
             onClick={() => setSearchMode((prev) => (prev === "name" ? "ingredients" : "name"))}
             className={`px-4 py-2 rounded-xl ${fontSize.small} text-white transition ${
-              searchMode === "name"
-                ? `${theme.accent} ${theme.accentHover}`
-                : "bg-[#BC6C25] hover:bg-[#A98467]"
+              searchMode === "name" ? `${theme.accent} ${theme.accentHover}` : "bg-[#BC6C25] hover:bg-[#A98467]"
             }`}
           >
             {searchMode === "name" ? t("По ингредиентам", "By ingredients") : t("По названию", "By name")}
           </button>
-
           <button
             onClick={() => setShowFilters((prev) => !prev)}
             className={`px-4 py-2 rounded-xl ${fontSize.small} transition ${theme.accent} ${theme.accentHover} text-white`}
           >
             {showFilters ? t("Скрыть фильтры", "Hide filters") : t("Фильтры", "Filters")}
           </button>
-
           <button
             onClick={onAddRecipeClick}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl ${fontSize.small} font-semibold transition bg-[#BC6C25] hover:bg-[#A98467] text-white`}
@@ -139,7 +129,6 @@ export default function SearchScreen({
         </div>
       </div>
 
-      {/* Поле исключений */}
       <div className="max-w-6xl mx-auto">
         <input
           type="text"
@@ -150,7 +139,6 @@ export default function SearchScreen({
         />
       </div>
 
-      {/* Фильтры */}
       {showFilters && (
         <div className={`${theme.cardBg} p-4 rounded-2xl shadow space-y-3`}>
           <div className="flex items-center justify-between gap-3">
@@ -162,7 +150,6 @@ export default function SearchScreen({
               {t("Сбросить", "Reset")}
             </button>
           </div>
-
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <select value={selectedFilters.type} onChange={(e) => setSelectedFilters((prev) => ({ ...prev, type: e.target.value }))} className={`w-full p-2 ${theme.input} ${fontSize.body} rounded-xl`}>
               <option value="">{t("Тип блюда (все)", "Dish type (all)")}</option>
@@ -194,7 +181,6 @@ export default function SearchScreen({
         </div>
       )}
 
-      {/* Результаты */}
       <div className={`${theme.cardBg} p-4 rounded-2xl shadow`}>
         <div className="flex items-center justify-between mb-3">
           <h2 className={`${fontSize.subheading} font-semibold`}>{t("Результаты", "Results")}</h2>
@@ -214,7 +200,7 @@ export default function SearchScreen({
               const kcalPerServing = r.caloriesPerServing ?? r.calories;
               const fav = isFavorite ? isFavorite(r.id) : false;
               const imgSrc = r.image || r.imageUrl || RECIPE_PLACEHOLDER;
-              const isOwner = firebaseUser && r.authorId === firebaseUser.uid;
+              const isOwner = isOwnerOf(r);
               return (
                 <div
                   key={r.id}
@@ -222,14 +208,12 @@ export default function SearchScreen({
                   className={`p-4 ${theme.border} border rounded-lg cursor-pointer hover:shadow-lg transition`}
                 >
                   <div className="flex items-start gap-4">
-                    {/* Фото рецепта */}
                     <img
                       src={imgSrc}
                       alt={r.title}
                       className="w-20 h-16 object-cover rounded-xl flex-shrink-0 bg-gray-100"
                       onError={(e) => { e.target.src = RECIPE_PLACEHOLDER; }}
                     />
-
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1 min-w-0">
@@ -248,12 +232,10 @@ export default function SearchScreen({
                           </div>
                           <div className={`${fontSize.small} ${theme.textSecondary} mt-1`}>
                             {r.time} {t("мин", "min")} • {kcalPerServing} {t("ккал/порц.", "kcal/srv")}
-                            {/* authorName показывается только если это не почта */}
                             {r.authorName && !r.authorName.includes('@') && <span> • {r.authorName}</span>}
                           </div>
                         </div>
 
-                        {/* Кнопки: тип блюда + избранное + удаление */}
                         <div className="flex items-center gap-2 flex-shrink-0">
                           {r.type && (
                             <span className={`${dishTypeInfo.color} text-white px-3 py-1 rounded-full ${fontSize.tiny} font-semibold`}>
