@@ -23,6 +23,16 @@ const UNITS = [
   { value: 'капля', label_ru: 'капля', label_en: 'drop' },
 ];
 
+// Умный поиск: сначала начинающиеся с запроса, потом содержащие
+function smartSearch(query, limit = 7) {
+  const q = query.trim().toLowerCase();
+  if (!q || q.length < 2) return [];
+  const allKeys = Object.keys(PRODUCTS_BY_NAME);
+  const startsWith = allKeys.filter(k => k.startsWith(q));
+  const contains = allKeys.filter(k => !k.startsWith(q) && k.includes(q));
+  return [...startsWith, ...contains].slice(0, limit);
+}
+
 function IngredientRow({ ing, idx, onChange, onRemove, canRemove, theme, fontSize, language }) {
   const t = (ru, en) => language === 'ru' ? ru : en;
   const [suggestions, setSuggestions] = useState([]);
@@ -31,9 +41,8 @@ function IngredientRow({ ing, idx, onChange, onRemove, canRemove, theme, fontSiz
   const nameRef = useRef(null);
 
   useEffect(() => {
-    const q = (ing.name || '').trim().toLowerCase();
-    if (!q || q.length < 2 || autoFilled) { setSuggestions([]); return; }
-    const matches = Object.keys(PRODUCTS_BY_NAME).filter(k => k.includes(q)).slice(0, 7);
+    if (autoFilled) { setSuggestions([]); return; }
+    const matches = smartSearch(ing.name || '');
     setSuggestions(matches);
     setShowSug(matches.length > 0);
   }, [ing.name, autoFilled]);
@@ -182,7 +191,6 @@ export default function AddRecipeModal({ onClose, onAdded, theme, fontSize, lang
         variants: [],
         source: 'user',
       };
-      // authorName и authorId сохраняются в firebase.js — почта туда не попадает
       await addRecipe(recipe, firebaseUser);
       onAdded();
       onClose();
