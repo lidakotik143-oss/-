@@ -346,46 +346,196 @@ export const PRODUCTS_NUTRITION = {
   "язык морской": { id: 880, calories: 88, protein: 10.3, fat: 5.2, carbs: 0.0 },
   "язь": { id: 881, calories: 81, protein: 18.2, fat: 1.0, carbs: 0.0 },
 
-  // ===== ... (файл очень большой, ниже не меняем) =====
+  // ===== ОВОЩИ =====
+  "огурец": { id: 1001, calories: 15, protein: 0.8, fat: 0.1, carbs: 2.8 },
+  "огурцы": { id: 1002, calories: 15, protein: 0.8, fat: 0.1, carbs: 2.8 },
+  "огурец свежий": { id: 1003, calories: 15, protein: 0.8, fat: 0.1, carbs: 2.8 },
+  "помидор": { id: 1004, calories: 20, protein: 1.1, fat: 0.2, carbs: 3.8 },
+  "помидоры": { id: 1005, calories: 20, protein: 1.1, fat: 0.2, carbs: 3.8 },
+  "томат": { id: 1006, calories: 20, protein: 1.1, fat: 0.2, carbs: 3.8 },
+  "томаты": { id: 1007, calories: 20, protein: 1.1, fat: 0.2, carbs: 3.8 },
+  "томаты черри": { id: 1008, calories: 18, protein: 0.9, fat: 0.2, carbs: 3.5 },
+  "морковь": { id: 1009, calories: 32, protein: 1.3, fat: 0.1, carbs: 6.9 },
+  "морковь вареная": { id: 1010, calories: 25, protein: 0.8, fat: 0.3, carbs: 5.0 },
+  "лук репчатый": { id: 1011, calories: 41, protein: 1.4, fat: 0.2, carbs: 8.2 },
+  "лук": { id: 1012, calories: 41, protein: 1.4, fat: 0.2, carbs: 8.2 },
+  "лук зеленый": { id: 1013, calories: 19, protein: 1.3, fat: 0.1, carbs: 3.2 },
+  "лук-порей": { id: 1014, calories: 33, protein: 2.0, fat: 0.3, carbs: 6.3 },
+  "чеснок": { id: 1015, calories: 149, protein: 6.4, fat: 0.5, carbs: 29.9 },
+  "капуста белокочанная": { id: 1016, calories: 27, protein: 1.8, fat: 0.1, carbs: 4.7 },
+  "капуста": { id: 1017, calories: 27, protein: 1.8, fat: 0.1, carbs: 4.7 },
+  "капуста краснокочанная": { id: 1018, calories: 26, protein: 1.8, fat: 0.1, carbs: 5.4 },
+  "капуста цветная": { id: 1019, calories: 30, protein: 2.5, fat: 0.3, carbs: 5.4 },
+  "капуста брокколи": { id: 1020, calories: 34, protein: 2.8, fat: 0.4, carbs: 6.6 },
+  "брокколи": { id: 1021, calories: 34, protein: 2.8, fat: 0.4, carbs: 6.6 },
+  "капуста брюссельская": { id: 1022, calories: 43, protein: 4.8, fat: 0.3, carbs: 8.0 },
+  "капуста пекинская": { id: 1023, calories: 16, protein: 1.2, fat: 0.2, carbs: 2.0 },
+  "капуста квашеная": { id: 1024, calories: 19, protein: 1.8, fat: 0.1, carbs: 3.0 },
+  "свёкла": { id: 1025, calories: 48, protein: 1.7, fat: 0.1, carbs: 10.8 },
+  "свекла": { id: 1026, calories: 48, protein: 1.7, fat: 0.1, carbs: 10.8 },
+  "свекла вареная": { id: 1027, calories: 44, protein: 1.8, fat: 0.0, carbs: 9.5 },
+  "картофель": { id: 1028, calories: 77, protein: 2.0, fat: 0.4, carbs: 16.3 },
+  "картофель вареный": { id: 1029, calories: 82, protein: 2.0, fat: 0.4, carbs: 16.7 },
+  "картофель запеченый": { id: 1030, calories: 80, protein: 2.5, fat: 0.1, carbs: 17.0 },
+  "картофель жареный": { id: 1031, calories: 192, protein: 2.9, fat: 9.5, carbs: 23.2 },
+  "перец болгарский": { id: 1032, calories: 27, protein: 1.3, fat: 0.1, carbs: 5.7 },
+  "перец сладкий": { id: 1033, calories: 27, protein: 1.3, fat: 0.1, carbs: 5.7 },
+  "перец красный": { id: 1034, calories: 31, protein: 1.3, fat: 0.3, carbs: 6.0 },
+  "перец желтый": { id: 1035, calories: 27, protein: 1.0, fat: 0.2, carbs: 5.3 },
+  "перец зеленый": { id: 1036, calories: 20, protein: 0.9, fat: 0.2, carbs: 3.7 },
+  "перец чили": { id: 1037, calories: 40, protein: 2.0, fat: 0.2, carbs: 7.3 },
+  "баклажан": { id: 1038, calories: 24, protein: 1.2, fat: 0.1, carbs: 4.5 },
+  "баклажаны": { id: 1039, calories: 24, protein: 1.2, fat: 0.1, carbs: 4.5 },
+  "кабачок": { id: 1040, calories: 24, protein: 0.6, fat: 0.3, carbs: 4.6 },
+  "кабачки": { id: 1041, calories: 24, protein: 0.6, fat: 0.3, carbs: 4.6 },
+  "тыква": { id: 1042, calories: 22, protein: 1.0, fat: 0.1, carbs: 4.4 },
+  "шпинат": { id: 1043, calories: 23, protein: 2.9, fat: 0.4, carbs: 2.3 },
+  "салат листовой": { id: 1044, calories: 15, protein: 1.5, fat: 0.2, carbs: 2.2 },
+  "салат": { id: 1045, calories: 15, protein: 1.5, fat: 0.2, carbs: 2.2 },
+  "рукола": { id: 1046, calories: 25, protein: 2.6, fat: 0.7, carbs: 2.1 },
+  "сельдерей": { id: 1047, calories: 13, protein: 0.9, fat: 0.1, carbs: 2.1 },
+  "петрушка": { id: 1048, calories: 47, protein: 3.7, fat: 0.4, carbs: 7.6 },
+  "укроп": { id: 1049, calories: 38, protein: 2.5, fat: 0.5, carbs: 6.3 },
+  "кинза": { id: 1050, calories: 23, protein: 2.1, fat: 0.5, carbs: 0.9 },
+  "базилик": { id: 1051, calories: 23, protein: 3.2, fat: 0.6, carbs: 2.7 },
+  "редис": { id: 1052, calories: 20, protein: 1.2, fat: 0.1, carbs: 3.4 },
+  "редька": { id: 1053, calories: 35, protein: 1.9, fat: 0.2, carbs: 6.5 },
+  "репа": { id: 1054, calories: 28, protein: 1.5, fat: 0.1, carbs: 5.9 },
+  "спаржа": { id: 1055, calories: 20, protein: 1.9, fat: 0.1, carbs: 3.1 },
+  "артишок": { id: 1056, calories: 47, protein: 3.3, fat: 0.2, carbs: 10.5 },
+  "авокадо": { id: 1057, calories: 160, protein: 2.0, fat: 14.7, carbs: 8.5 },
+  "кукуруза вареная": { id: 1058, calories: 123, protein: 4.1, fat: 2.3, carbs: 22.7 },
+  "кукуруза консервированная": { id: 1059, calories: 119, protein: 3.4, fat: 1.0, carbs: 23.5 },
+  "маслины": { id: 1060, calories: 115, protein: 0.8, fat: 10.7, carbs: 6.3 },
+  "оливки": { id: 1061, calories: 115, protein: 0.8, fat: 10.7, carbs: 6.3 },
+  "грибы шампиньоны": { id: 1062, calories: 27, protein: 4.3, fat: 1.0, carbs: 1.0 },
+  "шампиньоны": { id: 1063, calories: 27, protein: 4.3, fat: 1.0, carbs: 1.0 },
+  "грибы вешенки": { id: 1064, calories: 38, protein: 3.3, fat: 0.4, carbs: 6.5 },
+  "вешенки": { id: 1065, calories: 38, protein: 3.3, fat: 0.4, carbs: 6.5 },
+  "грибы белые": { id: 1066, calories: 34, protein: 3.7, fat: 1.7, carbs: 3.4 },
+  "белые грибы": { id: 1067, calories: 34, protein: 3.7, fat: 1.7, carbs: 3.4 },
+  "грибы белые сушеные": { id: 1068, calories: 282, protein: 30.3, fat: 14.3, carbs: 28.0 },
+
+  // ===== ФРУКТЫ И ЯГОДЫ =====
+  "яблоко": { id: 1101, calories: 47, protein: 0.4, fat: 0.4, carbs: 9.8 },
+  "яблоки": { id: 1102, calories: 47, protein: 0.4, fat: 0.4, carbs: 9.8 },
+  "груша": { id: 1103, calories: 42, protein: 0.4, fat: 0.3, carbs: 10.9 },
+  "груши": { id: 1104, calories: 42, protein: 0.4, fat: 0.3, carbs: 10.9 },
+  "банан": { id: 1105, calories: 96, protein: 1.5, fat: 0.2, carbs: 21.8 },
+  "бананы": { id: 1106, calories: 96, protein: 1.5, fat: 0.2, carbs: 21.8 },
+  "апельсин": { id: 1107, calories: 43, protein: 0.9, fat: 0.2, carbs: 8.1 },
+  "апельсины": { id: 1108, calories: 43, protein: 0.9, fat: 0.2, carbs: 8.1 },
+  "мандарин": { id: 1109, calories: 38, protein: 0.6, fat: 0.3, carbs: 7.5 },
+  "мандарины": { id: 1110, calories: 38, protein: 0.6, fat: 0.3, carbs: 7.5 },
+  "лимон": { id: 1111, calories: 34, protein: 0.9, fat: 0.1, carbs: 9.0 },
+  "грейпфрут": { id: 1112, calories: 35, protein: 0.7, fat: 0.2, carbs: 6.5 },
+  "виноград": { id: 1113, calories: 65, protein: 0.6, fat: 0.2, carbs: 16.8 },
+  "клубника": { id: 1114, calories: 30, protein: 0.8, fat: 0.4, carbs: 6.3 },
+  "земляника": { id: 1115, calories: 34, protein: 0.7, fat: 0.4, carbs: 7.5 },
+  "черника": { id: 1116, calories: 44, protein: 1.1, fat: 0.6, carbs: 6.6 },
+  "малина": { id: 1117, calories: 41, protein: 0.8, fat: 0.5, carbs: 8.3 },
+  "смородина черная": { id: 1118, calories: 44, protein: 1.0, fat: 0.4, carbs: 11.5 },
+  "смородина красная": { id: 1119, calories: 39, protein: 0.6, fat: 0.2, carbs: 7.7 },
+  "вишня": { id: 1120, calories: 52, protein: 0.8, fat: 0.5, carbs: 10.3 },
+  "черешня": { id: 1121, calories: 50, protein: 1.1, fat: 0.4, carbs: 11.3 },
+  "персик": { id: 1122, calories: 46, protein: 0.9, fat: 0.1, carbs: 11.3 },
+  "абрикос": { id: 1123, calories: 44, protein: 0.9, fat: 0.1, carbs: 10.5 },
+  "абрикосы": { id: 1124, calories: 44, protein: 0.9, fat: 0.1, carbs: 10.5 },
+  "слива": { id: 1125, calories: 42, protein: 0.8, fat: 0.3, carbs: 9.6 },
+  "сливы": { id: 1126, calories: 42, protein: 0.8, fat: 0.3, carbs: 9.6 },
+  "арбуз": { id: 1127, calories: 25, protein: 0.7, fat: 0.1, carbs: 5.8 },
+  "дыня": { id: 1128, calories: 33, protein: 0.6, fat: 0.3, carbs: 7.4 },
+  "ананас": { id: 1129, calories: 52, protein: 0.4, fat: 0.2, carbs: 11.8 },
+  "манго": { id: 1130, calories: 65, protein: 0.5, fat: 0.3, carbs: 14.0 },
+  "киви": { id: 1131, calories: 48, protein: 0.8, fat: 0.4, carbs: 10.3 },
+  "хурма": { id: 1132, calories: 67, protein: 0.5, fat: 0.4, carbs: 15.9 },
+  "гранат": { id: 1133, calories: 52, protein: 0.9, fat: 0.0, carbs: 11.8 },
+  "инжир": { id: 1134, calories: 54, protein: 0.7, fat: 0.2, carbs: 12.4 },
+  "финики": { id: 1135, calories: 274, protein: 1.8, fat: 0.5, carbs: 69.2 },
+  "чернослив": { id: 1136, calories: 256, protein: 2.3, fat: 0.7, carbs: 65.6 },
+  "изюм": { id: 1137, calories: 264, protein: 2.9, fat: 0.6, carbs: 66.0 },
+  "курага": { id: 1138, calories: 241, protein: 5.2, fat: 0.3, carbs: 51.0 },
+
+  // ===== МАСЛА И ЖИРЫ =====
+  "масло подсолнечное": { id: 1201, calories: 899, protein: 0.0, fat: 99.9, carbs: 0.0 },
+  "масло оливковое": { id: 1202, calories: 898, protein: 0.0, fat: 99.8, carbs: 0.0 },
+  "масло сливочное": { id: 1203, calories: 748, protein: 0.8, fat: 82.5, carbs: 0.8 },
+  "масло сливочное 82,5%": { id: 1204, calories: 748, protein: 0.8, fat: 82.5, carbs: 0.8 },
+  "масло кокосовое": { id: 1205, calories: 862, protein: 0.0, fat: 100.0, carbs: 0.0 },
+  "масло льняное": { id: 1206, calories: 898, protein: 0.0, fat: 99.8, carbs: 0.0 },
+  "майонез": { id: 1207, calories: 627, protein: 2.8, fat: 67.0, carbs: 2.6 },
+  "майонез провансаль": { id: 1208, calories: 627, protein: 2.8, fat: 67.0, carbs: 2.6 },
+
+  // ===== ОРЕХИ И СЕМЕНА =====
+  "орехи грецкие": { id: 1301, calories: 654, protein: 15.2, fat: 65.2, carbs: 7.0 },
+  "грецкий орех": { id: 1302, calories: 654, protein: 15.2, fat: 65.2, carbs: 7.0 },
+  "фундук": { id: 1303, calories: 628, protein: 15.0, fat: 61.5, carbs: 9.9 },
+  "миндаль": { id: 1304, calories: 575, protein: 18.6, fat: 57.7, carbs: 13.0 },
+  "кешью": { id: 1305, calories: 553, protein: 18.5, fat: 48.5, carbs: 22.5 },
+  "арахис": { id: 1306, calories: 567, protein: 25.8, fat: 49.2, carbs: 16.1 },
+  "фисташки": { id: 1307, calories: 556, protein: 20.0, fat: 50.0, carbs: 7.0 },
+  "кедровые орехи": { id: 1308, calories: 673, protein: 13.7, fat: 68.4, carbs: 13.1 },
+  "семена подсолнечника": { id: 1309, calories: 601, protein: 20.7, fat: 52.9, carbs: 10.5 },
+  "семена тыквы": { id: 1310, calories: 556, protein: 30.2, fat: 49.1, carbs: 10.7 },
+  "кунжут": { id: 1311, calories: 573, protein: 19.4, fat: 48.7, carbs: 12.2 },
+  "лён семена": { id: 1312, calories: 534, protein: 18.3, fat: 42.2, carbs: 28.9 },
+  "семена льна": { id: 1313, calories: 534, protein: 18.3, fat: 42.2, carbs: 28.9 },
+  "паста арахисовая": { id: 1314, calories: 589, protein: 25.1, fat: 50.4, carbs: 19.6 },
+
+  // ===== САХАР, МЁД, СЛАДОСТИ =====
+  "сахар": { id: 1401, calories: 399, protein: 0.0, fat: 0.0, carbs: 99.8 },
+  "мёд": { id: 1402, calories: 329, calories_alt: 329, protein: 0.8, fat: 0.0, carbs: 81.5 },
+  "мед": { id: 1403, calories: 329, protein: 0.8, fat: 0.0, carbs: 81.5 },
+  "варенье": { id: 1404, calories: 238, protein: 0.3, fat: 0.1, carbs: 62.6 },
+  "шоколад горький": { id: 1405, calories: 539, protein: 6.2, fat: 35.4, carbs: 48.2 },
+  "шоколад молочный": { id: 1406, calories: 554, protein: 6.9, fat: 35.7, carbs: 49.5 },
+  "какао-порошок": { id: 1407, calories: 290, protein: 24.3, fat: 15.0, carbs: 10.2 },
+
+  // ===== ПРИПРАВЫ И СОУСЫ =====
+  "соевый соус": { id: 1501, calories: 60, protein: 6.0, fat: 0.1, carbs: 8.1 },
+  "кетчуп": { id: 1502, calories: 90, protein: 2.0, fat: 0.1, carbs: 19.0 },
+  "томатная паста": { id: 1503, calories: 82, protein: 4.8, fat: 0.5, carbs: 18.0 },
+  "горчица": { id: 1504, calories: 162, protein: 5.7, fat: 10.9, carbs: 11.1 },
+  "уксус": { id: 1505, calories: 11, protein: 0.0, fat: 0.0, carbs: 3.6 },
+  "соль": { id: 1506, calories: 0, protein: 0.0, fat: 0.0, carbs: 0.0 },
+  "перец черный молотый": { id: 1507, calories: 251, protein: 10.4, fat: 3.3, carbs: 38.7 },
+  "паприка": { id: 1508, calories: 282, protein: 14.1, fat: 12.9, carbs: 34.0 },
+  "куркума": { id: 1509, calories: 354, protein: 7.8, fat: 9.9, carbs: 64.9 },
+  "имбирь": { id: 1510, calories: 80, protein: 1.8, fat: 0.8, carbs: 15.8 },
+  "имбирь свежий": { id: 1511, calories: 80, protein: 1.8, fat: 0.8, carbs: 15.8 },
+
+  // ===== НАПИТКИ =====
+  "сок апельсиновый": { id: 1601, calories: 45, protein: 0.7, fat: 0.2, carbs: 10.4 },
+  "сок яблочный": { id: 1602, calories: 46, protein: 0.5, fat: 0.1, carbs: 11.4 },
+  "кофе": { id: 1603, calories: 2, protein: 0.2, fat: 0.1, carbs: 0.3 },
+  "чай": { id: 1604, calories: 1, protein: 0.0, fat: 0.0, carbs: 0.3 },
+
+  // ===== РАЗНОЕ =====
   "чача": { id: 2129, calories: 225, protein: 0.1, fat: 0.1, carbs: 0.5 }
 };
 
-// --- ЕДИНИЦЫ И ПОДСКАЗКИ (граммы в скобках) ---
-// В рецептах показываем оригинальную единицу, но добавляем в скобках приблизительный перевод в граммы.
-// Значения "стакан"/"ложки" зависят от продукта; тут используются усреднённые кухонные меры.
-// Источники: таблицы мер и весов продуктов [web:95][web:97].
-
 const UNIT_TO_GRAMS_APPROX = {
-  // объёмные меры
   "стакан": 250,
   "стакана": 250,
   "стаканов": 250,
   "cup": 250,
   "cups": 250,
-
   "ст.л": 15,
   "ст. л": 15,
   "столовая ложка": 15,
   "столовые ложки": 15,
-
   "ч.л": 5,
   "ч. л": 5,
   "чайная ложка": 5,
   "чайные ложки": 5,
-
-  // жидкие
   "мл": 1,
   "ml": 1,
-
-  // массовые
   "г": 1,
   "гр": 1,
   "gram": 1,
   "grams": 1,
   "кг": 1000,
   "kg": 1000,
-
-  // штуки (очень приблизительно)
   "шт": null,
   "штук": null,
   "piece": null,
@@ -399,6 +549,8 @@ const PRODUCT_AVG_WEIGHT_G = {
   "бананы": 120,
   "помидор": 100,
   "помидоры": 100,
+  "огурец": 150,
+  "огурцы": 150,
   "лук": 75,
   "лук репчатый": 75,
   "авокадо": 200,
@@ -406,7 +558,14 @@ const PRODUCT_AVG_WEIGHT_G = {
   "перец сладкий": 150,
   "морковь": 75,
   "кабачок": 300,
-  "баклажан": 250
+  "баклажан": 250,
+  "яблоко": 150,
+  "груша": 150,
+  "апельсин": 200,
+  "мандарин": 80,
+  "лимон": 100,
+  "персик": 120,
+  "абрикос": 40,
 };
 
 function normalizeUnit(unitRaw = "") {
@@ -420,36 +579,27 @@ function normalizeProductName(nameRaw = "") {
 export function getApproxGramsForIngredient({ name, quantity, unit }) {
   const q = parseFloat(quantity);
   if (!q) return null;
-
   const u = normalizeUnit(unit);
   const product = normalizeProductName(name);
-
-  // штуки — только если знаем средний вес
   if (u.includes("шт") || u.includes("piece") || u.includes("pcs")) {
     const avg = PRODUCT_AVG_WEIGHT_G[product];
     if (!avg) return null;
     return Math.round(q * avg);
   }
-
-  // сначала точные совпадения по словарю
   for (const [key, gramsPerUnit] of Object.entries(UNIT_TO_GRAMS_APPROX)) {
     if (!gramsPerUnit) continue;
     if (u === key || u.includes(key)) {
       return Math.round(q * gramsPerUnit);
     }
   }
-
   return null;
 }
 
 export function formatIngredientAmountWithApproxGrams({ name, quantity, unit }) {
   const q = (quantity ?? "").toString();
   const u = (unit ?? "").toString();
-
   const grams = getApproxGramsForIngredient({ name, quantity, unit });
   if (!grams) return `${q} ${u}`.trim();
-
-  // Показываем как просили: сначала "как в рецепте", потом в скобках граммы
   return `${q} ${u} (≈ ${grams} г)`.trim();
 }
 
@@ -459,35 +609,24 @@ export function calculateRecipeNutrition(ingredients) {
     const productName = normalizeProductName(ingredient.name);
     const quantity = parseFloat(ingredient.quantity) || 0;
     if (!quantity) return;
-
     const product = PRODUCTS_NUTRITION[productName];
     if (!product) return;
-
     const unit = normalizeUnit(ingredient.unit);
-
     let gramsAmount = null;
-
-    // 1) Если в граммах/кг/мл — переводим напрямую
     if (unit.includes("кг") || unit === "kg") gramsAmount = quantity * 1000;
     else if (unit.includes("г") || unit.includes("гр") || unit === "gram" || unit === "grams") gramsAmount = quantity;
-    else if (unit.includes("мл") || unit === "ml") gramsAmount = quantity; // упрощение: 1 мл ≈ 1 г
-
-    // 2) Иначе пробуем приблизительный перевод
+    else if (unit.includes("мл") || unit === "ml") gramsAmount = quantity;
     if (gramsAmount === null) {
       const approx = getApproxGramsForIngredient({ name: ingredient.name, quantity, unit: ingredient.unit });
       if (approx !== null) gramsAmount = approx;
     }
-
-    // 3) Если не получилось перевести — пропускаем, чтобы не рисовать неверные КБЖУ
     if (gramsAmount === null) return;
-
     const factor = gramsAmount / 100;
     totalCalories += product.calories * factor;
     totalProtein += product.protein * factor;
     totalFat += product.fat * factor;
     totalCarbs += product.carbs * factor;
   });
-
   return {
     calories: Math.round(totalCalories),
     protein: Math.round(totalProtein * 10) / 10,
