@@ -106,7 +106,7 @@ export const PRODUCTS_NUTRITION = {
   "сливки 10%": { id: 510, calories: 119, protein: 2.7, fat: 10.0, carbs: 4.4 },
   "сливки 20%": { id: 511, calories: 205, protein: 2.5, fat: 20.0, carbs: 4.0 },
   "творог": { id: 512, calories: 169, protein: 18.0, fat: 9.0, carbs: 3.0 },
-  "творог нежирный": { id: 513, calories: 110, protein: 22.0, fat: 0.6, carbs: 3.3 },
+  "творог обезжиренный": { id: 513, calories: 110, protein: 22.0, fat: 0.6, carbs: 3.3 },
   "творог 5%": { id: 514, calories: 145, protein: 21.0, fat: 5.0, carbs: 3.0 },
   "творог 9%": { id: 515, calories: 169, protein: 18.0, fat: 9.0, carbs: 3.0 },
   "творог 18%": { id: 516, calories: 236, protein: 15.0, fat: 18.0, carbs: 2.8 },
