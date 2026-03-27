@@ -1,7 +1,9 @@
-import React from 'react';
-import { FaTimes } from 'react-icons/fa';
+import React, { useState } from 'react';
+import { FaTimes, FaEdit, FaTrash } from 'react-icons/fa';
 import { getTimeCategory, DISH_TYPE_LABELS, normalize } from '../utils/constants';
 import { MEAL_CATEGORIES } from '../utils/constants';
+import { useApp } from '../context/AppContext';
+import { deleteRecipe } from '../firebase.js';
 
 export default function RecipeModal({ 
   recipe,
@@ -14,12 +16,18 @@ export default function RecipeModal({
   language,
   theme,
   fontSize,
-  MEAL_LABELS
+  MEAL_LABELS,
+  onEditRecipe,
 }) {
   if (!recipe) return null;
 
+  const { firebaseUser } = useApp();
+  const [deleting, setDeleting] = useState(false);
+
   const t = (ru, en) => (language === "ru" ? ru : en);
-  
+
+  const isMyRecipe = firebaseUser?.uid && String(recipe.authorId) === String(firebaseUser.uid);
+
   const variants = Array.isArray(recipe.variants) ? recipe.variants : [];
   const activeVariant = variants.length
     ? (variants.find(v => v.key === variantKey) || variants[0])
@@ -36,6 +44,18 @@ export default function RecipeModal({
   const dishTypeInfo = DISH_TYPE_LABELS[normalize(recipe.type)];
   const dishTypeLabel = dishTypeInfo?.[language] || recipe.type;
   const dishTypeColor = dishTypeInfo?.color || "bg-gray-500";
+
+  const handleDelete = async () => {
+    if (!window.confirm(t(`Удалить рецепт «${recipe.title}»?`, `Delete "${recipe.title}"?`))) return;
+    setDeleting(true);
+    try {
+      await deleteRecipe(recipe.id, firebaseUser.uid);
+      onClose();
+    } catch {
+      alert(t('Ошибка при удалении', 'Delete error'));
+      setDeleting(false);
+    }
+  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" onClick={onClose}>
@@ -66,9 +86,32 @@ export default function RecipeModal({
               </div>
             )}
           </div>
-          <button onClick={onClose} className={`${theme.textSecondary} hover:${theme.text} transition ml-4`}>
-            <FaTimes size={24} />
-          </button>
+
+          {/* Кнопки управления: только для своих рецептов */}
+          <div className="flex items-center gap-2 ml-4">
+            {isMyRecipe && onEditRecipe && (
+              <button
+                onClick={() => { onClose(); onEditRecipe(recipe); }}
+                className="p-2 rounded-full text-blue-400 hover:text-blue-600 hover:bg-blue-50 transition"
+                title={t('Редактировать', 'Edit')}
+              >
+                <FaEdit size={18} />
+              </button>
+            )}
+            {isMyRecipe && (
+              <button
+                onClick={handleDelete}
+                disabled={deleting}
+                className={`p-2 rounded-full text-red-400 hover:text-red-600 hover:bg-red-50 transition ${deleting ? 'opacity-50 cursor-not-allowed' : ''}`}
+                title={t('Удалить', 'Delete')}
+              >
+                <FaTrash size={18} />
+              </button>
+            )}
+            <button onClick={onClose} className={`${theme.textSecondary} hover:${theme.text} transition`}>
+              <FaTimes size={24} />
+            </button>
+          </div>
         </div>
 
         <div className={`${theme.cardBg} border-2 rounded-xl p-4 mb-6 shadow-md`} style={{ borderColor: timeInfo.color }}>
@@ -111,10 +154,11 @@ export default function RecipeModal({
           <h3 className={`${fontSize.cardTitle} font-semibold mb-2 ${theme.headerText}`}>{t("Ингредиенты:", "Ingredients:")}</h3>
           <ul className={`list-disc list-inside space-y-1 ${fontSize.body}`}>
             {(activeRecipe.ingredients || []).map((ing, i) => {
-              const low = ing.toLowerCase();
+              const name = typeof ing === 'object' ? ing.name : ing;
+              const low = (name || '').toLowerCase();
               const isAllergy = allergyList.some(a => a && low.includes(a));
               const cls = isAllergy ? "text-red-600 font-semibold" : "";
-              return <li key={i} className={cls}>{ing}</li>;
+              return <li key={i} className={cls}>{name}</li>;
             })}
           </ul>
         </div>
