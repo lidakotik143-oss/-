@@ -44,10 +44,6 @@ function smartSearch(query, limit = 7) {
   return productsFuse.search(q, { limit }).map(r => r.item.key);
 }
 
-/**
- * Читает файл и конвертирует в base64 jpeg.
- * Ресайзит только если изображение шире maxW ИЛИ выше maxH, сохраняя пропорции.
- */
 function readFileAsBase64(file, maxW = 1600, maxH = 1200, quality = 0.92) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -74,11 +70,6 @@ function readFileAsBase64(file, maxW = 1600, maxH = 1200, quality = 0.92) {
   });
 }
 
-/**
- * Кнопка-загрузчик фото со превью.
- * small=true  — для фото шага: показывает фото полностью (без обрезки) object-contain.
- * small=false — для превью рецепта: широкое полотно с обрезкой object-cover.
- */
 function PhotoUpload({ value, onChange, label, theme, fontSize, t, small = false }) {
   const inputRef = useRef(null);
 
@@ -140,26 +131,27 @@ function PhotoUpload({ value, onChange, label, theme, fontSize, t, small = false
   );
 }
 
-function IngredientRow({ ing, idx, onChange, onRemove, canRemove, theme, fontSize, language }) {
+function IngredientRow({ ing, idx, onChange, onRemove, canRemove, theme, fontSize, language, initiallyFilled }) {
   const t = (ru, en) => language === 'ru' ? ru : en;
   const [suggestions, setSuggestions] = useState([]);
-  const [showSug, setShowSug]         = useState(false);
-  // Если имя уже заполнено при монтировании (режим редактирования) — считаем поле «уже выбранным»,
-  // чтобы автодополнение не открывалось автоматически.
-  const [autoFilled, setAutoFilled]   = useState(() => !!(ing.name && ing.name.trim()));
+  const [showSug, setShowSug] = useState(false);
+  // userIsTyping: true ONLY when user actually typed something this session
+  // initiallyFilled: passed from parent, true if this row had a name when modal opened
+  const userIsTypingRef = useRef(false);
   const nameRef = useRef(null);
 
   useEffect(() => {
-    if (autoFilled) { setSuggestions([]); setShowSug(false); return; }
+    // Показываем подсказки только если пользователь сам начал печатать
+    if (!userIsTypingRef.current) return;
     const matches = smartSearch(ing.name || '');
     setSuggestions(matches);
     setShowSug(matches.length > 0);
-  }, [ing.name, autoFilled]);
+  }, [ing.name]);
 
   const selectSuggestion = (key) => {
     const prod = PRODUCTS_BY_NAME[key];
     onChange(idx, 'name', prod.name || key);
-    setAutoFilled(true);
+    userIsTypingRef.current = false;
     setShowSug(false);
     setSuggestions([]);
     nameRef.current?.focus();
@@ -174,8 +166,10 @@ function IngredientRow({ ing, idx, onChange, onRemove, canRemove, theme, fontSiz
         <input
           ref={nameRef}
           value={ing.name}
-          onChange={e => { onChange(idx, 'name', e.target.value); setAutoFilled(false); }}
-          onFocus={() => !autoFilled && suggestions.length > 0 && setShowSug(true)}
+          onChange={e => {
+            userIsTypingRef.current = true;
+            onChange(idx, 'name', e.target.value);
+          }}
           onBlur={() => setTimeout(() => setShowSug(false), 150)}
           placeholder={t('Название ингредиента...', 'Ingredient name...')}
           className={`${inputCls} pl-8`}
@@ -198,7 +192,7 @@ function IngredientRow({ ing, idx, onChange, onRemove, canRemove, theme, fontSiz
             ))}
           </ul>
         )}
-        {autoFilled && (
+        {initiallyFilled && !userIsTypingRef.current && (
           <span className={`absolute right-3 top-1/2 -translate-y-1/2 text-green-600 ${fontSize.tiny} font-semibold pointer-events-none`}>
             ✅
           </span>
@@ -272,6 +266,14 @@ export default function AddRecipeModal({ onClose, onAdded, theme, fontSize, lang
 
   const [previewImage, setPreviewImage] = useState(() => editingRecipe?.image || '');
 
+  // Для каждого ингредиента запоминаем, было ли имя заполнено при открытии модального окна
+  const [initialFilledNames] = useState(() => {
+    if (!editingRecipe?.ingredients?.length) return [];
+    return editingRecipe.ingredients.map(i =>
+      typeof i === 'object' ? !!(i.name && i.name.trim()) : !!(i && String(i).trim())
+    );
+  });
+
   const [ingredients, setIngredients] = useState(() =>
     editingRecipe?.ingredients?.length
       ? editingRecipe.ingredients.map(i => ({
@@ -282,16 +284,26 @@ export default function AddRecipeModal({ onClose, onAdded, theme, fontSize, lang
       : [{ name: '', quantity: '', unit: '' }]
   );
 
+  // Стабильные id для IngredientRow, чтобы не сбрасывать state при перерисовке
+  const rowIdsRef = useRef(ingredients.map((_, i) => i));
+  const nextIdRef = useRef(ingredients.length);
+
+  const addIngredient = () => {
+    setIngredients(p => [...p, { name: '', quantity: '', unit: '' }]);
+    rowIdsRef.current = [...rowIdsRef.current, nextIdRef.current++];
+  };
+  const removeIngredient = (i) => {
+    setIngredients(p => p.filter((_, idx) => idx !== i));
+    rowIdsRef.current = rowIdsRef.current.filter((_, idx) => idx !== i);
+  };
+  const setIngredient = (i, field, val) => setIngredients(p => p.map((ing, idx) => idx === i ? { ...ing, [field]: val } : ing));
+
   const [steps, setSteps] = useState(() => normalizeSteps(editingRecipe?.instructions));
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   const set = (field, val) => setForm(p => ({ ...p, [field]: val }));
-
-  const addIngredient    = () => setIngredients(p => [...p, { name: '', quantity: '', unit: '' }]);
-  const removeIngredient = (i) => setIngredients(p => p.filter((_, idx) => idx !== i));
-  const setIngredient    = (i, field, val) => setIngredients(p => p.map((ing, idx) => idx === i ? { ...ing, [field]: val } : ing));
 
   const addStep    = () => setSteps(p => [...p, { text: '', image: '' }]);
   const removeStep = (i) => setSteps(p => p.filter((_, idx) => idx !== i));
@@ -439,7 +451,7 @@ export default function AddRecipeModal({ onClose, onAdded, theme, fontSize, lang
             <div className="space-y-3">
               {ingredients.map((ing, i) => (
                 <IngredientRow
-                  key={i}
+                  key={rowIdsRef.current[i]}
                   ing={ing}
                   idx={i}
                   onChange={setIngredient}
@@ -448,6 +460,7 @@ export default function AddRecipeModal({ onClose, onAdded, theme, fontSize, lang
                   theme={theme}
                   fontSize={fontSize}
                   language={language}
+                  initiallyFilled={initialFilledNames[i] ?? false}
                 />
               ))}
             </div>
