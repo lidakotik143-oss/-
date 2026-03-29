@@ -1,5 +1,5 @@
 // =================== БЛОК 1: Импорты и примерные данные ===================
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { FaTimes, FaPlus, FaMinus, FaHeart, FaRegHeart, FaPlay, FaPause, FaRedo, FaEdit, FaTrash } from "react-icons/fa";
 import Fuse from 'fuse.js';
 import { RECIPES_DATABASE } from './recipesData';
@@ -25,6 +25,7 @@ import SettingsScreen from "./components/SettingsScreen";
 import AddRecipeModal from "./components/AddRecipeModal";
 import NotificationModal from "./components/NotificationModal";
 import RecipeVariantModal from "./components/RecipeVariantModal";
+import Toast from "./components/Toast";
 
 // 🌐 Context
 import { AppContext } from './context/AppContext';
@@ -390,6 +391,15 @@ export default function CookifyDemo() {
   const [notificationMessage, setNotificationMessage] = useState("");
 
   const [initialFavorites, setInitialFavorites] = useState(null);
+
+  // =================== TOAST ===================
+  const [toast, setToast] = useState({ visible: false, message: '', type: 'success' });
+  const showToast = useCallback((message, type = 'success') => {
+    setToast({ visible: true, message, type });
+  }, []);
+  const hideToast = useCallback(() => {
+    setToast(prev => ({ ...prev, visible: false }));
+  }, []);
 
   const openVariantModal = (recipe, onSelect) => {
     setVariantSelectionRecipe(recipe);
@@ -828,6 +838,8 @@ export default function CookifyDemo() {
     getTodayEntries: getWaterTodayEntries,
     getWeeklyStats: getWaterWeeklyStats,
     calculateWaterGoal,
+    // Toast API
+    showToast,
   };
 
   if (authLoading) {
@@ -892,8 +904,9 @@ export default function CookifyDemo() {
               await deleteRecipe(selectedRecipe.id, firebaseUser.uid);
               closeModal();
               refreshCommunityRecipes();
+              showToast(t('Рецепт удалён', 'Recipe deleted'), 'success');
             } catch {
-              alert(t('Ошибка при удалении', 'Delete error'));
+              showToast(t('Ошибка при удалении', 'Delete error'), 'error');
             }
           };
 
@@ -918,7 +931,6 @@ export default function CookifyDemo() {
             return scaled % 1 === 0 ? scaled.toString() : scaled.toFixed(1).replace('.', ',');
           };
 
-          // Нормализуем шаг: может быть строкой (старые рецепты) или объектом { text, image }
           const normalizeStep = (step) => {
             if (typeof step === 'object' && step !== null) return step;
             return { text: step || '', image: '' };
@@ -1104,7 +1116,6 @@ export default function CookifyDemo() {
                           </div>
                           {step.image && (
                             <div className="pl-9">
-                              {/* object-contain — показываем фото целиком без обрезки */}
                               <img
                                 src={step.image}
                                 alt={`${t('Шаг', 'Step')} ${i + 1}`}
@@ -1210,10 +1221,21 @@ export default function CookifyDemo() {
           <AddRecipeModal
             theme={theme} fontSize={fontSize} language={language} firebaseUser={firebaseUser}
             onClose={() => { setShowAddRecipeModal(false); setEditingRecipe(null); }}
-            onAdded={() => { getRecipes().then(r => setCommunityRecipes(r)).catch(() => {}); }}
+            onAdded={() => {
+              getRecipes().then(r => setCommunityRecipes(r)).catch(() => {});
+              showToast(language === 'ru' ? 'Рецепт сохранён' : 'Recipe saved', 'success');
+            }}
             editingRecipe={editingRecipe}
           />
         )}
+
+        {/* Глобальный Toast */}
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          visible={toast.visible}
+          onHide={hideToast}
+        />
       </div>
     </AppContext.Provider>
   );
