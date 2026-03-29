@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { FaTrash, FaEdit, FaSearch, FaUtensils } from 'react-icons/fa';
 import { deleteRecipe, getRecipes } from '../../firebase.js';
 import { useApp } from '../../context/AppContext';
@@ -7,24 +7,28 @@ import AddRecipeModal from '../AddRecipeModal';
 const RECIPE_PLACEHOLDER = 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=120&h=80&fit=crop&auto=format';
 
 export default function MyRecipesTab() {
-  const { t, theme, fontSize, language, firebaseUser, getDishTypeInfo, setSelectedRecipe, setSelectedRecipeVariantKey } = useApp();
+  const {
+    t, theme, fontSize, language, firebaseUser,
+    getDishTypeInfo, setSelectedRecipe, setSelectedRecipeVariantKey,
+    showToast,
+  } = useApp();
 
-  const [myRecipes, setMyRecipes]     = useState([]);
-  const [loading, setLoading]         = useState(true);
-  const [deletingId, setDeletingId]   = useState(null);
-  const [editingRecipe, setEditingRecipe] = useState(null);
-  const [search, setSearch]           = useState('');
+  const [myRecipes, setMyRecipes]           = useState([]);
+  const [loading, setLoading]               = useState(true);
+  const [deletingId, setDeletingId]         = useState(null);
+  const [editingRecipe, setEditingRecipe]   = useState(null);
+  const [search, setSearch]                 = useState('');
 
-  const loadMyRecipes = () => {
+  const loadMyRecipes = useCallback(() => {
     if (!firebaseUser?.uid) return;
     setLoading(true);
     getRecipes()
       .then(all => setMyRecipes(all.filter(r => String(r.authorId) === String(firebaseUser.uid))))
       .catch(() => setMyRecipes([]))
       .finally(() => setLoading(false));
-  };
+  }, [firebaseUser?.uid]);
 
-  useEffect(() => { loadMyRecipes(); }, [firebaseUser?.uid]);
+  useEffect(() => { loadMyRecipes(); }, [loadMyRecipes]);
 
   const handleDelete = async (e, recipe) => {
     e.stopPropagation();
@@ -33,17 +37,19 @@ export default function MyRecipesTab() {
     try {
       await deleteRecipe(recipe.id, firebaseUser.uid);
       setMyRecipes(prev => prev.filter(r => r.id !== recipe.id));
+      showToast(t('Рецепт удалён', 'Recipe deleted'), 'success');
     } catch {
-      alert(t('Ошибка при удалении', 'Delete error'));
+      showToast(t('Ошибка при удалении', 'Delete error'), 'error');
     } finally {
       setDeletingId(null);
     }
   };
 
-  // После сохранения перезагружаем список чтобы отобразить изменения
+  // onAdded: перезагружаем список + toast
   const handleAdded = () => {
     loadMyRecipes();
     setEditingRecipe(null);
+    showToast(t('Рецепт сохранён', 'Recipe saved'), 'success');
   };
 
   const filtered = myRecipes.filter(r =>
@@ -96,9 +102,9 @@ export default function MyRecipesTab() {
         <div className="grid gap-3">
           {filtered.map(r => {
             const dishTypeInfo = getDishTypeInfo(r.type);
-            const kcal        = r.caloriesPerServing ?? r.calories;
-            const imgSrc      = r.image || r.imageUrl || RECIPE_PLACEHOLDER;
-            const isDeleting  = deletingId === r.id;
+            const kcal         = r.caloriesPerServing ?? r.calories;
+            const imgSrc       = r.image || r.imageUrl || RECIPE_PLACEHOLDER;
+            const isDeleting   = deletingId === r.id;
             return (
               <div key={r.id}
                 onClick={() => { setSelectedRecipe(r); setSelectedRecipeVariantKey(r?.variants?.[0]?.key || null); }}
@@ -155,7 +161,6 @@ export default function MyRecipesTab() {
         </div>
       )}
 
-      {/* Используем единый AddRecipeModal с editingRecipe пропом — как из поиска */}
       {editingRecipe && (
         <AddRecipeModal
           editingRecipe={editingRecipe}
