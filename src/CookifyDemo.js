@@ -1,6 +1,6 @@
 // =================== БЛОК 1: Импорты и примерные данные ===================
 import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
-import { FaTimes, FaPlus, FaMinus, FaHeart, FaRegHeart, FaPlay, FaPause, FaRedo, FaEdit, FaTrash, FaClock } from "react-icons/fa";
+import { FaTimes, FaPlus, FaMinus, FaHeart, FaRegHeart, FaPlay, FaPause, FaRedo, FaEdit, FaTrash, FaClock, FaExpand, FaCompress } from "react-icons/fa";
 import Fuse from 'fuse.js';
 import { RECIPES_DATABASE } from './recipesData';
 
@@ -330,51 +330,206 @@ function CookingTimerBlock({ timeMinutes, timeInfo, t, fontSize, theme }) {
   );
 }
 
+// =================== Полноэкранный таймер ===================
+function FullscreenTimer({ minutes, stepText, stepIndex, t, onClose, theme }) {
+  const { isRunning, isDone, start, pause, reset, formatted, progress } = useCookingTimer(minutes);
+  const size = 280;
+  const r = 120;
+  const circumference = 2 * Math.PI * r;
+  const strokeDash = circumference - (progress / 100) * circumference;
+  const color = isDone ? '#10B981' : '#F59E0B';
+
+  // Вибрация при завершении (если поддерживается)
+  useEffect(() => {
+    if (isDone && navigator.vibrate) navigator.vibrate([300, 100, 300]);
+  }, [isDone]);
+
+  // Закрытие по Escape
+  useEffect(() => {
+    const handler = (e) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [onClose]);
+
+  return (
+    <div
+      className="fixed inset-0 z-[200] flex flex-col items-center justify-center"
+      style={{ background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)' }}
+    >
+      {/* Кнопка закрыть */}
+      <button
+        onClick={onClose}
+        className="absolute top-5 right-5 text-white/60 hover:text-white transition p-2 rounded-full hover:bg-white/10"
+        title={t('Свернуть', 'Minimize')}
+      >
+        <FaCompress size={22} />
+      </button>
+
+      {/* Номер шага + текст */}
+      <div className="text-center mb-8 px-8 max-w-md">
+        <div className="text-white/50 text-sm font-medium mb-2 tracking-widest uppercase">
+          {t(`Шаг ${stepIndex + 1}`, `Step ${stepIndex + 1}`)}
+        </div>
+        {stepText && (
+          <p className="text-white/80 text-base leading-relaxed line-clamp-3">{stepText}</p>
+        )}
+      </div>
+
+      {/* Большой круговой прогресс */}
+      <div className="relative" style={{ width: size, height: size }}>
+        {/* Свечение */}
+        <div
+          className="absolute inset-0 rounded-full"
+          style={{
+            boxShadow: isDone
+              ? '0 0 60px 20px rgba(16,185,129,0.3)'
+              : '0 0 60px 20px rgba(245,158,11,0.25)',
+            transition: 'box-shadow 1s ease'
+          }}
+        />
+        <svg width={size} height={size} className="-rotate-90 drop-shadow-2xl">
+          {/* Фоновая дорожка */}
+          <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="12" />
+          {/* Прогресс */}
+          <circle
+            cx={size/2} cy={size/2} r={r} fill="none"
+            stroke={color} strokeWidth="12"
+            strokeDasharray={circumference} strokeDashoffset={strokeDash}
+            strokeLinecap="round"
+            style={{ transition: 'stroke-dashoffset 0.8s linear, stroke 0.5s ease', filter: `drop-shadow(0 0 8px ${color})` }}
+          />
+        </svg>
+        {/* Цифры по центру */}
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          {isDone ? (
+            <>
+              <span className="text-7xl mb-2" style={{ filter: 'drop-shadow(0 0 12px #10B981)' }}>🎉</span>
+              <span className="text-white font-bold text-2xl tracking-wide" style={{ color: '#10B981' }}>
+                {t('Готово!', 'Done!')}
+              </span>
+            </>
+          ) : (
+            <>
+              <span
+                className="font-bold tabular-nums"
+                style={{ fontSize: 64, color, lineHeight: 1, filter: `drop-shadow(0 0 10px ${color})` }}
+              >
+                {formatted}
+              </span>
+              <span className="text-white/40 text-sm mt-2 tracking-widest">
+                {t('осталось', 'remaining')}
+              </span>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Кнопки управления */}
+      <div className="flex items-center gap-4 mt-10">
+        {!isDone && (
+          isRunning ? (
+            <button
+              onClick={pause}
+              className="flex items-center gap-2 px-8 py-4 rounded-2xl text-white font-semibold text-lg transition hover:opacity-80 active:scale-95"
+              style={{ background: 'rgba(245,158,11,0.25)', border: '2px solid rgba(245,158,11,0.5)' }}
+            >
+              <FaPause size={18}/> {t('Пауза', 'Pause')}
+            </button>
+          ) : (
+            <button
+              onClick={start}
+              className="flex items-center gap-2 px-8 py-4 rounded-2xl text-white font-semibold text-lg transition hover:opacity-90 active:scale-95"
+              style={{ background: 'linear-gradient(135deg, #F59E0B, #D97706)', boxShadow: '0 4px 20px rgba(245,158,11,0.4)' }}
+            >
+              <FaPlay size={18}/> {t('Старт', 'Start')}
+            </button>
+          )
+        )}
+        <button
+          onClick={reset}
+          className="flex items-center gap-2 px-6 py-4 rounded-2xl text-white/70 font-semibold text-base transition hover:text-white hover:bg-white/10 active:scale-95"
+          style={{ border: '2px solid rgba(255,255,255,0.15)' }}
+        >
+          <FaRedo size={16}/> {t('Сброс', 'Reset')}
+        </button>
+      </div>
+
+      {/* Подсказка */}
+      <p className="absolute bottom-6 text-white/25 text-xs tracking-widest">
+        {t('Нажмите Esc или ⊞ чтобы свернуть', 'Press Esc or ⊞ to minimize')}
+      </p>
+    </div>
+  );
+}
+
 // =================== Таймер одного шага ===================
-function StepTimerBlock({ minutes, t, fontSize, theme }) {
+function StepTimerBlock({ minutes, stepText, stepIndex, t, fontSize, theme }) {
   const mins = parseInt(minutes, 10);
   const { isRunning, isDone, start, pause, reset, formatted, progress } = useCookingTimer(mins);
   const circumference = 2 * Math.PI * 18;
   const strokeDash    = circumference - (progress / 100) * circumference;
   const color = isDone ? '#10B981' : '#F59E0B';
+  const [fullscreen, setFullscreen] = useState(false);
 
   return (
-    <div className={`flex items-center gap-3 mt-2 px-3 py-2 rounded-xl border ${theme.border} bg-amber-50/40`}>
-      {/* Мини круговой прогресс */}
-      <div className="relative flex-shrink-0" style={{ width: 44, height: 44 }}>
-        <svg width="44" height="44" className="-rotate-90">
-          <circle cx="22" cy="22" r="18" fill="none" stroke="#e5e7eb" strokeWidth="4" />
-          <circle cx="22" cy="22" r="18" fill="none"
-            stroke={color} strokeWidth="4"
-            strokeDasharray={circumference} strokeDashoffset={strokeDash}
-            strokeLinecap="round" style={{ transition: 'stroke-dashoffset 0.8s linear' }}
-          />
-        </svg>
-        <div className="absolute inset-0 flex items-center justify-center">
-          <span className={`font-bold tabular-nums`} style={{ fontSize: 9, color }}>
-            {isDone ? '✓' : formatted}
-          </span>
-        </div>
-      </div>
+    <>
+      {fullscreen && (
+        <FullscreenTimer
+          minutes={mins}
+          stepText={stepText}
+          stepIndex={stepIndex}
+          t={t}
+          theme={theme}
+          onClose={() => setFullscreen(false)}
+        />
+      )}
 
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-1 mb-1">
-          <FaClock size={10} className="text-amber-500" />
-          <span className={`${fontSize.tiny} text-amber-600 font-medium`}>
-            {t(`Таймер: ${mins} мин`, `Timer: ${mins} min`)}
-          </span>
-          {isDone && <span className={`${fontSize.tiny} font-semibold ml-1`} style={{ color: '#10B981' }}>🎉 {t('Готово!','Done!')}</span>}
+      <div className={`flex items-center gap-3 mt-2 px-3 py-2 rounded-xl border ${theme.border} bg-amber-50/40`}>
+        {/* Мини круговой прогресс */}
+        <div className="relative flex-shrink-0" style={{ width: 44, height: 44 }}>
+          <svg width="44" height="44" className="-rotate-90">
+            <circle cx="22" cy="22" r="18" fill="none" stroke="#e5e7eb" strokeWidth="4" />
+            <circle cx="22" cy="22" r="18" fill="none"
+              stroke={color} strokeWidth="4"
+              strokeDasharray={circumference} strokeDashoffset={strokeDash}
+              strokeLinecap="round" style={{ transition: 'stroke-dashoffset 0.8s linear' }}
+            />
+          </svg>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className="font-bold tabular-nums" style={{ fontSize: 9, color }}>
+              {isDone ? '✓' : formatted}
+            </span>
+          </div>
         </div>
-        <div className="flex gap-1.5">
-          {!isDone && (
-            isRunning
-              ? <button onClick={pause} className={`flex items-center gap-1 px-2 py-0.5 rounded-full ${theme.accent} text-white hover:opacity-80 transition`} style={{ fontSize: 10 }}><FaPause size={8}/> {t('Пауза','Pause')}</button>
-              : <button onClick={start} className={`flex items-center gap-1 px-2 py-0.5 rounded-full ${theme.accent} text-white hover:opacity-80 transition`} style={{ fontSize: 10 }}><FaPlay  size={8}/> {t('Старт','Start')}</button>
-          )}
-          <button onClick={reset} className={`flex items-center gap-1 px-2 py-0.5 rounded-full border ${theme.border} hover:opacity-70 transition`} style={{ fontSize: 10 }}><FaRedo size={8}/> {t('Сброс','Reset')}</button>
+
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-1 mb-1">
+            <FaClock size={10} className="text-amber-500" />
+            <span className={`${fontSize.tiny} text-amber-600 font-medium`}>
+              {t(`Таймер: ${mins} мин`, `Timer: ${mins} min`)}
+            </span>
+            {isDone && <span className={`${fontSize.tiny} font-semibold ml-1`} style={{ color: '#10B981' }}>🎉 {t('Готово!','Done!')}</span>}
+          </div>
+          <div className="flex gap-1.5 flex-wrap">
+            {!isDone && (
+              isRunning
+                ? <button onClick={pause} className={`flex items-center gap-1 px-2 py-0.5 rounded-full ${theme.accent} text-white hover:opacity-80 transition`} style={{ fontSize: 10 }}><FaPause size={8}/> {t('Пауза','Pause')}</button>
+                : <button onClick={start} className={`flex items-center gap-1 px-2 py-0.5 rounded-full ${theme.accent} text-white hover:opacity-80 transition`} style={{ fontSize: 10 }}><FaPlay  size={8}/> {t('Старт','Start')}</button>
+            )}
+            <button onClick={reset} className={`flex items-center gap-1 px-2 py-0.5 rounded-full border ${theme.border} hover:opacity-70 transition`} style={{ fontSize: 10 }}><FaRedo size={8}/> {t('Сброс','Reset')}</button>
+          </div>
         </div>
+
+        {/* Кнопка полноэкранного режима */}
+        <button
+          onClick={() => setFullscreen(true)}
+          className="flex-shrink-0 text-amber-500/60 hover:text-amber-500 transition p-1 rounded-lg hover:bg-amber-50"
+          title={t('Открыть большой таймер', 'Open fullscreen timer')}
+        >
+          <FaExpand size={13} />
+        </button>
       </div>
-    </div>
+    </>
   );
 }
 
@@ -1121,7 +1276,14 @@ export default function CookifyDemo() {
                           {/* Таймер шага — показывается только если задан */}
                           {stepMins > 0 && (
                             <div className="mt-2 pl-9">
-                              <StepTimerBlock minutes={stepMins} t={t} fontSize={fontSize} theme={theme} />
+                              <StepTimerBlock
+                                minutes={stepMins}
+                                stepText={step.text}
+                                stepIndex={i}
+                                t={t}
+                                fontSize={fontSize}
+                                theme={theme}
+                              />
                             </div>
                           )}
                           {step.image && (
