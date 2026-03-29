@@ -2,14 +2,32 @@ import React, { useState, useEffect } from 'react';
 import { FaPlay, FaPause, FaRedo, FaClock, FaExpand, FaCompress } from 'react-icons/fa';
 import { useCookingTimer } from '../hooks/useCookingTimer';
 
+// Цвета фона и акцента по теме (hex для inline-style)
+const THEME_COLORS = {
+  olive:  { bg1: '#2D3A1E', bg2: '#3D4E28', bg3: '#606C38', accent: '#DDA15E', text: '#FEFAE0', textMuted: 'rgba(254,250,224,0.5)' },
+  sage:   { bg1: '#3B2F24', bg2: '#6C584C', bg3: '#A98467', accent: '#DDE5B6', text: '#F0EAD2', textMuted: 'rgba(240,234,210,0.5)' },
+  forest: { bg1: '#0D1A0C', bg2: '#172815', bg3: '#3E5622', accent: '#95B46A', text: '#EDEEC9', textMuted: 'rgba(237,238,201,0.45)' },
+};
+
+function getThemeColors(theme) {
+  // Определяем тему по классу accent
+  if (!theme) return THEME_COLORS.olive;
+  const acc = theme.accent || '';
+  if (acc.includes('709255') || acc.includes('95B46A')) return THEME_COLORS.forest;
+  if (acc.includes('A98467') || acc.includes('6C584C')) return THEME_COLORS.sage;
+  return THEME_COLORS.olive;
+}
+
 // =================== Полноэкранный таймер ===================
-function FullscreenTimer({ minutes, stepText, stepIndex, t, onClose }) {
+function FullscreenTimer({ minutes, stepText, stepIndex, theme, t, onClose }) {
   const { isRunning, isDone, start, pause, reset, formatted, progress } = useCookingTimer(minutes);
+  const tc = getThemeColors(theme);
+
   const size = 280;
   const r = 120;
   const circumference = 2 * Math.PI * r;
   const strokeDash = circumference - (progress / 100) * circumference;
-  const color = isDone ? '#10B981' : '#F59E0B';
+  const timerColor = isDone ? '#10B981' : tc.accent;
 
   useEffect(() => {
     if (isDone && navigator.vibrate) navigator.vibrate([300, 100, 300]);
@@ -24,22 +42,23 @@ function FullscreenTimer({ minutes, stepText, stepIndex, t, onClose }) {
   return (
     <div
       className="fixed inset-0 z-[200] flex flex-col items-center justify-center"
-      style={{ background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)' }}
+      style={{ background: `linear-gradient(135deg, ${tc.bg1} 0%, ${tc.bg2} 50%, ${tc.bg3} 100%)` }}
     >
       <button
         onClick={onClose}
-        className="absolute top-5 right-5 text-white/60 hover:text-white transition p-2 rounded-full hover:bg-white/10"
+        className="absolute top-5 right-5 transition p-2 rounded-full hover:bg-white/10"
+        style={{ color: tc.textMuted }}
         title={t('Свернуть', 'Minimize')}
       >
         <FaCompress size={22} />
       </button>
 
       <div className="text-center mb-8 px-8 max-w-md">
-        <div className="text-white/50 text-sm font-medium mb-2 tracking-widest uppercase">
+        <div className="text-sm font-medium mb-2 tracking-widest uppercase" style={{ color: tc.textMuted }}>
           {t(`Шаг ${stepIndex + 1}`, `Step ${stepIndex + 1}`)}
         </div>
         {stepText && (
-          <p className="text-white/80 text-base leading-relaxed line-clamp-3">{stepText}</p>
+          <p className="text-base leading-relaxed line-clamp-3" style={{ color: tc.text, opacity: 0.8 }}>{stepText}</p>
         )}
       </div>
 
@@ -49,7 +68,7 @@ function FullscreenTimer({ minutes, stepText, stepIndex, t, onClose }) {
           style={{
             boxShadow: isDone
               ? '0 0 60px 20px rgba(16,185,129,0.3)'
-              : '0 0 60px 20px rgba(245,158,11,0.25)',
+              : `0 0 60px 20px ${tc.accent}44`,
             transition: 'box-shadow 1s ease'
           }}
         />
@@ -57,17 +76,17 @@ function FullscreenTimer({ minutes, stepText, stepIndex, t, onClose }) {
           <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="12" />
           <circle
             cx={size/2} cy={size/2} r={r} fill="none"
-            stroke={color} strokeWidth="12"
+            stroke={timerColor} strokeWidth="12"
             strokeDasharray={circumference} strokeDashoffset={strokeDash}
             strokeLinecap="round"
-            style={{ transition: 'stroke-dashoffset 0.8s linear, stroke 0.5s ease', filter: `drop-shadow(0 0 8px ${color})` }}
+            style={{ transition: 'stroke-dashoffset 0.8s linear, stroke 0.5s ease', filter: `drop-shadow(0 0 8px ${timerColor})` }}
           />
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           {isDone ? (
             <>
               <span className="text-7xl mb-2" style={{ filter: 'drop-shadow(0 0 12px #10B981)' }}>🎉</span>
-              <span className="text-white font-bold text-2xl tracking-wide" style={{ color: '#10B981' }}>
+              <span className="font-bold text-2xl tracking-wide" style={{ color: '#10B981' }}>
                 {t('Готово!', 'Done!')}
               </span>
             </>
@@ -75,11 +94,11 @@ function FullscreenTimer({ minutes, stepText, stepIndex, t, onClose }) {
             <>
               <span
                 className="font-bold tabular-nums"
-                style={{ fontSize: 64, color, lineHeight: 1, filter: `drop-shadow(0 0 10px ${color})` }}
+                style={{ fontSize: 64, color: timerColor, lineHeight: 1, filter: `drop-shadow(0 0 10px ${timerColor})` }}
               >
                 {formatted}
               </span>
-              <span className="text-white/40 text-sm mt-2 tracking-widest">
+              <span className="text-sm mt-2 tracking-widest" style={{ color: tc.textMuted }}>
                 {t('осталось', 'remaining')}
               </span>
             </>
@@ -92,16 +111,16 @@ function FullscreenTimer({ minutes, stepText, stepIndex, t, onClose }) {
           isRunning ? (
             <button
               onClick={pause}
-              className="flex items-center gap-2 px-8 py-4 rounded-2xl text-white font-semibold text-lg transition hover:opacity-80 active:scale-95"
-              style={{ background: 'rgba(245,158,11,0.25)', border: '2px solid rgba(245,158,11,0.5)' }}
+              className="flex items-center gap-2 px-8 py-4 rounded-2xl font-semibold text-lg transition hover:opacity-80 active:scale-95"
+              style={{ background: `${tc.accent}33`, border: `2px solid ${tc.accent}88`, color: tc.text }}
             >
               <FaPause size={18}/> {t('Пауза', 'Pause')}
             </button>
           ) : (
             <button
               onClick={start}
-              className="flex items-center gap-2 px-8 py-4 rounded-2xl text-white font-semibold text-lg transition hover:opacity-90 active:scale-95"
-              style={{ background: 'linear-gradient(135deg, #F59E0B, #D97706)', boxShadow: '0 4px 20px rgba(245,158,11,0.4)' }}
+              className="flex items-center gap-2 px-8 py-4 rounded-2xl font-semibold text-lg transition hover:opacity-90 active:scale-95"
+              style={{ background: tc.accent, color: tc.bg1, boxShadow: `0 4px 20px ${tc.accent}66` }}
             >
               <FaPlay size={18}/> {t('Старт', 'Start')}
             </button>
@@ -109,14 +128,14 @@ function FullscreenTimer({ minutes, stepText, stepIndex, t, onClose }) {
         )}
         <button
           onClick={reset}
-          className="flex items-center gap-2 px-6 py-4 rounded-2xl text-white/70 font-semibold text-base transition hover:text-white hover:bg-white/10 active:scale-95"
-          style={{ border: '2px solid rgba(255,255,255,0.15)' }}
+          className="flex items-center gap-2 px-6 py-4 rounded-2xl font-semibold text-base transition hover:bg-white/10 active:scale-95"
+          style={{ border: `2px solid ${tc.accent}44`, color: tc.textMuted }}
         >
           <FaRedo size={16}/> {t('Сброс', 'Reset')}
         </button>
       </div>
 
-      <p className="absolute bottom-6 text-white/25 text-xs tracking-widest">
+      <p className="absolute bottom-6 text-xs tracking-widest" style={{ color: tc.textMuted, opacity: 0.5 }}>
         {t('Нажмите Esc или ⊞ чтобы свернуть', 'Press Esc or ⊞ to minimize')}
       </p>
     </div>
@@ -145,6 +164,7 @@ function StepTimerInner({ minutes, stepText, stepIndex, theme, fontSize, t }) {
           minutes={minutes}
           stepText={stepText}
           stepIndex={stepIndex}
+          theme={theme}
           t={t}
           onClose={() => setFullscreen(false)}
         />
