@@ -86,7 +86,6 @@ function PhotoUpload({ value, onChange, label, theme, fontSize, t, small = false
     const file = e.target.files?.[0];
     if (!file) return;
     try {
-      // Для фото шага даём больше пространства и лучшее качество
       const base64 = small
         ? await readFileAsBase64(file, 1200, 900, 0.92)
         : await readFileAsBase64(file, 1600, 1200, 0.92);
@@ -122,7 +121,6 @@ function PhotoUpload({ value, onChange, label, theme, fontSize, t, small = false
       </div>
       {value && (
         small ? (
-          // Фото шага: полная ширина, высота автоматически, БЕЗ обрезки
           <img
             src={value}
             alt="step preview"
@@ -130,7 +128,6 @@ function PhotoUpload({ value, onChange, label, theme, fontSize, t, small = false
             style={{ objectFit: 'contain', display: 'block', maxHeight: '320px' }}
           />
         ) : (
-          // Превью рецепта: широкое, фиксированная высота object-cover
           <img
             src={value}
             alt="preview"
@@ -147,11 +144,13 @@ function IngredientRow({ ing, idx, onChange, onRemove, canRemove, theme, fontSiz
   const t = (ru, en) => language === 'ru' ? ru : en;
   const [suggestions, setSuggestions] = useState([]);
   const [showSug, setShowSug]         = useState(false);
-  const [autoFilled, setAutoFilled]   = useState(false);
+  // Если имя уже заполнено при монтировании (режим редактирования) — считаем поле «уже выбранным»,
+  // чтобы автодополнение не открывалось автоматически.
+  const [autoFilled, setAutoFilled]   = useState(() => !!(ing.name && ing.name.trim()));
   const nameRef = useRef(null);
 
   useEffect(() => {
-    if (autoFilled) { setSuggestions([]); return; }
+    if (autoFilled) { setSuggestions([]); setShowSug(false); return; }
     const matches = smartSearch(ing.name || '');
     setSuggestions(matches);
     setShowSug(matches.length > 0);
@@ -176,7 +175,7 @@ function IngredientRow({ ing, idx, onChange, onRemove, canRemove, theme, fontSiz
           ref={nameRef}
           value={ing.name}
           onChange={e => { onChange(idx, 'name', e.target.value); setAutoFilled(false); }}
-          onFocus={() => suggestions.length > 0 && setShowSug(true)}
+          onFocus={() => !autoFilled && suggestions.length > 0 && setShowSug(true)}
           onBlur={() => setTimeout(() => setShowSug(false), 150)}
           placeholder={t('Название ингредиента...', 'Ingredient name...')}
           className={`${inputCls} pl-8`}
@@ -481,7 +480,6 @@ export default function AddRecipeModal({ onClose, onAdded, theme, fontSize, lang
                       </button>
                     )}
                   </div>
-                  {/* Фото для шага: small=true -> object-contain, без обрезки */}
                   <div className="pl-7">
                     <PhotoUpload
                       value={step.image}
