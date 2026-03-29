@@ -714,7 +714,6 @@ export default function CookifyDemo() {
   const allergyList = (userData?.allergies || "").toLowerCase().split(",").map(s => s.trim()).filter(Boolean);
 
   // =================== FUSE.JS: индексы для fuzzy-поиска ===================
-  // Пересоздаём индексы при изменении списка рецептов
   const recipeNameFuse = useMemo(() => new Fuse(allRecipes, {
     keys: ['title', 'tags', 'cuisine', 'type'],
     threshold: 0.4,
@@ -738,15 +737,12 @@ export default function CookifyDemo() {
 
     if (searchMode === "name") {
       if (query && query.length >= 2) {
-        // fuzzy-поиск по названию, тегам, кухне, типу
         const fuseResults = recipeNameFuse.search(query);
         results = fuseResults.map(r => r.item);
       }
     } else {
       if (query && query.length >= 2) {
-        // По ингредиентам: каждый термин через запятую ищем fuzzy отдельно
         const queryIngredients = query.split(",").map(s => s.trim()).filter(Boolean);
-        // Для каждого ингредиента ищем совпадающие рецепты и пересекаем
         let matched = null;
         for (const qi of queryIngredients) {
           const found = new Set(
@@ -922,6 +918,12 @@ export default function CookifyDemo() {
             return scaled % 1 === 0 ? scaled.toString() : scaled.toFixed(1).replace('.', ',');
           };
 
+          // Нормализуем шаг: может быть строкой (старые рецепты) или объектом { text, image }
+          const normalizeStep = (step) => {
+            if (typeof step === 'object' && step !== null) return step;
+            return { text: step || '', image: '' };
+          };
+
           return (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" onClick={closeModal}>
               <div className={`${theme.cardBg} ${fontSize.body} rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6`} onClick={(e) => e.stopPropagation()}>
@@ -978,6 +980,17 @@ export default function CookifyDemo() {
                     </button>
                   </div>
                 </div>
+
+                {/* Превью-фото рецепта */}
+                {selectedRecipe.image && (
+                  <div className="mb-4 rounded-2xl overflow-hidden">
+                    <img
+                      src={selectedRecipe.image}
+                      alt={selectedRecipe.title}
+                      className="w-full max-h-56 object-cover"
+                    />
+                  </div>
+                )}
 
                 <div className={`${theme.cardBg} border-2 rounded-xl p-4 mb-6 shadow-md`} style={{ borderColor: timeInfo.color }}>
                   <div className="flex items-center justify-between mb-3">
@@ -1080,13 +1093,28 @@ export default function CookifyDemo() {
 
                 <div>
                   <h3 className={`${fontSize.cardTitle} font-semibold mb-3 ${theme.headerText}`}>{t("Как готовить:", "How to cook:")}</h3>
-                  <ol className={`space-y-3 ${fontSize.body}`}>
-                    {(activeRecipe.instructions || []).map((step, i) => (
-                      <li key={i} className="flex gap-3">
-                        <span className={`${theme.accent} text-white rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0 ${fontSize.small} font-bold`}>{i + 1}</span>
-                        <span>{step}</span>
-                      </li>
-                    ))}
+                  <ol className={`space-y-4 ${fontSize.body}`}>
+                    {(activeRecipe.instructions || []).map((rawStep, i) => {
+                      const step = normalizeStep(rawStep);
+                      return (
+                        <li key={i} className="flex flex-col gap-2">
+                          <div className="flex gap-3 items-start">
+                            <span className={`${theme.accent} text-white rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0 ${fontSize.small} font-bold`}>{i + 1}</span>
+                            <span>{step.text}</span>
+                          </div>
+                          {step.image && (
+                            <div className="pl-9">
+                              <img
+                                src={step.image}
+                                alt={`${t('Шаг', 'Step')} ${i + 1}`}
+                                className="rounded-xl object-cover max-h-48 w-full"
+                                style={{ objectFit: 'cover' }}
+                              />
+                            </div>
+                          )}
+                        </li>
+                      );
+                    })}
                   </ol>
                 </div>
 
