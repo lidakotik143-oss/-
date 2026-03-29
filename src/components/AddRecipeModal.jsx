@@ -44,8 +44,11 @@ function smartSearch(query, limit = 7) {
   return productsFuse.search(q, { limit }).map(r => r.item.key);
 }
 
-// Утилита: читает файл → base64 строку, и ресайзит до maxW×maxH
-function readFileAsBase64(file, maxW = 800, maxH = 600) {
+/**
+ * Читает файл и конвертирует в base64 jpeg.
+ * Ресайзит только если изображение шире maxW ИЛИ выше maxH, сохраняя пропорции.
+ */
+function readFileAsBase64(file, maxW = 1600, maxH = 1200, quality = 0.92) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -61,7 +64,7 @@ function readFileAsBase64(file, maxW = 800, maxH = 600) {
         canvas.width  = width;
         canvas.height = height;
         canvas.getContext('2d').drawImage(img, 0, 0, width, height);
-        resolve(canvas.toDataURL('image/jpeg', 0.8));
+        resolve(canvas.toDataURL('image/jpeg', quality));
       };
       img.onerror = reject;
       img.src = e.target.result;
@@ -71,7 +74,11 @@ function readFileAsBase64(file, maxW = 800, maxH = 600) {
   });
 }
 
-// Кнопка-загрузчик фото со превью
+/**
+ * Кнопка-загрузчик фото со превью.
+ * small=true  — для фото шага: показывает фото полностью (без обрезки) object-contain.
+ * small=false — для превью рецепта: широкое полотно с обрезкой object-cover.
+ */
 function PhotoUpload({ value, onChange, label, theme, fontSize, t, small = false }) {
   const inputRef = useRef(null);
 
@@ -79,7 +86,10 @@ function PhotoUpload({ value, onChange, label, theme, fontSize, t, small = false
     const file = e.target.files?.[0];
     if (!file) return;
     try {
-      const base64 = await readFileAsBase64(file, small ? 400 : 800, small ? 300 : 600);
+      // Для фото шага даём больше пространства и лучшее качество
+      const base64 = small
+        ? await readFileAsBase64(file, 1200, 900, 0.92)
+        : await readFileAsBase64(file, 1600, 1200, 0.92);
       onChange(base64);
     } catch {
       // ignore
@@ -111,12 +121,23 @@ function PhotoUpload({ value, onChange, label, theme, fontSize, t, small = false
         <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={handleChange} />
       </div>
       {value && (
-        <img
-          src={value}
-          alt="preview"
-          className={`rounded-xl object-cover border ${theme.border} ${small ? 'h-20 w-32' : 'h-36 w-full'}`}
-          style={{ objectFit: 'cover' }}
-        />
+        small ? (
+          // Фото шага: полная ширина, высота автоматически, БЕЗ обрезки
+          <img
+            src={value}
+            alt="step preview"
+            className={`rounded-xl border ${theme.border} w-full`}
+            style={{ objectFit: 'contain', display: 'block', maxHeight: '320px' }}
+          />
+        ) : (
+          // Превью рецепта: широкое, фиксированная высота object-cover
+          <img
+            src={value}
+            alt="preview"
+            className={`rounded-xl border ${theme.border} h-36 w-full`}
+            style={{ objectFit: 'cover' }}
+          />
+        )
       )}
     </div>
   );
@@ -223,7 +244,6 @@ function IngredientRow({ ing, idx, onChange, onRemove, canRemove, theme, fontSiz
 export default function AddRecipeModal({ onClose, onAdded, theme, fontSize, language, firebaseUser, editingRecipe }) {
   const t = (ru, en) => language === 'ru' ? ru : en;
 
-  // Нормализуем шаги из editingRecipe: могут быть строками или объектами {text,image}
   const normalizeSteps = (steps) => {
     if (!steps || !steps.length) return [{ text: '', image: '' }];
     return steps.map(s => typeof s === 'object' && s !== null ? { text: s.text || '', image: s.image || '' } : { text: s || '', image: '' });
@@ -251,7 +271,6 @@ export default function AddRecipeModal({ onClose, onAdded, theme, fontSize, lang
     tags: '',
   });
 
-  // Превью-фото рецепта
   const [previewImage, setPreviewImage] = useState(() => editingRecipe?.image || '');
 
   const [ingredients, setIngredients] = useState(() =>
@@ -264,7 +283,6 @@ export default function AddRecipeModal({ onClose, onAdded, theme, fontSize, lang
       : [{ name: '', quantity: '', unit: '' }]
   );
 
-  // Шаги: объекты { text, image }
   const [steps, setSteps] = useState(() => normalizeSteps(editingRecipe?.instructions));
 
   const [loading, setLoading] = useState(false);
@@ -308,14 +326,11 @@ export default function AddRecipeModal({ onClose, onAdded, theme, fontSize, lang
             unit: i.unit || 'г',
             productId: null
           })),
-        // Сохраняем шаги как объекты { text, image }
-        // Шаги без текста отбрасываем
         instructions: steps
           .filter(s => s.text.trim())
           .map(s => ({ text: s.text.trim(), image: s.image || '' })),
         variants: editingRecipe?.variants || [],
         source: 'user',
-        // Превью-фото
         image: previewImage || '',
       };
       if (editingRecipe?.id) {
@@ -466,7 +481,7 @@ export default function AddRecipeModal({ onClose, onAdded, theme, fontSize, lang
                       </button>
                     )}
                   </div>
-                  {/* Фото для шага */}
+                  {/* Фото для шага: small=true -> object-contain, без обрезки */}
                   <div className="pl-7">
                     <PhotoUpload
                       value={step.image}
