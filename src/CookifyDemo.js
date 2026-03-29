@@ -133,7 +133,7 @@ const THEMES = {
 // Цвета фона полноэкранного таймера по ключу темы
 const FULLSCREEN_PALETTES = {
   olive:  { bg1: '#2D3A1E', bg2: '#3D4E28', bg3: '#606C38', accent: '#DDA15E', text: '#FEFAE0', textMuted: 'rgba(254,250,224,0.55)' },
-  sage:   { bg1: '#2C2318', bg2: '#4A3728', bg3: '#6C584C', accent: '#A98467', text: '#F0EAD2', textMuted: 'rgba(240,234,210,0.55)' },
+  sage:   { bg1: '#C8BC9E', bg2: '#D4C9A8', bg3: '#DDE5B6', accent: '#A98467', text: '#3D2B1F', textMuted: 'rgba(61,43,31,0.55)' },
   forest: { bg1: '#0D1A0C', bg2: '#172815', bg3: '#3E5622', accent: '#95B46A', text: '#EDEEC9', textMuted: 'rgba(237,238,201,0.5)'  },
 };
 
@@ -364,7 +364,7 @@ function FullscreenTimer({ minutes, stepText, stepIndex, t, onClose, themeKey })
     >
       <button
         onClick={onClose}
-        className="absolute top-5 right-5 transition p-2 rounded-full hover:bg-white/10"
+        className="absolute top-5 right-5 transition p-2 rounded-full hover:bg-black/10"
         style={{ color: tc.textMuted }}
         title={t('Свернуть', 'Minimize')}
       >
@@ -391,7 +391,7 @@ function FullscreenTimer({ minutes, stepText, stepIndex, t, onClose, themeKey })
           }}
         />
         <svg width={size} height={size} className="-rotate-90 drop-shadow-2xl">
-          <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth="12" />
+          <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="rgba(0,0,0,0.08)" strokeWidth="12" />
           <circle
             cx={size/2} cy={size/2} r={r} fill="none"
             stroke={timerColor} strokeWidth="12"
@@ -438,7 +438,7 @@ function FullscreenTimer({ minutes, stepText, stepIndex, t, onClose, themeKey })
             <button
               onClick={start}
               className="flex items-center gap-2 px-8 py-4 rounded-2xl font-semibold text-lg transition hover:opacity-90 active:scale-95"
-              style={{ background: tc.accent, color: tc.bg1, boxShadow: `0 4px 20px ${tc.accent}60` }}
+              style={{ background: tc.accent, color: '#fff', boxShadow: `0 4px 20px ${tc.accent}60` }}
             >
               <FaPlay size={18}/> {t('Старт', 'Start')}
             </button>
@@ -446,7 +446,7 @@ function FullscreenTimer({ minutes, stepText, stepIndex, t, onClose, themeKey })
         )}
         <button
           onClick={reset}
-          className="flex items-center gap-2 px-6 py-4 rounded-2xl font-semibold text-base transition hover:bg-white/10 active:scale-95"
+          className="flex items-center gap-2 px-6 py-4 rounded-2xl font-semibold text-base transition hover:bg-black/10 active:scale-95"
           style={{ border: `2px solid ${tc.accent}40`, color: tc.textMuted }}
         >
           <FaRedo size={16}/> {t('Сброс', 'Reset')}
