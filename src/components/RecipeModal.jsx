@@ -47,13 +47,13 @@ export default function RecipeModal({
   const dishTypeColor = dishTypeInfo?.color || "bg-gray-500";
 
   const handleDelete = async () => {
-    if (!window.confirm(t(`Delete recipe "${recipe.title}"?`, `Delete "${recipe.title}"?`))) return;
+    if (!window.confirm(t(`Удалить рецепт "${recipe.title}"?`, `Delete "${recipe.title}"?`))) return;
     setDeleting(true);
     try {
       await deleteRecipe(recipe.id, firebaseUser.uid);
       onClose();
     } catch {
-      alert(t('Error deleting', 'Delete error'));
+      alert(t('Ошибка удаления', 'Delete error'));
       setDeleting(false);
     }
   };
@@ -115,7 +115,7 @@ export default function RecipeModal({
               <button
                 onClick={() => { onClose(); onEditRecipe(recipe); }}
                 className="p-2 rounded-full text-blue-400 hover:text-blue-600 hover:bg-blue-50 transition"
-                title={t('Edit', 'Edit')}
+                title={t('Редактировать', 'Edit')}
               >
                 <FaEdit size={18} />
               </button>
@@ -125,7 +125,7 @@ export default function RecipeModal({
                 onClick={handleDelete}
                 disabled={deleting}
                 className={`p-2 rounded-full text-red-400 hover:text-red-600 hover:bg-red-50 transition ${deleting ? 'opacity-50 cursor-not-allowed' : ''}`}
-                title={t('Delete', 'Delete')}
+                title={t('Удалить', 'Delete')}
               >
                 <FaTrash size={18} />
               </button>
@@ -153,7 +153,7 @@ export default function RecipeModal({
               <span className="text-4xl">{timeInfo.emoji}</span>
               <div>
                 <div className={`${fontSize.body} font-bold`} style={{ color: timeInfo.color }}>
-                  {timeMinutes} {t("minutes", "minutes")}
+                  {timeMinutes} {t("минут", "minutes")}
                 </div>
                 <div className={`${fontSize.small} ${theme.textSecondary}`}>
                   {language === "ru" ? timeInfo.label_ru : timeInfo.label_en}
@@ -161,9 +161,9 @@ export default function RecipeModal({
               </div>
             </div>
             <div className="text-right">
-              <div className={`${fontSize.tiny} ${theme.textSecondary} mb-1`}>{t("Calories (per serving)", "Calories (per serving)")}</div>
-              <div className={`${fontSize.body} font-bold ${theme.accentText}`}>{kcalPerServing} {t("kcal", "kcal")}</div>
-              <div className={`${fontSize.tiny} ${theme.textSecondary} mt-1`}>{t("Servings:", "Servings:")} {servings}</div>
+              <div className={`${fontSize.tiny} ${theme.textSecondary} mb-1`}>{t("Калорий (на порцию)", "Calories (per serving)")}</div>
+              <div className={`${fontSize.body} font-bold ${theme.accentText}`}>{kcalPerServing} {t("ккал", "kcal")}</div>
+              <div className={`${fontSize.tiny} ${theme.textSecondary} mt-1`}>{t("Порций:", "Servings:")} {servings}</div>
             </div>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-2.5 mb-2">
@@ -174,18 +174,18 @@ export default function RecipeModal({
           </div>
           <div className={`${fontSize.tiny} ${theme.textSecondary} text-center`}>
             {t(
-              timeMinutes <= 15 ? 'Quick!' : timeMinutes <= 40 ? 'Moderate time' : 'Takes patience',
+              timeMinutes <= 15 ? 'Быстрое приготовление!' : timeMinutes <= 40 ? 'Умеренное время' : 'Требуется терпение',
               timeMinutes <= 15 ? 'Quick cooking!' : timeMinutes <= 40 ? 'Moderate time' : 'Takes patience'
             )}
           </div>
         </div>
 
         <div className={`${theme.textSecondary} ${fontSize.small} mb-4`}>
-          {t("Difficulty:", "Difficulty:")} {recipe.difficulty}
+          {t("Сложность:", "Difficulty:")} {recipe.difficulty}
         </div>
 
         <div className="mb-6">
-          <h3 className={`${fontSize.cardTitle} font-semibold mb-2 ${theme.headerText}`}>{t("Ingredients:", "Ingredients:")}</h3>
+          <h3 className={`${fontSize.cardTitle} font-semibold mb-2 ${theme.headerText}`}>{t("Ингредиенты:", "Ingredients:")}</h3>
           <ul className={`list-disc list-inside space-y-1 ${fontSize.body}`}>
             {(activeRecipe.ingredients || []).map((ing, i) => {
               const name = typeof ing === 'object' ? (ing.name || '') : ing;
@@ -201,7 +201,7 @@ export default function RecipeModal({
         </div>
 
         <div>
-          <h3 className={`${fontSize.cardTitle} font-semibold mb-3 ${theme.headerText}`}>{t("How to cook:", "How to cook:")}</h3>
+          <h3 className={`${fontSize.cardTitle} font-semibold mb-3 ${theme.headerText}`}>{t("Как готовить:", "How to cook:")}</h3>
           <ol className={`space-y-4 ${fontSize.body}`}>
             {(activeRecipe.instructions || []).map((rawStep, i) => {
               const step = normalizeStep(rawStep);
@@ -216,6 +216,8 @@ export default function RecipeModal({
                     <div className="pl-9">
                       <StepTimer
                         minutes={stepMins}
+                        stepText={step.text}
+                        stepIndex={i}
                         theme={theme}
                         fontSize={fontSize}
                         t={t}
@@ -225,7 +227,7 @@ export default function RecipeModal({
                   {step.image && (
                     <img
                       src={step.image}
-                      alt={`Step ${i + 1}`}
+                      alt={`Шаг ${i + 1}`}
                       className={`rounded-xl border ${theme.border} w-full ml-9`}
                       style={{ maxHeight: '260px', objectFit: 'contain' }}
                     />
@@ -246,7 +248,7 @@ export default function RecipeModal({
 
         {registered && (
           <div className="mt-6 border-t pt-4">
-            <h4 className={`${fontSize.body} font-semibold mb-3`}>{t("Add to meal history:", "Add to meal history:")}</h4>
+            <h4 className={`${fontSize.body} font-semibold mb-3`}>{t("Добавить в историю питания:", "Add to meal history:")}</h4>
             <div className="flex gap-2 flex-wrap">
               {MEAL_CATEGORIES.map(cat => (
                 <button
