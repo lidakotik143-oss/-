@@ -2,20 +2,23 @@ import React, { useState, useEffect } from 'react';
 import { FaPlay, FaPause, FaRedo, FaClock, FaExpand, FaCompress } from 'react-icons/fa';
 import { useCookingTimer } from '../hooks/useCookingTimer';
 
-// Цвета фона и акцента по теме (hex для inline-style)
-const THEME_COLORS = {
-  olive:  { bg1: '#2D3A1E', bg2: '#3D4E28', bg3: '#606C38', accent: '#DDA15E', text: '#FEFAE0', textMuted: 'rgba(254,250,224,0.5)' },
-  sage:   { bg1: '#3B2F24', bg2: '#6C584C', bg3: '#A98467', accent: '#DDE5B6', text: '#F0EAD2', textMuted: 'rgba(240,234,210,0.5)' },
-  forest: { bg1: '#0D1A0C', bg2: '#172815', bg3: '#3E5622', accent: '#95B46A', text: '#EDEEC9', textMuted: 'rgba(237,238,201,0.45)' },
+// Цвета полноэкранного таймера по каждой теме
+const THEME_PALETTES = {
+  // Оливковая — bg-[#FEFAE0]
+  olive:  { bg1: '#2D3A1E', bg2: '#3D4E28', bg3: '#606C38', accent: '#DDA15E', text: '#FEFAE0', textMuted: 'rgba(254,250,224,0.55)' },
+  // Шалфейная — bg-[#F0EAD2]
+  sage:   { bg1: '#2C2318', bg2: '#4A3728', bg3: '#6C584C', accent: '#A98467', text: '#F0EAD2', textMuted: 'rgba(240,234,210,0.55)' },
+  // Лесная — bg-[#172815]
+  forest: { bg1: '#0D1A0C', bg2: '#172815', bg3: '#3E5622', accent: '#95B46A', text: '#EDEEC9', textMuted: 'rgba(237,238,201,0.5)' },
 };
 
 function getThemeColors(theme) {
-  // Определяем тему по классу accent
-  if (!theme) return THEME_COLORS.olive;
-  const acc = theme.accent || '';
-  if (acc.includes('709255') || acc.includes('95B46A')) return THEME_COLORS.forest;
-  if (acc.includes('A98467') || acc.includes('6C584C')) return THEME_COLORS.sage;
-  return THEME_COLORS.olive;
+  if (!theme) return THEME_PALETTES.olive;
+  const bg = (theme.bg || '').toLowerCase();
+  // Определяем по уникальному цвету фона приложения
+  if (bg.includes('172815')) return THEME_PALETTES.forest; // Лесная
+  if (bg.includes('f0ead2')) return THEME_PALETTES.sage;   // Шалфейная
+  return THEME_PALETTES.olive;                             // Оливковая (по умолчанию)
 }
 
 // =================== Полноэкранный таймер ===================
@@ -58,7 +61,7 @@ function FullscreenTimer({ minutes, stepText, stepIndex, theme, t, onClose }) {
           {t(`Шаг ${stepIndex + 1}`, `Step ${stepIndex + 1}`)}
         </div>
         {stepText && (
-          <p className="text-base leading-relaxed line-clamp-3" style={{ color: tc.text, opacity: 0.8 }}>{stepText}</p>
+          <p className="text-base leading-relaxed line-clamp-3" style={{ color: tc.text, opacity: 0.85 }}>{stepText}</p>
         )}
       </div>
 
@@ -68,12 +71,12 @@ function FullscreenTimer({ minutes, stepText, stepIndex, theme, t, onClose }) {
           style={{
             boxShadow: isDone
               ? '0 0 60px 20px rgba(16,185,129,0.3)'
-              : `0 0 60px 20px ${tc.accent}44`,
+              : `0 0 60px 20px ${tc.accent}55`,
             transition: 'box-shadow 1s ease'
           }}
         />
         <svg width={size} height={size} className="-rotate-90 drop-shadow-2xl">
-          <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="12" />
+          <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth="12" />
           <circle
             cx={size/2} cy={size/2} r={r} fill="none"
             stroke={timerColor} strokeWidth="12"
@@ -112,7 +115,7 @@ function FullscreenTimer({ minutes, stepText, stepIndex, theme, t, onClose }) {
             <button
               onClick={pause}
               className="flex items-center gap-2 px-8 py-4 rounded-2xl font-semibold text-lg transition hover:opacity-80 active:scale-95"
-              style={{ background: `${tc.accent}33`, border: `2px solid ${tc.accent}88`, color: tc.text }}
+              style={{ background: `${tc.accent}30`, border: `2px solid ${tc.accent}80`, color: tc.text }}
             >
               <FaPause size={18}/> {t('Пауза', 'Pause')}
             </button>
@@ -120,7 +123,7 @@ function FullscreenTimer({ minutes, stepText, stepIndex, theme, t, onClose }) {
             <button
               onClick={start}
               className="flex items-center gap-2 px-8 py-4 rounded-2xl font-semibold text-lg transition hover:opacity-90 active:scale-95"
-              style={{ background: tc.accent, color: tc.bg1, boxShadow: `0 4px 20px ${tc.accent}66` }}
+              style={{ background: tc.accent, color: tc.bg1, boxShadow: `0 4px 20px ${tc.accent}60` }}
             >
               <FaPlay size={18}/> {t('Старт', 'Start')}
             </button>
@@ -129,13 +132,13 @@ function FullscreenTimer({ minutes, stepText, stepIndex, theme, t, onClose }) {
         <button
           onClick={reset}
           className="flex items-center gap-2 px-6 py-4 rounded-2xl font-semibold text-base transition hover:bg-white/10 active:scale-95"
-          style={{ border: `2px solid ${tc.accent}44`, color: tc.textMuted }}
+          style={{ border: `2px solid ${tc.accent}40`, color: tc.textMuted }}
         >
           <FaRedo size={16}/> {t('Сброс', 'Reset')}
         </button>
       </div>
 
-      <p className="absolute bottom-6 text-xs tracking-widest" style={{ color: tc.textMuted, opacity: 0.5 }}>
+      <p className="absolute bottom-6 text-xs tracking-widest" style={{ color: tc.textMuted, opacity: 0.45 }}>
         {t('Нажмите Esc или ⊞ чтобы свернуть', 'Press Esc or ⊞ to minimize')}
       </p>
     </div>
@@ -146,7 +149,6 @@ function FullscreenTimer({ minutes, stepText, stepIndex, theme, t, onClose }) {
 export default function StepTimer({ minutes, stepText, stepIndex = 0, theme, fontSize, t }) {
   const mins = parseInt(minutes, 10);
   if (!mins || mins <= 0) return null;
-
   return <StepTimerInner minutes={mins} stepText={stepText} stepIndex={stepIndex} theme={theme} fontSize={fontSize} t={t} />;
 }
 
@@ -176,7 +178,6 @@ function StepTimerInner({ minutes, stepText, stepIndex, theme, fontSize, t }) {
         } transition-colors`}
         style={{ maxWidth: 320 }}
       >
-        {/* Круговой прогресс */}
         <div className="relative flex-shrink-0" style={{ width: 36, height: 36 }}>
           <svg width="36" height="36" className="-rotate-90">
             <circle cx="18" cy="18" r="16" fill="none" stroke="#e5e7eb" strokeWidth="3" />
@@ -198,7 +199,6 @@ function StepTimerInner({ minutes, stepText, stepIndex, theme, fontSize, t }) {
           </div>
         </div>
 
-        {/* Время */}
         <span
           className={`font-mono font-bold tabular-nums ${fontSize?.tiny || 'text-xs'}`}
           style={{ color: isDone ? '#10B981' : '#B45309', minWidth: 38 }}
@@ -206,40 +206,19 @@ function StepTimerInner({ minutes, stepText, stepIndex, theme, fontSize, t }) {
           {isDone ? t('Готово!', 'Done!') : formatted}
         </span>
 
-        {/* Кнопки управления */}
         <div className="flex gap-1 ml-1">
           {!isDone && (
             isRunning
-              ? <button
-                  onClick={pause}
-                  className="w-6 h-6 flex items-center justify-center rounded-full bg-amber-400 text-white hover:bg-amber-500 transition"
-                  title={t('Пауза', 'Pause')}
-                >
-                  <FaPause size={8} />
-                </button>
-              : <button
-                  onClick={start}
-                  className="w-6 h-6 flex items-center justify-center rounded-full bg-amber-400 text-white hover:bg-amber-500 transition"
-                  title={t('Старт', 'Start')}
-                >
-                  <FaPlay size={8} />
-                </button>
+              ? <button onClick={pause} className="w-6 h-6 flex items-center justify-center rounded-full bg-amber-400 text-white hover:bg-amber-500 transition" title={t('Пауза', 'Pause')}><FaPause size={8} /></button>
+              : <button onClick={start} className="w-6 h-6 flex items-center justify-center rounded-full bg-amber-400 text-white hover:bg-amber-500 transition" title={t('Старт', 'Start')}><FaPlay size={8} /></button>
           )}
-          <button
-            onClick={reset}
-            className="w-6 h-6 flex items-center justify-center rounded-full border border-gray-300 text-gray-500 hover:opacity-70 transition"
-            title={t('Сброс', 'Reset')}
-          >
-            <FaRedo size={8} />
-          </button>
+          <button onClick={reset} className="w-6 h-6 flex items-center justify-center rounded-full border border-gray-300 text-gray-500 hover:opacity-70 transition" title={t('Сброс', 'Reset')}><FaRedo size={8} /></button>
         </div>
 
-        {/* Подпись */}
         <span className={`${fontSize?.tiny || 'text-xs'} text-gray-400 ml-1 whitespace-nowrap`}>
           {minutes} {t('мин', 'min')}
         </span>
 
-        {/* Кнопка полного экрана */}
         <button
           onClick={() => setFullscreen(true)}
           className="w-6 h-6 flex items-center justify-center rounded-full text-amber-400/60 hover:text-amber-500 hover:bg-amber-100 transition ml-0.5 flex-shrink-0"
