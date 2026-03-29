@@ -1,6 +1,6 @@
 // =================== БЛОК 1: Импорты и примерные данные ===================
 import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
-import { FaTimes, FaPlus, FaMinus, FaHeart, FaRegHeart, FaPlay, FaPause, FaRedo, FaEdit, FaTrash } from "react-icons/fa";
+import { FaTimes, FaPlus, FaMinus, FaHeart, FaRegHeart, FaPlay, FaPause, FaRedo, FaEdit, FaTrash, FaClock } from "react-icons/fa";
 import Fuse from 'fuse.js';
 import { RECIPES_DATABASE } from './recipesData';
 
@@ -284,28 +284,22 @@ const loadFeatureFlags = () => {
   }
 };
 
-// =================== Компонент таймера (встраивается в модалку) ===================
+// =================== Таймер всего рецепта ===================
 function CookingTimerBlock({ timeMinutes, timeInfo, t, fontSize, theme }) {
   const { isRunning, isDone, start, pause, reset, formatted, progress } = useCookingTimer(timeMinutes);
-
-  const circumference = 2 * Math.PI * 28; // r=28
+  const circumference = 2 * Math.PI * 28;
   const strokeDash    = circumference - (progress / 100) * circumference;
 
   return (
     <div className={`mt-3 pt-3 border-t ${theme.border}`}>
-      {/* Круговой прогресс + цифры */}
       <div className="flex items-center justify-between gap-4">
         <div className="relative flex-shrink-0" style={{ width: 72, height: 72 }}>
           <svg width="72" height="72" className="-rotate-90">
             <circle cx="36" cy="36" r="28" fill="none" stroke="#e5e7eb" strokeWidth="5" />
-            <circle
-              cx="36" cy="36" r="28" fill="none"
-              stroke={isDone ? '#10B981' : timeInfo.color}
-              strokeWidth="5"
-              strokeDasharray={circumference}
-              strokeDashoffset={strokeDash}
-              strokeLinecap="round"
-              style={{ transition: 'stroke-dashoffset 0.8s linear' }}
+            <circle cx="36" cy="36" r="28" fill="none"
+              stroke={isDone ? '#10B981' : timeInfo.color} strokeWidth="5"
+              strokeDasharray={circumference} strokeDashoffset={strokeDash}
+              strokeLinecap="round" style={{ transition: 'stroke-dashoffset 0.8s linear' }}
             />
           </svg>
           <div className="absolute inset-0 flex items-center justify-center">
@@ -314,27 +308,70 @@ function CookingTimerBlock({ timeMinutes, timeInfo, t, fontSize, theme }) {
             </span>
           </div>
         </div>
-
         <div className="flex-1">
           {isDone ? (
-            <div className={`${fontSize.small} font-semibold`} style={{ color: '#10B981' }}>
-              🎉 {t('Готово!', 'Done!')}
-            </div>
+            <div className={`${fontSize.small} font-semibold`} style={{ color: '#10B981' }}>🎉 {t('Готово!', 'Done!')}</div>
           ) : (
             <div className={`${fontSize.tiny} ${theme.textSecondary} mb-2`}>
               {isRunning ? t('Идёт приготовление…', 'Cooking in progress…') : t('Нажмите ▶ чтобы начать', 'Press ▶ to start')}
             </div>
           )}
-
-          {/* Кнопки управления */}
           <div className="flex gap-2">
             {!isDone && (
               isRunning
-                ? <button onClick={pause}  className={`flex items-center gap-1 px-3 py-1 rounded-full ${theme.accent} text-white ${fontSize.tiny} hover:opacity-80 transition`}><FaPause size={10}/> {t('Пауза','Pause')}</button>
-                : <button onClick={start}  className={`flex items-center gap-1 px-3 py-1 rounded-full ${theme.accent} text-white ${fontSize.tiny} hover:opacity-80 transition`}><FaPlay  size={10}/> {t('Начать','Start')}</button>
+                ? <button onClick={pause} className={`flex items-center gap-1 px-3 py-1 rounded-full ${theme.accent} text-white ${fontSize.tiny} hover:opacity-80 transition`}><FaPause size={10}/> {t('Пауза','Pause')}</button>
+                : <button onClick={start} className={`flex items-center gap-1 px-3 py-1 rounded-full ${theme.accent} text-white ${fontSize.tiny} hover:opacity-80 transition`}><FaPlay  size={10}/> {t('Начать','Start')}</button>
             )}
             <button onClick={reset} className={`flex items-center gap-1 px-3 py-1 rounded-full border ${theme.border} ${fontSize.tiny} hover:opacity-70 transition`}><FaRedo size={10}/> {t('Сброс','Reset')}</button>
           </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// =================== Таймер одного шага ===================
+function StepTimerBlock({ minutes, t, fontSize, theme }) {
+  const mins = parseInt(minutes, 10);
+  const { isRunning, isDone, start, pause, reset, formatted, progress } = useCookingTimer(mins);
+  const circumference = 2 * Math.PI * 18;
+  const strokeDash    = circumference - (progress / 100) * circumference;
+  const color = isDone ? '#10B981' : '#F59E0B';
+
+  return (
+    <div className={`flex items-center gap-3 mt-2 px-3 py-2 rounded-xl border ${theme.border} bg-amber-50/40`}>
+      {/* Мини круговой прогресс */}
+      <div className="relative flex-shrink-0" style={{ width: 44, height: 44 }}>
+        <svg width="44" height="44" className="-rotate-90">
+          <circle cx="22" cy="22" r="18" fill="none" stroke="#e5e7eb" strokeWidth="4" />
+          <circle cx="22" cy="22" r="18" fill="none"
+            stroke={color} strokeWidth="4"
+            strokeDasharray={circumference} strokeDashoffset={strokeDash}
+            strokeLinecap="round" style={{ transition: 'stroke-dashoffset 0.8s linear' }}
+          />
+        </svg>
+        <div className="absolute inset-0 flex items-center justify-center">
+          <span className={`font-bold tabular-nums`} style={{ fontSize: 9, color }}>
+            {isDone ? '✓' : formatted}
+          </span>
+        </div>
+      </div>
+
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-1 mb-1">
+          <FaClock size={10} className="text-amber-500" />
+          <span className={`${fontSize.tiny} text-amber-600 font-medium`}>
+            {t(`Таймер: ${mins} мин`, `Timer: ${mins} min`)}
+          </span>
+          {isDone && <span className={`${fontSize.tiny} font-semibold ml-1`} style={{ color: '#10B981' }}>🎉 {t('Готово!','Done!')}</span>}
+        </div>
+        <div className="flex gap-1.5">
+          {!isDone && (
+            isRunning
+              ? <button onClick={pause} className={`flex items-center gap-1 px-2 py-0.5 rounded-full ${theme.accent} text-white hover:opacity-80 transition`} style={{ fontSize: 10 }}><FaPause size={8}/> {t('Пауза','Pause')}</button>
+              : <button onClick={start} className={`flex items-center gap-1 px-2 py-0.5 rounded-full ${theme.accent} text-white hover:opacity-80 transition`} style={{ fontSize: 10 }}><FaPlay  size={8}/> {t('Старт','Start')}</button>
+          )}
+          <button onClick={reset} className={`flex items-center gap-1 px-2 py-0.5 rounded-full border ${theme.border} hover:opacity-70 transition`} style={{ fontSize: 10 }}><FaRedo size={8}/> {t('Сброс','Reset')}</button>
         </div>
       </div>
     </div>
@@ -723,21 +760,14 @@ export default function CookifyDemo() {
 
   const allergyList = (userData?.allergies || "").toLowerCase().split(",").map(s => s.trim()).filter(Boolean);
 
-  // =================== FUSE.JS: индексы для fuzzy-поиска ===================
   const recipeNameFuse = useMemo(() => new Fuse(allRecipes, {
     keys: ['title', 'tags', 'cuisine', 'type'],
-    threshold: 0.4,
-    distance: 100,
-    minMatchCharLength: 2,
-    shouldSort: true,
+    threshold: 0.4, distance: 100, minMatchCharLength: 2, shouldSort: true,
   }), [allRecipes]);
 
   const recipeIngredientFuse = useMemo(() => new Fuse(allRecipes, {
     keys: ['ingredients.name'],
-    threshold: 0.35,
-    distance: 100,
-    minMatchCharLength: 2,
-    shouldSort: true,
+    threshold: 0.35, distance: 100, minMatchCharLength: 2, shouldSort: true,
   }), [allRecipes]);
 
   const filteredResults = useMemo(() => {
@@ -755,19 +785,12 @@ export default function CookifyDemo() {
         const queryIngredients = query.split(",").map(s => s.trim()).filter(Boolean);
         let matched = null;
         for (const qi of queryIngredients) {
-          const found = new Set(
-            recipeIngredientFuse.search(qi).map(r => r.item.id ?? r.item.title)
-          );
-          if (matched === null) {
-            matched = found;
-          } else {
-            matched = new Set([...matched].filter(id => found.has(id)));
-          }
+          const found = new Set(recipeIngredientFuse.search(qi).map(r => r.item.id ?? r.item.title));
+          matched = matched === null ? found : new Set([...matched].filter(id => found.has(id)));
         }
         results = allRecipes.filter(r => matched && matched.has(r.id ?? r.title));
       }
     }
-
     if (exclude.length > 0) {
       results = results.filter(r =>
         !(r.ingredients || []).some(ing => {
@@ -793,7 +816,6 @@ export default function CookifyDemo() {
     return results;
   }, [allRecipes, searchQuery, searchMode, excludeIngredients, selectedFilters, recipeNameFuse, recipeIngredientFuse]);
 
-  // =================== ЗНАЧЕНИЕ КОНТЕКСТА ===================
   const contextValue = {
     theme, font, fontSize, language, setLanguage, unitSystem, setUnitSystem, toggleUnitSystem,
     currentTheme, setCurrentTheme, currentFont, setCurrentFont, currentFontSize, setCurrentFontSize,
@@ -838,7 +860,6 @@ export default function CookifyDemo() {
     getTodayEntries: getWaterTodayEntries,
     getWeeklyStats: getWaterWeeklyStats,
     calculateWaterGoal,
-    // Toast API
     showToast,
   };
 
@@ -895,8 +916,7 @@ export default function CookifyDemo() {
           const totalFat     = Math.round((nutritionInfo.total.fat      || 0) * servingsMultiplier);
           const totalCarbs   = Math.round((nutritionInfo.total.carbs    || 0) * servingsMultiplier);
           const fav          = isFavorite(selectedRecipe.id);
-
-          const isMyRecipe = firebaseUser?.uid && String(selectedRecipe.authorId) === String(firebaseUser.uid);
+          const isMyRecipe   = firebaseUser?.uid && String(selectedRecipe.authorId) === String(firebaseUser.uid);
 
           const handleDeleteRecipe = async () => {
             if (!window.confirm(t(`Удалить рецепт «${selectedRecipe.title}»?`, `Delete "${selectedRecipe.title}"?`))) return;
@@ -933,7 +953,7 @@ export default function CookifyDemo() {
 
           const normalizeStep = (step) => {
             if (typeof step === 'object' && step !== null) return step;
-            return { text: step || '', image: '' };
+            return { text: step || '', image: '', timerMinutes: null };
           };
 
           return (
@@ -959,48 +979,34 @@ export default function CookifyDemo() {
                   </div>
 
                   <div className="flex items-center gap-1 ml-3 flex-shrink-0">
-                    <button
-                      onClick={(e) => { e.stopPropagation(); toggleFav(selectedRecipe.id); }}
+                    <button onClick={(e) => { e.stopPropagation(); toggleFav(selectedRecipe.id); }}
                       className={`p-2 rounded-full transition hover:scale-110 ${fav ? 'text-red-500' : theme.textSecondary}`}
-                      title={fav ? t('Удалить из избранного', 'Remove from favorites') : t('В избранное', 'Add to favorites')}
-                    >
+                      title={fav ? t('Удалить из избранного', 'Remove from favorites') : t('В избранное', 'Add to favorites')}>
                       {fav ? <FaHeart size={20} /> : <FaRegHeart size={20} />}
                     </button>
-
                     {isMyRecipe && (
-                      <button
-                        onClick={(e) => { e.stopPropagation(); closeModal(); handleEditRecipeClick(selectedRecipe); }}
-                        className={`p-2 rounded-full text-blue-500 hover:text-blue-700 hover:bg-blue-50 transition`}
-                        title={t('Редактировать', 'Edit')}
-                      >
+                      <button onClick={(e) => { e.stopPropagation(); closeModal(); handleEditRecipeClick(selectedRecipe); }}
+                        className="p-2 rounded-full text-blue-500 hover:text-blue-700 hover:bg-blue-50 transition"
+                        title={t('Редактировать', 'Edit')}>
                         <FaEdit size={18} />
                       </button>
                     )}
-
                     {isMyRecipe && (
-                      <button
-                        onClick={(e) => { e.stopPropagation(); handleDeleteRecipe(); }}
-                        className={`p-2 rounded-full text-red-400 hover:text-red-600 hover:bg-red-50 transition`}
-                        title={t('Удалить', 'Delete')}
-                      >
+                      <button onClick={(e) => { e.stopPropagation(); handleDeleteRecipe(); }}
+                        className="p-2 rounded-full text-red-400 hover:text-red-600 hover:bg-red-50 transition"
+                        title={t('Удалить', 'Delete')}>
                         <FaTrash size={18} />
                       </button>
                     )}
-
                     <button onClick={closeModal} className={`p-2 ${theme.textSecondary} hover:${theme.text} transition`}>
                       <FaTimes size={24} />
                     </button>
                   </div>
                 </div>
 
-                {/* Превью-фото рецепта */}
                 {selectedRecipe.image && (
                   <div className="mb-4 rounded-2xl overflow-hidden">
-                    <img
-                      src={selectedRecipe.image}
-                      alt={selectedRecipe.title}
-                      className="w-full max-h-56 object-cover"
-                    />
+                    <img src={selectedRecipe.image} alt={selectedRecipe.title} className="w-full max-h-56 object-cover" />
                   </div>
                 )}
 
@@ -1031,15 +1037,11 @@ export default function CookifyDemo() {
                   <div className="w-full bg-gray-200 rounded-full h-2.5 mb-2">
                     <div className="h-2.5 rounded-full transition-all duration-500" style={{ width: `${progressPercentage}%`, backgroundColor: timeInfo.color }}></div>
                   </div>
-                  <div className={`${fontSize.tiny} ${theme.textSecondary} text-center mb-1`}>{t(`${timeMinutes <= 15 ? 'Быстрое приготовление!' : timeMinutes <= 40 ? 'Умеренное время' : 'Требуется терпение'}`, `${timeMinutes <= 15 ? 'Quick cooking!' : timeMinutes <= 40 ? 'Moderate time' : 'Takes patience'}`)}</div>
-
-                  <CookingTimerBlock
-                    timeMinutes={timeMinutes}
-                    timeInfo={timeInfo}
-                    t={t}
-                    fontSize={fontSize}
-                    theme={theme}
-                  />
+                  <div className={`${fontSize.tiny} ${theme.textSecondary} text-center mb-1`}>
+                    {t(`${timeMinutes <= 15 ? 'Быстрое приготовление!' : timeMinutes <= 40 ? 'Умеренное время' : 'Требуется терпение'}`,
+                       `${timeMinutes <= 15 ? 'Quick cooking!' : timeMinutes <= 40 ? 'Moderate time' : 'Takes patience'}`)}
+                  </div>
+                  <CookingTimerBlock timeMinutes={timeMinutes} timeInfo={timeInfo} t={t} fontSize={fontSize} theme={theme} />
                 </div>
 
                 <div className={`${theme.textSecondary} ${fontSize.small} mb-4`}>{t("Сложность:", "Difficulty:")} {selectedRecipe.difficulty}</div>
@@ -1103,25 +1105,29 @@ export default function CookifyDemo() {
                   </ul>
                 </div>
 
+                {/* =================== ШАГИ С ТАЙМЕРАМИ =================== */}
                 <div>
                   <h3 className={`${fontSize.cardTitle} font-semibold mb-3 ${theme.headerText}`}>{t("Как готовить:", "How to cook:")}</h3>
                   <ol className={`space-y-4 ${fontSize.body}`}>
                     {(activeRecipe.instructions || []).map((rawStep, i) => {
                       const step = normalizeStep(rawStep);
+                      const stepMins = step.timerMinutes ? parseInt(step.timerMinutes, 10) : 0;
                       return (
-                        <li key={i} className="flex flex-col gap-2">
+                        <li key={i} className={`rounded-xl border ${theme.border} p-3`}>
                           <div className="flex gap-3 items-start">
                             <span className={`${theme.accent} text-white rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0 ${fontSize.small} font-bold`}>{i + 1}</span>
-                            <span>{step.text}</span>
+                            <span className="flex-1">{step.text}</span>
                           </div>
+                          {/* Таймер шага — показывается только если задан */}
+                          {stepMins > 0 && (
+                            <div className="mt-2 pl-9">
+                              <StepTimerBlock minutes={stepMins} t={t} fontSize={fontSize} theme={theme} />
+                            </div>
+                          )}
                           {step.image && (
-                            <div className="pl-9">
-                              <img
-                                src={step.image}
-                                alt={`${t('Шаг', 'Step')} ${i + 1}`}
-                                className="rounded-xl w-full"
-                                style={{ objectFit: 'contain', display: 'block' }}
-                              />
+                            <div className="pl-9 mt-2">
+                              <img src={step.image} alt={`${t('Шаг', 'Step')} ${i + 1}`}
+                                className="rounded-xl w-full" style={{ objectFit: 'contain', display: 'block' }} />
                             </div>
                           )}
                         </li>
@@ -1229,13 +1235,7 @@ export default function CookifyDemo() {
           />
         )}
 
-        {/* Глобальный Toast */}
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          visible={toast.visible}
-          onHide={hideToast}
-        />
+        <Toast message={toast.message} type={toast.type} visible={toast.visible} onHide={hideToast} />
       </div>
     </AppContext.Provider>
   );
