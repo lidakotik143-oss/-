@@ -146,9 +146,17 @@ export default function HomeScreen({
 
     calorieBalance: featureFlags.home_showCalorieBalance && isLoggedIn && (
       <div key="calorieBalance" className={`${theme.cardBg} p-5 rounded-xl shadow`}>
-        <div className="flex items-center gap-2 mb-4">
-          <FaBalanceScale className={theme.accentText} />
-          <h3 className={`${fontSize.cardTitle} font-semibold ${theme.headerText}`}>{t('\u0411\u0430\u043b\u0430\u043d\u0441 \u043a\u0430\u043b\u043e\u0440\u0438\u0439', 'Calorie Balance')}</h3>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <FaBalanceScale className={theme.accentText} />
+            <h3 className={`${fontSize.cardTitle} font-semibold ${theme.headerText}`}>{t('\u0411\u0430\u043b\u0430\u043d\u0441 \u043a\u0430\u043b\u043e\u0440\u0438\u0439', 'Calorie Balance')}</h3>
+          </div>
+          <button
+            onClick={() => { if (setAccountTab) setAccountTab('history'); setActiveScreen('account'); }}
+            className={`${fontSize.tiny} ${theme.textSecondary} underline`}
+          >
+            {t('\u043f\u043e\u0434\u0440\u043e\u0431\u043d\u0435\u0435', 'details')}
+          </button>
         </div>
         <div className="flex items-center justify-around">
           <div className="text-center">
