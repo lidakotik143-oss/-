@@ -1104,11 +1104,12 @@ export default function CookifyDemo() {
                           </div>
                           {step.image && (
                             <div className="pl-9">
+                              {/* object-contain — показываем фото целиком без обрезки */}
                               <img
                                 src={step.image}
                                 alt={`${t('Шаг', 'Step')} ${i + 1}`}
-                                className="rounded-xl object-cover max-h-48 w-full"
-                                style={{ objectFit: 'cover' }}
+                                className="rounded-xl w-full"
+                                style={{ objectFit: 'contain', display: 'block' }}
                               />
                             </div>
                           )}
