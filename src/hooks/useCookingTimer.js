@@ -1,29 +1,30 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 
 /**
- * useCookingTimer
- * totalMinutes — общее время рецепта в минутах
- * Возвращает: secondsLeft, isRunning, isDone, start, pause, reset, formatted
+ * useCookingTimer(minutes)
+ * Независимый таймер: каждый вызов — своя изолированная копия.
+ * Поддерживает несколько одновременных таймеров на странице.
  */
-export function useCookingTimer(totalMinutes) {
-  const total = Math.max(1, parseInt(totalMinutes, 10)) * 60;
-  const [secondsLeft, setSecondsLeft] = useState(total);
-  const [isRunning, setIsRunning]     = useState(false);
-  const [isDone, setIsDone]           = useState(false);
-  const intervalRef                   = useRef(null);
+export function useCookingTimer(minutes) {
+  const totalSeconds = Math.max(1, Math.round((parseFloat(minutes) || 0) * 60));
 
-  // Сброс при смене рецепта
+  const [remaining, setRemaining] = useState(totalSeconds);
+  const [isRunning, setIsRunning]  = useState(false);
+  const [isDone,    setIsDone]     = useState(false);
+  const intervalRef = useRef(null);
+
+  // Сброс при смене длительности
   useEffect(() => {
-    setSecondsLeft(total);
+    setRemaining(totalSeconds);
     setIsRunning(false);
     setIsDone(false);
-    return () => clearInterval(intervalRef.current);
-  }, [total]);
+    clearInterval(intervalRef.current);
+  }, [totalSeconds]);
 
   useEffect(() => {
-    if (!isRunning) { clearInterval(intervalRef.current); return; }
+    if (!isRunning) return;
     intervalRef.current = setInterval(() => {
-      setSecondsLeft(prev => {
+      setRemaining(prev => {
         if (prev <= 1) {
           clearInterval(intervalRef.current);
           setIsRunning(false);
@@ -36,23 +37,19 @@ export function useCookingTimer(totalMinutes) {
     return () => clearInterval(intervalRef.current);
   }, [isRunning]);
 
-  const start  = useCallback(() => { if (!isDone) setIsRunning(true);  }, [isDone]);
-  const pause  = useCallback(() => setIsRunning(false), []);
-  const reset  = useCallback(() => {
+  const start = useCallback(() => { if (!isDone) setIsRunning(true);  }, [isDone]);
+  const pause = useCallback(() => setIsRunning(false), []);
+  const reset = useCallback(() => {
     clearInterval(intervalRef.current);
-    setSecondsLeft(total);
+    setRemaining(totalSeconds);
     setIsRunning(false);
     setIsDone(false);
-  }, [total]);
+  }, [totalSeconds]);
 
-  const h = Math.floor(secondsLeft / 3600);
-  const m = Math.floor((secondsLeft % 3600) / 60);
-  const s = secondsLeft % 60;
-  const formatted = h > 0
-    ? `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`
-    : `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  const mins = Math.floor(remaining / 60);
+  const secs = remaining % 60;
+  const formatted = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+  const progress   = Math.round(((totalSeconds - remaining) / totalSeconds) * 100);
 
-  const progress = total > 0 ? ((total - secondsLeft) / total) * 100 : 0;
-
-  return { secondsLeft, isRunning, isDone, start, pause, reset, formatted, progress };
+  return { isRunning, isDone, start, pause, reset, formatted, progress, remaining };
 }

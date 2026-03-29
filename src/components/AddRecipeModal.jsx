@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { FaTimes, FaPlus, FaTrash, FaSearch, FaCamera } from 'react-icons/fa';
+import { FaTimes, FaPlus, FaTrash, FaSearch, FaCamera, FaClock } from 'react-icons/fa';
 import Fuse from 'fuse.js';
 import { addRecipe, updateRecipe } from '../firebase.js';
 import { PRODUCTS_BY_NAME } from '../data/productsNutritionById.js';
@@ -135,13 +135,10 @@ function IngredientRow({ ing, idx, onChange, onRemove, canRemove, theme, fontSiz
   const t = (ru, en) => language === 'ru' ? ru : en;
   const [suggestions, setSuggestions] = useState([]);
   const [showSug, setShowSug] = useState(false);
-  // userIsTyping: true ONLY when user actually typed something this session
-  // initiallyFilled: passed from parent, true if this row had a name when modal opened
   const userIsTypingRef = useRef(false);
   const nameRef = useRef(null);
 
   useEffect(() => {
-    // Показываем подсказки только если пользователь сам начал печатать
     if (!userIsTypingRef.current) return;
     const matches = smartSearch(ing.name || '');
     setSuggestions(matches);
@@ -234,12 +231,63 @@ function IngredientRow({ ing, idx, onChange, onRemove, canRemove, theme, fontSiz
   );
 }
 
+// ─── Мини-компонент: поле таймера шага ───────────────────────────────────────
+function StepTimerInput({ value, onChange, theme, fontSize, t }) {
+  const [open, setOpen] = useState(false);
+
+  const hasTimer = !!(value && parseInt(value) > 0);
+
+  return (
+    <div>
+      {!open && !hasTimer ? (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className={`flex items-center gap-1.5 ${fontSize.tiny} ${theme.textSecondary} hover:opacity-70 transition mt-1`}
+        >
+          <FaClock size={11} />
+          {t('+ Добавить таймер (необязательно)', '+ Add timer (optional)')}
+        </button>
+      ) : (
+        <div className={`flex items-center gap-2 mt-1 p-2 rounded-xl border ${theme.border} bg-opacity-50`}>
+          <FaClock size={13} className="text-amber-500 flex-shrink-0" />
+          <label className={`${fontSize.tiny} ${theme.textSecondary} whitespace-nowrap`}>
+            {t('Таймер (мин):', 'Timer (min):')}
+          </label>
+          <input
+            type="number"
+            min="1"
+            max="300"
+            value={value || ''}
+            onChange={e => onChange(e.target.value)}
+            placeholder="5"
+            className={`w-20 px-2 py-1 rounded-lg border ${theme.border} ${theme.input} ${fontSize.tiny} focus:outline-none focus:ring-1 focus:ring-amber-400`}
+          />
+          <span className={`${fontSize.tiny} ${theme.textSecondary}`}>{t('мин', 'min')}</span>
+          <button
+            type="button"
+            onClick={() => { onChange(''); setOpen(false); }}
+            className={`ml-auto text-red-400 hover:text-red-600 transition ${fontSize.tiny}`}
+            title={t('Убрать таймер', 'Remove timer')}
+          >
+            <FaTimes size={11} />
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function AddRecipeModal({ onClose, onAdded, theme, fontSize, language, firebaseUser, editingRecipe }) {
   const t = (ru, en) => language === 'ru' ? ru : en;
 
   const normalizeSteps = (steps) => {
-    if (!steps || !steps.length) return [{ text: '', image: '' }];
-    return steps.map(s => typeof s === 'object' && s !== null ? { text: s.text || '', image: s.image || '' } : { text: s || '', image: '' });
+    if (!steps || !steps.length) return [{ text: '', image: '', timerMinutes: '' }];
+    return steps.map(s =>
+      typeof s === 'object' && s !== null
+        ? { text: s.text || '', image: s.image || '', timerMinutes: s.timerMinutes ? String(s.timerMinutes) : '' }
+        : { text: s || '', image: '', timerMinutes: '' }
+    );
   };
 
   const [form, setForm] = useState(() => editingRecipe ? {
@@ -266,7 +314,6 @@ export default function AddRecipeModal({ onClose, onAdded, theme, fontSize, lang
 
   const [previewImage, setPreviewImage] = useState(() => editingRecipe?.image || '');
 
-  // Для каждого ингредиента запоминаем, было ли имя заполнено при открытии модального окна
   const [initialFilledNames] = useState(() => {
     if (!editingRecipe?.ingredients?.length) return [];
     return editingRecipe.ingredients.map(i =>
@@ -284,7 +331,6 @@ export default function AddRecipeModal({ onClose, onAdded, theme, fontSize, lang
       : [{ name: '', quantity: '', unit: '' }]
   );
 
-  // Стабильные id для IngredientRow, чтобы не сбрасывать state при перерисовке
   const rowIdsRef = useRef(ingredients.map((_, i) => i));
   const nextIdRef = useRef(ingredients.length);
 
@@ -301,14 +347,15 @@ export default function AddRecipeModal({ onClose, onAdded, theme, fontSize, lang
   const [steps, setSteps] = useState(() => normalizeSteps(editingRecipe?.instructions));
 
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError]     = useState('');
 
   const set = (field, val) => setForm(p => ({ ...p, [field]: val }));
 
-  const addStep    = () => setSteps(p => [...p, { text: '', image: '' }]);
-  const removeStep = (i) => setSteps(p => p.filter((_, idx) => idx !== i));
-  const setStepText  = (i, val) => setSteps(p => p.map((s, idx) => idx === i ? { ...s, text: val } : s));
-  const setStepImage = (i, val) => setSteps(p => p.map((s, idx) => idx === i ? { ...s, image: val } : s));
+  const addStep       = () => setSteps(p => [...p, { text: '', image: '', timerMinutes: '' }]);
+  const removeStep    = (i) => setSteps(p => p.filter((_, idx) => idx !== i));
+  const setStepText   = (i, val) => setSteps(p => p.map((s, idx) => idx === i ? { ...s, text: val } : s));
+  const setStepImage  = (i, val) => setSteps(p => p.map((s, idx) => idx === i ? { ...s, image: val } : s));
+  const setStepTimer  = (i, val) => setSteps(p => p.map((s, idx) => idx === i ? { ...s, timerMinutes: val } : s));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -339,7 +386,14 @@ export default function AddRecipeModal({ onClose, onAdded, theme, fontSize, lang
           })),
         instructions: steps
           .filter(s => s.text.trim())
-          .map(s => ({ text: s.text.trim(), image: s.image || '' })),
+          .map(s => ({
+            text: s.text.trim(),
+            image: s.image || '',
+            // сохраняем только если задано
+            ...(s.timerMinutes && parseInt(s.timerMinutes) > 0
+              ? { timerMinutes: parseInt(s.timerMinutes) }
+              : {})
+          })),
         variants: editingRecipe?.variants || [],
         source: 'user',
         image: previewImage || '',
@@ -374,7 +428,6 @@ export default function AddRecipeModal({ onClose, onAdded, theme, fontSize, lang
 
         <form onSubmit={handleSubmit} className="p-5 space-y-5">
 
-          {/* Превью-фото */}
           <PhotoUpload
             value={previewImage}
             onChange={setPreviewImage}
@@ -493,6 +546,19 @@ export default function AddRecipeModal({ onClose, onAdded, theme, fontSize, lang
                       </button>
                     )}
                   </div>
+
+                  {/* Таймер шага */}
+                  <div className="pl-7">
+                    <StepTimerInput
+                      value={step.timerMinutes}
+                      onChange={val => setStepTimer(i, val)}
+                      theme={theme}
+                      fontSize={fontSize}
+                      t={t}
+                    />
+                  </div>
+
+                  {/* Фото шага */}
                   <div className="pl-7">
                     <PhotoUpload
                       value={step.image}
