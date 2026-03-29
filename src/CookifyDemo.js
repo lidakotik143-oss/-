@@ -132,7 +132,7 @@ const THEMES = {
 
 // Цвета фона полноэкранного таймера по ключу темы
 const FULLSCREEN_PALETTES = {
-  olive:  { bg1: '#2D3A1E', bg2: '#3D4E28', bg3: '#606C38', accent: '#DDA15E', text: '#FEFAE0', textMuted: 'rgba(254,250,224,0.55)' },
+  olive:  { bg1: '#C8BA8B', bg2: '#D4C99A', bg3: '#DDD4A0', accent: '#BC6C25', text: '#283618', textMuted: 'rgba(40,54,24,0.55)' },
   sage:   { bg1: '#C8BC9E', bg2: '#D4C9A8', bg3: '#DDE5B6', accent: '#A98467', text: '#3D2B1F', textMuted: 'rgba(61,43,31,0.55)' },
   forest: { bg1: '#0D1A0C', bg2: '#172815', bg3: '#3E5622', accent: '#95B46A', text: '#EDEEC9', textMuted: 'rgba(237,238,201,0.5)'  },
 };
@@ -397,13 +397,13 @@ function FullscreenTimer({ minutes, stepText, stepIndex, t, onClose, themeKey })
             stroke={timerColor} strokeWidth="12"
             strokeDasharray={circumference} strokeDashoffset={strokeDash}
             strokeLinecap="round"
-            style={{ transition: 'stroke-dashoffset 0.8s linear, stroke 0.5s ease', filter: `drop-shadow(0 0 8px ${timerColor})` }}
+            style={{ transition: 'stroke-dashoffset 0.8s linear, stroke 0.5s ease' }}
           />
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           {isDone ? (
             <>
-              <span className="text-7xl mb-2" style={{ filter: 'drop-shadow(0 0 12px #10B981)' }}>🎉</span>
+              <span className="text-7xl mb-2">🎉</span>
               <span className="font-bold text-2xl tracking-wide" style={{ color: '#10B981' }}>
                 {t('Готово!', 'Done!')}
               </span>
@@ -412,7 +412,7 @@ function FullscreenTimer({ minutes, stepText, stepIndex, t, onClose, themeKey })
             <>
               <span
                 className="font-bold tabular-nums"
-                style={{ fontSize: 64, color: timerColor, lineHeight: 1, filter: `drop-shadow(0 0 10px ${timerColor})` }}
+                style={{ fontSize: 64, color: timerColor, lineHeight: 1 }}
               >
                 {formatted}
               </span>
