@@ -126,9 +126,11 @@ export function convertToGrams(quantity, unit, ingredientName) {
   const coefficient = coefficients[product] || coefficients.default;
   const grams = Math.round(numericQuantity * coefficient);
   
-  // 🔥 ИЗМЕНЕНО: Формируем текст "оригинальная мера (≈ граммы)"
+  // Формируем текст: если граммов меньше 1 — не показываем скобку
   const originalText = `${quantity} ${unit}`.trim();
-  const displayText = `${originalText} (≈ ${grams} г)`;
+  const displayText = grams >= 1
+    ? `${originalText} (≈ ${grams} г)`
+    : originalText;
   
   return {
     grams: grams,
