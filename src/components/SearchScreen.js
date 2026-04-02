@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
-import { FaSearch, FaPlus, FaHeart, FaRegHeart, FaTrash } from "react-icons/fa";
-import { deleteRecipe } from "../firebase.js";
+import { FaSearch, FaPlus, FaHeart, FaRegHeart, FaTrash, FaEdit } from "react-icons/fa";
+import { deleteRecipe, isAdmin } from "../firebase.js";
 
 export default function SearchScreen({
   t,
@@ -36,6 +36,7 @@ export default function SearchScreen({
   isFavorite,
   toggleFav,
   onRecipeDeleted,
+  onEditRecipe,
 }) {
   const [inputValue, setInputValue] = useState(searchQuery);
   const debounceTimer = useRef(null);
@@ -63,17 +64,25 @@ export default function SearchScreen({
 
   const [deletingId, setDeletingId] = useState(null);
 
-  // Проверяем владельца через authorId или uid, игнорируя статические рецепты (без id в Firestore)
-  const isOwnerOf = (r) => {
+  // Владелец ИЛИ администратор могут редактировать/удалять любой рецепт из Firebase
+  const canEditRecipe = (r) => {
     if (!firebaseUser?.uid) return false;
     if (!r.authorId) return false; // статичные рецепты без authorId
+    if (isAdmin(firebaseUser.uid)) return true;
+    return String(r.authorId) === String(firebaseUser.uid);
+  };
+
+  // Для отображения бейджа «мой рецепт» — только настоящий автор
+  const isOwnerOf = (r) => {
+    if (!firebaseUser?.uid) return false;
+    if (!r.authorId) return false;
     return String(r.authorId) === String(firebaseUser.uid);
   };
 
   const handleDelete = async (e, recipe) => {
     e.stopPropagation();
     if (!firebaseUser) return;
-    if (!window.confirm(t('Удалить рецепт «' + recipe.title + '»?', 'Delete recipe \"' + recipe.title + '\"?'))) return;
+    if (!window.confirm(t('Удалить рецепт «' + recipe.title + '»?', 'Delete recipe "' + recipe.title + '"?'))) return;
     setDeletingId(recipe.id);
     try {
       await deleteRecipe(recipe.id, firebaseUser.uid);
@@ -83,6 +92,11 @@ export default function SearchScreen({
     } finally {
       setDeletingId(null);
     }
+  };
+
+  const handleEdit = (e, recipe) => {
+    e.stopPropagation();
+    if (onEditRecipe) onEditRecipe(recipe);
   };
 
   return (
@@ -199,6 +213,7 @@ export default function SearchScreen({
               const fav = isFavorite ? isFavorite(r.id) : false;
               const imgSrc = r.image || r.imageUrl || null;
               const isOwner = isOwnerOf(r);
+              const canEdit = canEditRecipe(r);
               return (
                 <div
                   key={r.id}
@@ -251,7 +266,16 @@ export default function SearchScreen({
                           >
                             {fav ? <FaHeart size={16} /> : <FaRegHeart size={16} />}
                           </button>
-                          {isOwner && (
+                          {canEdit && onEditRecipe && (
+                            <button
+                              onClick={(e) => handleEdit(e, r)}
+                              className="p-2 rounded-full transition hover:scale-110 text-blue-400 hover:text-blue-600"
+                              title={t('Редактировать рецепт', 'Edit recipe')}
+                            >
+                              <FaEdit size={14} />
+                            </button>
+                          )}
+                          {canEdit && (
                             <button
                               onClick={(e) => handleDelete(e, r)}
                               disabled={deletingId === r.id}
