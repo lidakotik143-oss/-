@@ -698,6 +698,116 @@ export const RECIPES_DATABASE = [
   }
 ,
   {
+    id: 8,
+    title: "Шакшука",
+    image: "https://i2.wp.com/www.downshiftology.com/wp-content/uploads/2023/12/Shakshuka-main-1.jpg",
+    time: "30",
+    calories: 260,
+    caloriesPerServing: 260,
+    servings: 2,
+    type: "завтрак",
+    diet: "вегетарианское",
+    cuisine: "ближневосточная",
+    difficulty: "легкий",
+    tags: ["популярное", "быстро", "сытное"],
+    ingredients: [
+      { name: "яйца", productId: 601, quantity: "4", unit: "шт" },
+      { name: "помидоры в собственном соку", productId: null, quantity: "400", unit: "г" },
+      { name: "болгарский перец", productId: 1344, quantity: "1", unit: "шт" },
+      { name: "лук", productId: 1333, quantity: "1", unit: "шт" },
+      { name: "чеснок", productId: 1370, quantity: "2", unit: "зубчика" },
+      { name: "оливковое масло", productId: 1205, quantity: "1", unit: "ст. л." },
+      { name: "паприка", productId: null, quantity: "1", unit: "ч. л." },
+      { name: "зира", productId: null, quantity: "0.5", unit: "ч. л." },
+      { name: "соль", productId: null, quantity: "", unit: "" },
+      { name: "чёрный перец", productId: null, quantity: "", unit: "" },
+      { name: "петрушка", productId: null, quantity: "0.25", unit: "пучка" },
+      { name: "хлеб или пита", productId: 105, quantity: "", unit: "" }
+    ],
+    instructions: [
+      {
+        text: "Нарежьте лук и болгарский перец небольшими кубиками, чеснок мелко порубите. Подготовьте яйца, специи и томаты, чтобы всё было под рукой.",
+        image: "https://www.allrecipes.com/thmb/E7q6YM86BGhi2_v_nOskFNkUKN4=/1500x0/filters:no_upscale%28%29:max_bytes%28150000%29:strip_icc%28%29/190276-easy-shakshuka-DDMFS-step-01-2126-e9e1052768524fbcaffef956a1b4c5c0.jpg"
+      },
+      {
+        text: "Разогрейте оливковое масло в сковороде и обжаривайте лук с перцем около 5 минут, пока овощи не станут мягкими.",
+        image: "https://pplx-res.cloudinary.com/image/upload/pplx_search_images/7cc6db9abf3da5d5777f1183bfe8d1ae400697e8.jpg",
+        timer: "5 мин"
+      },
+      {
+        text: "Добавьте чеснок, паприку и зиру. Готовьте ещё около 1 минуты, пока специи не раскроют аромат.",
+        timer: "1 мин"
+      },
+      {
+        text: "Выложите помидоры в собственном соку, посолите и поперчите. Тушите соус 10–15 минут на среднем огне, пока он слегка не загустеет.",
+        image: "https://pplx-res.cloudinary.com/image/upload/pplx_search_images/bf61ca2bb7de31947d17d7d52f80cdad78292742.jpg",
+        timer: "10–15 мин"
+      },
+      {
+        text: "Сделайте в соусе 4 небольшие лунки и аккуратно разбейте в них яйца. Накройте сковороду крышкой и готовьте, пока белки не схватятся, а желтки останутся немного жидкими.",
+        image: "https://pplx-res.cloudinary.com/image/upload/pplx_search_images/6eb4713526b2512452167bfa48653f17e7b61dde.jpg",
+        timer: "5–8 мин"
+      },
+      {
+        text: "Посыпьте шакшуку рубленой петрушкой и подавайте прямо в сковороде с хлебом или питой.",
+        image: "https://i2.wp.com/www.downshiftology.com/wp-content/uploads/2023/12/Shakshuka-main-1.jpg"
+      }
+    ],
+    variants: [
+      {
+        key: "classic",
+        labelRu: "Классическая",
+        labelEn: "Classic",
+        time: "30",
+        caloriesPerServing: 260,
+        ingredients: [
+          { name: "яйца", productId: 601, quantity: "4", unit: "шт" },
+          { name: "помидоры в собственном соку", productId: null, quantity: "400", unit: "г" },
+          { name: "болгарский перец", productId: 1344, quantity: "1", unit: "шт" },
+          { name: "лук", productId: 1333, quantity: "1", unit: "шт" },
+          { name: "чеснок", productId: 1370, quantity: "2", unit: "зубчика" },
+          { name: "оливковое масло", productId: 1205, quantity: "1", unit: "ст. л." },
+          { name: "паприка", productId: null, quantity: "1", unit: "ч. л." },
+          { name: "зира", productId: null, quantity: "0.5", unit: "ч. л." },
+          { name: "соль", productId: null, quantity: "", unit: "" },
+          { name: "чёрный перец", productId: null, quantity: "", unit: "" },
+          { name: "петрушка", productId: null, quantity: "0.25", unit: "пучка" },
+          { name: "хлеб или пита", productId: 105, quantity: "", unit: "" }
+        ],
+        instructions: [
+          {
+            text: "Нарежьте лук и болгарский перец небольшими кубиками, чеснок мелко порубите. Подготовьте яйца, специи и томаты, чтобы всё было под рукой.",
+            image: "https://www.allrecipes.com/thmb/E7q6YM86BGhi2_v_nOskFNkUKN4=/1500x0/filters:no_upscale%28%29:max_bytes%28150000%29:strip_icc%28%29/190276-easy-shakshuka-DDMFS-step-01-2126-e9e1052768524fbcaffef956a1b4c5c0.jpg"
+          },
+          {
+            text: "Разогрейте оливковое масло в сковороде и обжаривайте лук с перцем около 5 минут, пока овощи не станут мягкими.",
+            image: "https://pplx-res.cloudinary.com/image/upload/pplx_search_images/7cc6db9abf3da5d5777f1183bfe8d1ae400697e8.jpg",
+            timer: "5 мин"
+          },
+          {
+            text: "Добавьте чеснок, паприку и зиру. Готовьте ещё около 1 минуты, пока специи не раскроют аромат.",
+            timer: "1 мин"
+          },
+          {
+            text: "Выложите помидоры в собственном соку, посолите и поперчите. Тушите соус 10–15 минут на среднем огне, пока он слегка не загустеет.",
+            image: "https://pplx-res.cloudinary.com/image/upload/pplx_search_images/bf61ca2bb7de31947d17d7d52f80cdad78292742.jpg",
+            timer: "10–15 мин"
+          },
+          {
+            text: "Сделайте в соусе 4 небольшие лунки и аккуратно разбейте в них яйца. Накройте сковороду крышкой и готовьте, пока белки не схватятся, а желтки останутся немного жидкими.",
+            image: "https://pplx-res.cloudinary.com/image/upload/pplx_search_images/6eb4713526b2512452167bfa48653f17e7b61dde.jpg",
+            timer: "5–8 мин"
+          },
+          {
+            text: "Посыпьте шакшуку рубленой петрушкой и подавайте прямо в сковороде с хлебом или питой.",
+            image: "https://i2.wp.com/www.downshiftology.com/wp-content/uploads/2023/12/Shakshuka-main-1.jpg"
+          }
+        ]
+      }
+    ]
+  }
+,
+  {
     id: 41,
     title: "Рис карри",
     image: "https://pplx-res.cloudinary.com/image/upload/pplx_search_images/326bd966f7c3606ba8e1b836ac63ffc6d3817477.jpg",
