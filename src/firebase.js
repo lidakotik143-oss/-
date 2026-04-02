@@ -16,6 +16,12 @@ const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 
+// ─── АДМИНИСТРАТОР ────────────────────────────────────────────────────────────
+// Замени ТВОЙ_UID на свой реальный Firebase UID (найти в консоли Firebase → Authentication → Users)
+export const ADMIN_UID = 'ТВОЙ_UID';
+
+export const isAdmin = (uid) => uid === ADMIN_UID;
+
 // ─── РЕЦЕПТЫ (общие для всех) ──────────────────────────────────────────────
 
 export async function getRecipes() {
@@ -35,9 +41,12 @@ export async function addRecipe(recipe, user) {
 }
 
 export async function updateRecipe(recipeId, recipe, user) {
+  if (!isAdmin(user.uid)) {
+    const ref = doc(db, 'recipes', recipeId);
+    const snap = await getDoc(ref);
+    if (snap.data()?.authorId !== user.uid) throw new Error('Нет прав');
+  }
   const ref = doc(db, 'recipes', recipeId);
-  const snap = await getDoc(ref);
-  if (snap.data()?.authorId !== user.uid) throw new Error('Нет прав');
   return await updateDoc(ref, {
     ...recipe,
     updatedAt: new Date().toISOString()
@@ -45,10 +54,12 @@ export async function updateRecipe(recipeId, recipe, user) {
 }
 
 export async function deleteRecipe(recipeId, userId) {
-  const ref = doc(db, 'recipes', recipeId);
-  const snap = await getDoc(ref);
-  if (snap.data()?.authorId !== userId) throw new Error('Нет прав');
-  return await deleteDoc(ref);
+  if (!isAdmin(userId)) {
+    const ref = doc(db, 'recipes', recipeId);
+    const snap = await getDoc(ref);
+    if (snap.data()?.authorId !== userId) throw new Error('Нет прав');
+  }
+  return await deleteDoc(doc(db, 'recipes', recipeId));
 }
 
 // ─── ПРОФИЛЬ ПОЛЬЗОВАТЕЛЯ (личный) ───────────────────────────────────────

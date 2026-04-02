@@ -3,7 +3,7 @@ import { FaTimes, FaEdit, FaTrash } from 'react-icons/fa';
 import { getTimeCategory, DISH_TYPE_LABELS, normalize } from '../utils/constants';
 import { MEAL_CATEGORIES } from '../utils/constants';
 import { useApp } from '../context/AppContext';
-import { deleteRecipe } from '../firebase.js';
+import { deleteRecipe, isAdmin } from '../firebase.js';
 import StepTimer from './StepTimer';
 
 export default function RecipeModal({ 
@@ -28,6 +28,7 @@ export default function RecipeModal({
   const t = (ru, en) => (language === "ru" ? ru : en);
 
   const isMyRecipe = firebaseUser?.uid && String(recipe.authorId) === String(firebaseUser.uid);
+  const canEdit = isMyRecipe || (firebaseUser?.uid && isAdmin(firebaseUser.uid));
 
   const variants = Array.isArray(recipe.variants) ? recipe.variants : [];
   const activeVariant = variants.length
@@ -111,7 +112,7 @@ export default function RecipeModal({
             )}
           </div>
           <div className="flex items-center gap-2 ml-4">
-            {isMyRecipe && onEditRecipe && (
+            {canEdit && onEditRecipe && (
               <button
                 onClick={() => { onClose(); onEditRecipe(recipe); }}
                 className="p-2 rounded-full text-blue-400 hover:text-blue-600 hover:bg-blue-50 transition"
@@ -120,7 +121,7 @@ export default function RecipeModal({
                 <FaEdit size={18} />
               </button>
             )}
-            {isMyRecipe && (
+            {canEdit && (
               <button
                 onClick={handleDelete}
                 disabled={deleting}
