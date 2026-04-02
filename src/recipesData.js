@@ -6,6 +6,7 @@ export const RECIPES_DATABASE = [
   {
     id: 1,
     title: "Овсянка с бананом",
+    image: "https://pplx-res.cloudinary.com/image/upload/pplx_search_images/483a62e2f908949caee8a1e03ac6b06abb0092c4.jpg",
     time: "25",
     calories: 321,
     caloriesPerServing: 321,
@@ -122,6 +123,7 @@ export const RECIPES_DATABASE = [
   {
     id: 2,
     title: "Омлет с овощами",
+    image: "https://pplx-res.cloudinary.com/image/upload/pplx_search_images/1cbee011bc60fe9bcbd9a8fbb71719f7f62a362e.jpg",
     time: "15",
     calories: 110,
     caloriesPerServing: 110,
@@ -205,6 +207,7 @@ export const RECIPES_DATABASE = [
   {
     id: 3,
     title: "Греческий йогурт с мёдом",
+    image: "https://pplx-res.cloudinary.com/image/upload/pplx_search_images/d258db7932c4dcefaab868a455b3b597dbd8d60b.jpg",
     time: "5",
     calories: 200,
     caloriesPerServing: 200,
@@ -283,6 +286,7 @@ export const RECIPES_DATABASE = [
   {
     id: 4,
     title: "Смузи с ягодами",
+    image: "https://pplx-res.cloudinary.com/image/upload/pplx_search_images/2e0ebf60d03933035086acd39e9a773ada665a8d.jpg",
     time: "10",
     calories: 100,
     caloriesPerServing: 100,
@@ -363,6 +367,7 @@ export const RECIPES_DATABASE = [
   {
     id: 5,
     title: "Тосты с авокадо",
+    image: "https://pplx-res.cloudinary.com/image/upload/pplx_search_images/340320fc8d76f226500ed14d7d92dd97bde99f8c.jpg",
     time: "10",
     calories: 125,
     caloriesPerServing: 125,
@@ -485,6 +490,7 @@ export const RECIPES_DATABASE = [
   {
     id: 6,
     title: "Сырники классические",
+    image: "https://pplx-res.cloudinary.com/image/upload/pplx_search_images/5c909159a19d084f49ea266176053bb793e880f6.jpg",
     time: "20",
     calories: 140,
     caloriesPerServing: 140,
@@ -559,6 +565,7 @@ export const RECIPES_DATABASE = [
   {
     id: 41,
     title: "Рис карри",
+    image: "https://pplx-res.cloudinary.com/image/upload/pplx_search_images/326bd966f7c3606ba8e1b836ac63ffc6d3817477.jpg",
     time: "35",
     calories: 320,
     caloriesPerServing: 320,
@@ -703,6 +710,7 @@ export const RECIPES_DATABASE = [
   {
     id: 42,
     title: "Паста карбонара",
+    image: "https://pplx-res.cloudinary.com/image/upload/pplx_search_images/825112ac97ed2ee1cf1657e8d7b3c9a04fda9cbf.jpg",
     time: "30",
     calories: 310,
     caloriesPerServing: 310,
