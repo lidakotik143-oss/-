@@ -17,8 +17,7 @@ export const auth = getAuth(app);
 export const db = getFirestore(app);
 
 // ─── АДМИНИСТРАТОР ────────────────────────────────────────────────────────────
-// Замени ТВОЙ_UID на свой реальный Firebase UID (найти в консоли Firebase → Authentication → Users)
-export const ADMIN_UID = 'ТВОЙ_UID';
+export const ADMIN_UID = 'nkbivQWhrVV47hre0YcZoFCqZJa2';
 
 export const isAdmin = (uid) => uid === ADMIN_UID;
 
