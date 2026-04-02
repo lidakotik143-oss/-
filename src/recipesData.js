@@ -1,5 +1,5 @@
 // База данных рецептов Cookify
-// Всего: 9 рецептов (6 завтраков + 1 обед + 2 ужина)
+// Всего: 10 рецептов (7 завтраков + 1 обед + 2 ужина)
 // Каждый ингредиент теперь имеет productId для автоматического расчёта КБЖУ
 
 export const RECIPES_DATABASE = [
@@ -557,6 +557,141 @@ export const RECIPES_DATABASE = [
           "Выложите шарики на бумагу, слегка прижмите для придания формы и поставьте в духовку.",
           "Средние по размеру сырники готовятся около 20 минут, для больших лучше немного увеличить время запекания, а для маленьких, наоборот, уменьшить.",
           "Подавать со сметаной, вареньем или мёдом."
+        ]
+      }
+    ]
+  }
+,
+  {
+    id: 7,
+    title: "Тамагояки",
+    image: "https://pplx-res.cloudinary.com/image/upload/pplx_search_images/4a80956e62233749d5518f56ccdd5d2590abc23b.jpg",
+    time: "15",
+    calories: 180,
+    caloriesPerServing: 180,
+    servings: 1,
+    type: "завтрак",
+    diet: "вегетарианское",
+    cuisine: "японская",
+    difficulty: "средний",
+    tags: ["японская", "быстро", "популярное"],
+    ingredients: [
+      { name: "яйца", productId: 601, quantity: "3", unit: "шт" },
+      { name: "даши или вода", productId: null, quantity: "2", unit: "ст. л." },
+      { name: "соевый соус", productId: null, quantity: "0.5", unit: "ч. л." },
+      { name: "сахар", productId: 1901, quantity: "1", unit: "ч. л." },
+      { name: "мирин", productId: null, quantity: "0.5", unit: "ч. л." },
+      { name: "соль", productId: null, quantity: "0.3", unit: "ч. л." },
+      { name: "растительное масло", productId: 1206, quantity: "", unit: "" }
+    ],
+    instructions: [
+      {
+        text: "Разбейте яйца в миску. Добавьте даши (или воду), соевый соус, сахар, мирин и соль. Аккуратно перемешайте палочками или вилкой — не взбивайте, чтобы не появилось лишней пены.",
+        image: "https://pplx-res.cloudinary.com/image/upload/pplx_search_images/fca72695e313d9415b8a7e8be20bf6d5efabaa17.jpg"
+      },
+      {
+        text: "Разогрейте прямоугольную сковороду тамагояки (или обычную круглую) на среднем огне. Смажьте маслом с помощью кисточки или сложенного бумажного полотенца — слой должен быть тонким и равномерным.",
+        image: "https://pplx-res.cloudinary.com/image/upload/pplx_search_images/660a32aeacbcc0ad395c8fb535817162286a185b.jpg"
+      },
+      {
+        text: "Влейте примерно треть яичной смеси на сковороду — слой должен быть тонким, как блин. Когда края начнут схватываться, а середина ещё слегка жидкая, начинайте сворачивать омлет палочками или лопаткой от дальнего края к себе.",
+        image: "https://pplx-res.cloudinary.com/image/upload/pplx_search_images/d588bb521a9e049aa911abdeff5a47d8c4b8f7c7.jpg"
+      },
+      {
+        text: "Сдвиньте получившийся рулет к дальнему краю сковороды. Снова смажьте маслом освободившуюся часть. Влейте вторую треть смеси, немного приподняв рулет, чтобы яйцо затекло под него — так слои склеятся. Когда схватится, снова скатайте к дальнему краю.",
+        image: "https://pplx-res.cloudinary.com/image/upload/pplx_search_images/9d55b9338f7e69eecb6a784d53109475b3bcea19.jpg"
+      },
+      {
+        text: "Повторите с оставшейся третью смеси: смажьте масло, влейте яйцо, приподнимите рулет, скатайте. У вас получится плотный многослойный ролл.",
+        image: "https://pplx-res.cloudinary.com/image/upload/pplx_search_images/660a32aeacbcc0ad395c8fb535817162286a185b.jpg"
+      },
+      {
+        text: "Снимите с огня. Оберните тамагояки в бамбуковый коврик (макису) и придайте прямоугольную форму, слегка прижав. Если коврика нет — просто дайте остыть на разделочной доске 2–3 минуты.",
+        image: "https://pplx-res.cloudinary.com/image/upload/pplx_search_images/7279993499e2280ed5cf3cc229a86569627d75c3.jpg"
+      },
+      {
+        text: "Нарежьте поперёк на кусочки толщиной 2–3 см. Подавайте тёплым или холодным с тёртым дайконом и соевым соусом. Тамагояки отлично подходит к рису и как наполнение для бэнто.",
+        image: "https://pplx-res.cloudinary.com/image/upload/pplx_search_images/4a80956e62233749d5518f56ccdd5d2590abc23b.jpg"
+      }
+    ],
+    variants: [
+      {
+        key: "classic",
+        labelRu: "Классический",
+        labelEn: "Classic",
+        time: "15",
+        caloriesPerServing: 180,
+        ingredients: [
+          { name: "яйца", productId: 601, quantity: "3", unit: "шт" },
+          { name: "даши или вода", productId: null, quantity: "2", unit: "ст. л." },
+          { name: "соевый соус", productId: null, quantity: "0.5", unit: "ч. л." },
+          { name: "сахар", productId: 1901, quantity: "1", unit: "ч. л." },
+          { name: "мирин", productId: null, quantity: "0.5", unit: "ч. л." },
+          { name: "соль", productId: null, quantity: "0.3", unit: "ч. л." },
+          { name: "растительное масло", productId: 1206, quantity: "", unit: "" }
+        ],
+        instructions: [
+          {
+            text: "Разбейте яйца в миску. Добавьте даши (или воду), соевый соус, сахар, мирин и соль. Аккуратно перемешайте палочками или вилкой — не взбивайте, чтобы не появилось лишней пены.",
+            image: "https://pplx-res.cloudinary.com/image/upload/pplx_search_images/fca72695e313d9415b8a7e8be20bf6d5efabaa17.jpg"
+          },
+          {
+            text: "Разогрейте прямоугольную сковороду тамагояки (или обычную круглую) на среднем огне. Смажьте маслом с помощью кисточки или сложенного бумажного полотенца — слой должен быть тонким и равномерным.",
+            image: "https://pplx-res.cloudinary.com/image/upload/pplx_search_images/660a32aeacbcc0ad395c8fb535817162286a185b.jpg"
+          },
+          {
+            text: "Влейте примерно треть яичной смеси на сковороду — слой должен быть тонким, как блин. Когда края начнут схватываться, а середина ещё слегка жидкая, начинайте сворачивать омлет палочками или лопаткой от дальнего края к себе.",
+            image: "https://pplx-res.cloudinary.com/image/upload/pplx_search_images/d588bb521a9e049aa911abdeff5a47d8c4b8f7c7.jpg"
+          },
+          {
+            text: "Сдвиньте получившийся рулет к дальнему краю сковороды. Снова смажьте маслом освободившуюся часть. Влейте вторую треть смеси, немного приподняв рулет, чтобы яйцо затекло под него — так слои склеятся. Когда схватится, снова скатайте к дальнему краю.",
+            image: "https://pplx-res.cloudinary.com/image/upload/pplx_search_images/9d55b9338f7e69eecb6a784d53109475b3bcea19.jpg"
+          },
+          {
+            text: "Повторите с оставшейся третью смеси: смажьте масло, влейте яйцо, приподнимите рулет, скатайте. У вас получится плотный многослойный ролл.",
+            image: "https://pplx-res.cloudinary.com/image/upload/pplx_search_images/660a32aeacbcc0ad395c8fb535817162286a185b.jpg"
+          },
+          {
+            text: "Снимите с огня. Оберните тамагояки в бамбуковый коврик (макису) и придайте прямоугольную форму, слегка прижав. Если коврика нет — просто дайте остыть на разделочной доске 2–3 минуты.",
+            image: "https://pplx-res.cloudinary.com/image/upload/pplx_search_images/7279993499e2280ed5cf3cc229a86569627d75c3.jpg"
+          },
+          {
+            text: "Нарежьте поперёк на кусочки толщиной 2–3 см. Подавайте тёплым или холодным с тёртым дайконом и соевым соусом. Тамагояки отлично подходит к рису и как наполнение для бэнто.",
+            image: "https://pplx-res.cloudinary.com/image/upload/pplx_search_images/4a80956e62233749d5518f56ccdd5d2590abc23b.jpg"
+          }
+        ]
+      },
+      {
+        key: "sweet",
+        labelRu: "Сладкий",
+        labelEn: "Sweet",
+        time: "15",
+        caloriesPerServing: 210,
+        ingredients: [
+          { name: "яйца", productId: 601, quantity: "3", unit: "шт" },
+          { name: "сахар", productId: 1901, quantity: "2", unit: "ч. л." },
+          { name: "молоко", productId: 501, quantity: "1", unit: "ст. л." },
+          { name: "соевый соус", productId: null, quantity: "0.25", unit: "ч. л." },
+          { name: "соль", productId: null, quantity: "1", unit: "щепотка" },
+          { name: "растительное масло", productId: 1206, quantity: "", unit: "" }
+        ],
+        instructions: [
+          {
+            text: "Взбейте яйца с сахаром, молоком, соевым соусом и щепоткой соли до однородности. Сладкий вариант имеет более выраженный кремовый вкус.",
+            image: "https://pplx-res.cloudinary.com/image/upload/pplx_search_images/fca72695e313d9415b8a7e8be20bf6d5efabaa17.jpg"
+          },
+          {
+            text: "Разогрейте сковороду на среднем огне, смажьте маслом. Влейте треть смеси тонким слоем.",
+            image: "https://pplx-res.cloudinary.com/image/upload/pplx_search_images/660a32aeacbcc0ad395c8fb535817162286a185b.jpg"
+          },
+          {
+            text: "Когда края схватятся, скатайте омлет к дальнему краю. Смажьте масло, влейте вторую треть, подняв рулет. Скатайте снова.",
+            image: "https://pplx-res.cloudinary.com/image/upload/pplx_search_images/d588bb521a9e049aa911abdeff5a47d8c4b8f7c7.jpg"
+          },
+          {
+            text: "Повторите с остатком смеси. Придайте форму ковриком или доской. Нарежьте и подавайте — сладкий тамагояки хорош с зелёным чаем.",
+            image: "https://pplx-res.cloudinary.com/image/upload/pplx_search_images/4a80956e62233749d5518f56ccdd5d2590abc23b.jpg"
+          }
         ]
       }
     ]
