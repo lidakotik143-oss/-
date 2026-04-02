@@ -2,8 +2,6 @@ import React, { useState, useEffect, useRef } from "react";
 import { FaSearch, FaPlus, FaHeart, FaRegHeart, FaTrash } from "react-icons/fa";
 import { deleteRecipe } from "../firebase.js";
 
-const RECIPE_PLACEHOLDER = "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=120&h=80&fit=crop&auto=format";
-
 export default function SearchScreen({
   t,
   theme,
@@ -75,7 +73,7 @@ export default function SearchScreen({
   const handleDelete = async (e, recipe) => {
     e.stopPropagation();
     if (!firebaseUser) return;
-    if (!window.confirm(t('Удалить рецепт «' + recipe.title + '»?', 'Delete recipe "' + recipe.title + '"?'))) return;
+    if (!window.confirm(t('Удалить рецепт «' + recipe.title + '»?', 'Delete recipe \"' + recipe.title + '\"?'))) return;
     setDeletingId(recipe.id);
     try {
       await deleteRecipe(recipe.id, firebaseUser.uid);
@@ -199,7 +197,7 @@ export default function SearchScreen({
               const dishTypeInfo = getDishTypeInfo(r.type);
               const kcalPerServing = r.caloriesPerServing ?? r.calories;
               const fav = isFavorite ? isFavorite(r.id) : false;
-              const imgSrc = r.image || r.imageUrl || RECIPE_PLACEHOLDER;
+              const imgSrc = r.image || r.imageUrl || null;
               const isOwner = isOwnerOf(r);
               return (
                 <div
@@ -208,12 +206,14 @@ export default function SearchScreen({
                   className={`p-4 ${theme.border} border rounded-lg cursor-pointer hover:shadow-lg transition`}
                 >
                   <div className="flex items-start gap-4">
-                    <img
-                      src={imgSrc}
-                      alt={r.title}
-                      className="w-20 h-16 object-cover rounded-xl flex-shrink-0 bg-gray-100"
-                      onError={(e) => { e.target.src = RECIPE_PLACEHOLDER; }}
-                    />
+                    {imgSrc && (
+                      <img
+                        src={imgSrc}
+                        alt={r.title}
+                        className="w-20 h-16 object-cover rounded-xl flex-shrink-0 bg-gray-100"
+                        onError={(e) => { e.target.style.display = 'none'; }}
+                      />
+                    )}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1 min-w-0">
