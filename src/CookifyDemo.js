@@ -532,6 +532,13 @@ function StepTimerBlock({ minutes, stepText, stepIndex, t, fontSize, theme, them
 // =================== БЛОК 2: Компонент приложения ===================
 export default function CookifyDemo() {
   const [activeScreen, setActiveScreen] = useState("home");
+  // =================== FADE-ПЕРЕХОД ===================
+  const [transitionKey, setTransitionKey] = useState(0);
+  const navigateTo = useCallback((screen) => {
+    setActiveScreen(screen);
+    setTransitionKey(k => k + 1);
+  }, []);
+  // ====================================================
   const [language, setLanguage] = useState(() => localStorage.getItem("cookify_language") || "ru");
   const [unitSystem, setUnitSystem] = useState(() => localStorage.getItem("cookify_unitSystem") || "metric");
   const [currentTheme, setCurrentTheme] = useState(() => localStorage.getItem("cookify_theme") || "olive");
@@ -978,7 +985,7 @@ export default function CookifyDemo() {
     isEditingProfile, setIsEditingProfile, showRegisterForm, setShowRegisterForm,
     handleRegister, handleStartEditProfile, handleLogout, handleAvatarUpload,
     getDisplayWeight, getDisplayHeight, convertWeight, convertHeight, GOALS, LIFESTYLE, allergyList,
-    activeScreen, setActiveScreen, accountTab, setAccountTab,
+    activeScreen, setActiveScreen: navigateTo, accountTab, setAccountTab,
     allRecipes, DISH_TYPE_LABELS, DIET_LABELS, DIFFICULTY_LABELS, getDishTypeInfo,
     normalize, TYPE_OPTIONS, DIET_OPTIONS, DIFFICULTY_OPTIONS, TAG_OPTIONS, CUISINE_OPTIONS,
     getSortedRecipesForPlanner, onAddRecipeClick: handleAddRecipeClick,
@@ -1026,7 +1033,7 @@ export default function CookifyDemo() {
     <AppContext.Provider value={contextValue}>
       <div className={`min-h-screen ${theme.bg} ${theme.text} ${font.class} p-4`}>
         <Header
-          activeScreen={activeScreen} setActiveScreen={setActiveScreen}
+          activeScreen={activeScreen} setActiveScreen={navigateTo}
           language={language} setLanguage={setLanguage}
           theme={theme} fontSize={fontSize}
         />
@@ -1313,72 +1320,76 @@ export default function CookifyDemo() {
           );
         })()}
 
-        {activeScreen === "home" && (
-          <HomeScreen
-            t={t} theme={theme} fontSize={fontSize} language={language} setLanguage={setLanguage}
-            setActiveScreen={setActiveScreen} userData={userData} todayNutrition={todayNutrition}
-            setShowAddMealModal={setShowAddMealModal} setAccountTab={setAccountTab}
-            SAMPLE_RECIPES={allRecipes}
-          />
-        )}
+        {/* =================== FADE-ПЕРЕХОД МЕЖДУ ЭКРАНАМИ =================== */}
+        <div key={transitionKey} className="screen-enter">
+          {activeScreen === "home" && (
+            <HomeScreen
+              t={t} theme={theme} fontSize={fontSize} language={language} setLanguage={setLanguage}
+              setActiveScreen={navigateTo} userData={userData} todayNutrition={todayNutrition}
+              setShowAddMealModal={setShowAddMealModal} setAccountTab={setAccountTab}
+              SAMPLE_RECIPES={allRecipes}
+            />
+          )}
 
-        {activeScreen === "search" && (
-          <SearchScreen
-            t={t} theme={theme} fontSize={fontSize} searchQuery={searchQuery} setSearchQuery={setSearchQuery}
-            searchMode={searchMode} setSearchMode={setSearchMode} excludeIngredients={excludeIngredients}
-            setExcludeIngredients={setExcludeIngredients} showFilters={showFilters} setShowFilters={setShowFilters}
-            selectedFilters={selectedFilters} setSelectedFilters={setSelectedFilters} TYPE_OPTIONS={TYPE_OPTIONS}
-            DIET_OPTIONS={DIET_OPTIONS} DIFFICULTY_OPTIONS={DIFFICULTY_OPTIONS} TAG_OPTIONS={TAG_OPTIONS}
-            CUISINE_OPTIONS={CUISINE_OPTIONS} DISH_TYPE_LABELS={DISH_TYPE_LABELS} DIET_LABELS={DIET_LABELS}
-            DIFFICULTY_LABELS={DIFFICULTY_LABELS} language={language} normalize={normalize} filteredResults={filteredResults}
-            getDishTypeInfo={getDishTypeInfo} allergyList={allergyList} setSelectedRecipe={setSelectedRecipe}
-            setSelectedRecipeVariantKey={setSelectedRecipeVariantKey} userSubstitutions={userSubstitutions}
-            onAddRecipeClick={handleAddRecipeClick}
-            isFavorite={isFavorite} toggleFav={toggleFav}
-            firebaseUser={firebaseUser}
-            onRecipeDeleted={refreshCommunityRecipes}
-          />
-        )}
+          {activeScreen === "search" && (
+            <SearchScreen
+              t={t} theme={theme} fontSize={fontSize} searchQuery={searchQuery} setSearchQuery={setSearchQuery}
+              searchMode={searchMode} setSearchMode={setSearchMode} excludeIngredients={excludeIngredients}
+              setExcludeIngredients={setExcludeIngredients} showFilters={showFilters} setShowFilters={setShowFilters}
+              selectedFilters={selectedFilters} setSelectedFilters={setSelectedFilters} TYPE_OPTIONS={TYPE_OPTIONS}
+              DIET_OPTIONS={DIET_OPTIONS} DIFFICULTY_OPTIONS={DIFFICULTY_OPTIONS} TAG_OPTIONS={TAG_OPTIONS}
+              CUISINE_OPTIONS={CUISINE_OPTIONS} DISH_TYPE_LABELS={DISH_TYPE_LABELS} DIET_LABELS={DIET_LABELS}
+              DIFFICULTY_LABELS={DIFFICULTY_LABELS} language={language} normalize={normalize} filteredResults={filteredResults}
+              getDishTypeInfo={getDishTypeInfo} allergyList={allergyList} setSelectedRecipe={setSelectedRecipe}
+              setSelectedRecipeVariantKey={setSelectedRecipeVariantKey} userSubstitutions={userSubstitutions}
+              onAddRecipeClick={handleAddRecipeClick}
+              isFavorite={isFavorite} toggleFav={toggleFav}
+              firebaseUser={firebaseUser}
+              onRecipeDeleted={refreshCommunityRecipes}
+            />
+          )}
 
-        {activeScreen === "account" && (
-          <AccountScreen
-            t={t} theme={theme} fontSize={fontSize} language={language} registered={registered} userData={userData}
-            unitSystem={unitSystem} currentTheme={currentTheme} currentFont={currentFont} currentFontSize={currentFontSize}
-            showCustomization={showCustomization} setShowCustomization={setShowCustomization}
-            showRegisterForm={showRegisterForm} setShowRegisterForm={setShowRegisterForm}
-            isEditingProfile={isEditingProfile} setIsEditingProfile={setIsEditingProfile} GOALS={GOALS} LIFESTYLE={LIFESTYLE}
-            accountTab={accountTab} setAccountTab={setAccountTab} viewPeriod={viewPeriod} setViewPeriod={setViewPeriod}
-            selectedDate={selectedDate} setSelectedDate={setSelectedDate} selectedWeekDay={selectedWeekDay}
-            setSelectedWeekDay={setSelectedWeekDay} MONTH_NAMES={MONTH_NAMES} WEEKDAY_NAMES={WEEKDAY_NAMES}
-            WEEKDAY_SHORT={WEEKDAY_SHORT} MEAL_CATEGORIES={MEAL_CATEGORIES} MEAL_LABELS={MEAL_LABELS}
-            SAMPLE_RECIPES={allRecipes} getFilteredHistory={getFilteredHistory} getMealsForDay={getMealsForDay}
-            calculateDayCalories={calculateDayCalories} calculatePeriodStats={calculatePeriodStats}
-            calculatePeriodNutrition={calculatePeriodNutrition} getWeekDays={getWeekDays} getWeekRange={getWeekRange}
-            formatDate={formatDate} getPeriodDisplayText={getPeriodDisplayText} addDays={addDays} addWeeks={addWeeks}
-            addMonths={addMonths} setMonthYear={setMonthYear} plannerWeekDate={plannerWeekDate}
-            setPlannerWeekDate={setPlannerWeekDate} weeklyPlan={weeklyPlan} getPlannerRecipes={getPlannerRecipes}
-            calculatePlannerDayCalories={calculatePlannerDayCalories} showAddMealModal={showAddMealModal}
-            setShowAddMealModal={setShowAddMealModal} addMealCategory={addMealCategory} setAddMealCategory={setAddMealCategory}
-            showPlannerModal={showPlannerModal} setShowPlannerModal={setShowPlannerModal} plannerModalDate={plannerModalDate}
-            setPlannerModalDate={setPlannerModalDate} plannerModalCategory={plannerModalCategory}
-            setPlannerModalCategory={setPlannerModalCategory} getSortedRecipesForPlanner={getSortedRecipesForPlanner}
-            handleStartEditProfile={handleStartEditProfile} handleLogout={handleLogout} toggleUnitSystem={toggleUnitSystem}
-            handleRegister={handleRegister} handleAvatarUpload={handleAvatarUpload} setCurrentTheme={setCurrentTheme}
-            setCurrentFont={setCurrentFont} setCurrentFontSize={setCurrentFontSize} getDisplayWeight={getDisplayWeight}
-            getDisplayHeight={getDisplayHeight} removeMealFromHistory={removeMealFromHistory}
-            addMealToHistory={addMealToHistory} addRecipeToPlanner={addRecipeToPlanner}
-            removeRecipeFromPlanner={removeRecipeFromPlanner} setSelectedRecipe={setSelectedRecipe}
-            setSelectedRecipeVariantKey={setSelectedRecipeVariantKey} DISH_TYPE_LABELS={DISH_TYPE_LABELS}
-            normalize={normalize} THEMES={THEMES} FONTS={FONTS} FONT_SIZES={FONT_SIZES}
-            convertWeight={convertWeight} convertHeight={convertHeight} shoppingList={shoppingList}
-            setShoppingList={setShoppingList} generateShoppingListFromPlanner={generateShoppingListFromPlanner}
-            setUserData={setUserData} setRegistered={setRegistered} setMealHistory={setMealHistory}
-            setWeeklyPlan={setWeeklyPlan}
-            favorites={favorites} toggleFav={toggleFav} isFavorite={isFavorite}
-          />
-        )}
+          {activeScreen === "account" && (
+            <AccountScreen
+              t={t} theme={theme} fontSize={fontSize} language={language} registered={registered} userData={userData}
+              unitSystem={unitSystem} currentTheme={currentTheme} currentFont={currentFont} currentFontSize={currentFontSize}
+              showCustomization={showCustomization} setShowCustomization={setShowCustomization}
+              showRegisterForm={showRegisterForm} setShowRegisterForm={setShowRegisterForm}
+              isEditingProfile={isEditingProfile} setIsEditingProfile={setIsEditingProfile} GOALS={GOALS} LIFESTYLE={LIFESTYLE}
+              accountTab={accountTab} setAccountTab={setAccountTab} viewPeriod={viewPeriod} setViewPeriod={setViewPeriod}
+              selectedDate={selectedDate} setSelectedDate={setSelectedDate} selectedWeekDay={selectedWeekDay}
+              setSelectedWeekDay={setSelectedWeekDay} MONTH_NAMES={MONTH_NAMES} WEEKDAY_NAMES={WEEKDAY_NAMES}
+              WEEKDAY_SHORT={WEEKDAY_SHORT} MEAL_CATEGORIES={MEAL_CATEGORIES} MEAL_LABELS={MEAL_LABELS}
+              SAMPLE_RECIPES={allRecipes} getFilteredHistory={getFilteredHistory} getMealsForDay={getMealsForDay}
+              calculateDayCalories={calculateDayCalories} calculatePeriodStats={calculatePeriodStats}
+              calculatePeriodNutrition={calculatePeriodNutrition} getWeekDays={getWeekDays} getWeekRange={getWeekRange}
+              formatDate={formatDate} getPeriodDisplayText={getPeriodDisplayText} addDays={addDays} addWeeks={addWeeks}
+              addMonths={addMonths} setMonthYear={setMonthYear} plannerWeekDate={plannerWeekDate}
+              setPlannerWeekDate={setPlannerWeekDate} weeklyPlan={weeklyPlan} getPlannerRecipes={getPlannerRecipes}
+              calculatePlannerDayCalories={calculatePlannerDayCalories} showAddMealModal={showAddMealModal}
+              setShowAddMealModal={setShowAddMealModal} addMealCategory={addMealCategory} setAddMealCategory={setAddMealCategory}
+              showPlannerModal={showPlannerModal} setShowPlannerModal={setShowPlannerModal} plannerModalDate={plannerModalDate}
+              setPlannerModalDate={setPlannerModalDate} plannerModalCategory={plannerModalCategory}
+              setPlannerModalCategory={setPlannerModalCategory} getSortedRecipesForPlanner={getSortedRecipesForPlanner}
+              handleStartEditProfile={handleStartEditProfile} handleLogout={handleLogout} toggleUnitSystem={toggleUnitSystem}
+              handleRegister={handleRegister} handleAvatarUpload={handleAvatarUpload} setCurrentTheme={setCurrentTheme}
+              setCurrentFont={setCurrentFont} setCurrentFontSize={setCurrentFontSize} getDisplayWeight={getDisplayWeight}
+              getDisplayHeight={getDisplayHeight} removeMealFromHistory={removeMealFromHistory}
+              addMealToHistory={addMealToHistory} addRecipeToPlanner={addRecipeToPlanner}
+              removeRecipeFromPlanner={removeRecipeFromPlanner} setSelectedRecipe={setSelectedRecipe}
+              setSelectedRecipeVariantKey={setSelectedRecipeVariantKey} DISH_TYPE_LABELS={DISH_TYPE_LABELS}
+              normalize={normalize} THEMES={THEMES} FONTS={FONTS} FONT_SIZES={FONT_SIZES}
+              convertWeight={convertWeight} convertHeight={convertHeight} shoppingList={shoppingList}
+              setShoppingList={setShoppingList} generateShoppingListFromPlanner={generateShoppingListFromPlanner}
+              setUserData={setUserData} setRegistered={setRegistered} setMealHistory={setMealHistory}
+              setWeeklyPlan={setWeeklyPlan}
+              favorites={favorites} toggleFav={toggleFav} isFavorite={isFavorite}
+            />
+          )}
 
-        {activeScreen === "settings" && <SettingsScreen />}
+          {activeScreen === "settings" && <SettingsScreen />}
+        </div>
+        {/* ================================================================== */}
 
         {showAddRecipeModal && firebaseUser && (
           <AddRecipeModal
